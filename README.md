@@ -68,3 +68,12 @@ npm run dev
 ```bash
 npm run build
 ```
+## Cloudflare Worker 部署
+
+这个仓库现在按静态导出部署：
+
+- Build command: `npm run build`
+- Deploy command: `npx wrangler deploy`
+- Static output: `out/`
+
+`wrangler.toml` 指向 `out/` 静态资源目录，不配置 Worker service binding，也不需要 `WORKER_SELF_REFERENCE`。

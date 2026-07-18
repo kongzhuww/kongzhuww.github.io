@@ -1,6 +1,11 @@
 name = "project911"
 compatibility_date = "2026-07-18"
 
+routes = [
+  { pattern = "logicweaver.me/*", zone_name = "logicweaver.me" },
+  { pattern = "www.logicweaver.me/*", zone_name = "logicweaver.me" },
+]
+
 [assets]
 directory = "./out"
 not_found_handling = "404-page"

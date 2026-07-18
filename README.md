@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LogicWeaver AI RSS Daily
 
-## Getting Started
+这是一个 Next.js 前端，首页展示由 n8n 每天生成的 AI RSS 日报。现有 GitHub 登录后的项目管理功能仍保留在 `/dashboard`。
 
-First, run the development server:
+## n8n 对接方式
+
+推荐让 n8n 在每天 08:00 生成两个静态 JSON 文件，然后同步到网站的 `public/reports/` 目录。
+
+- `public/reports/latest.json`: 最新日报正文
+- `public/reports/index.json`: 历史日报列表和最新日报路径
+
+前端只读取静态 JSON，不需要访问 DeepSeek、OneAPI 或任何服务端密钥。
+
+## `latest.json` 格式
+
+```json
+{
+  "title": "AI RSS 日报",
+  "date": "2026-07-18",
+  "generatedAt": "2026-07-18T08:00:00+08:00",
+  "summary": "一句话总览",
+  "highlights": ["重点 1", "重点 2"],
+  "trends": ["模型更新", "开发者工具"],
+  "sources": [
+    { "name": "OpenAI News", "count": 3, "url": "https://openai.com/news" }
+  ],
+  "items": [
+    {
+      "title": "文章标题",
+      "source": "OpenAI News",
+      "url": "https://example.com/article",
+      "summary": "AI 摘要",
+      "tags": ["模型", "产品"],
+      "importance": "high"
+    }
+  ]
+}
+```
+
+## `index.json` 格式
+
+```json
+{
+  "latest": "/reports/latest.json",
+  "reports": [
+    {
+      "date": "2026-07-18",
+      "title": "AI RSS 日报",
+      "path": "/reports/latest.json",
+      "itemCount": 12
+    }
+  ]
+}
+```
+
+如果要保留历史日报，可以让 n8n 同时写入类似 `public/reports/2026-07-18.json` 的文件，然后把 `index.json` 里的 `reports` 数组追加对应记录，并把 `latest` 指向最新文件。
+
+## 本地运行
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+打开 `http://localhost:3000`。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 构建
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run build
+```

@@ -2,137 +2,442 @@
 
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+type SourceName = "HuggingFace Blog" | "OpenAI News" | "Hacker News" | "Google AI Blog";
+
+type ReportItem = {
+  title: string;
+  source: string;
+  url: string;
+  summary: string;
+  publishedAt?: string;
+  tags?: string[];
+  importance?: "high" | "medium" | "low" | string;
+};
+
+type DailyReport = {
+  title: string;
+  date: string;
+  generatedAt: string;
+  summary: string;
+  highlights: string[];
+  trends: string[];
+  sources: { name: SourceName | string; count: number; url?: string }[];
+  items: ReportItem[];
+  sample?: boolean;
+};
+
+type ReportIndexItem = {
+  date: string;
+  title: string;
+  path: string;
+  itemCount?: number;
+};
+
+type ReportIndex = {
+  latest: string;
+  reports: ReportIndexItem[];
+};
+
+type LoadState = "loading" | "ready" | "fallback" | "error";
+
+const SOURCE_PROFILES: Record<string, { domain: string; color: string }> = {
+  "HuggingFace Blog": { domain: "huggingface.co", color: "#f59e0b" },
+  "OpenAI News": { domain: "openai.com", color: "#10b981" },
+  "Hacker News": { domain: "news.ycombinator.com", color: "#f97316" },
+  "Google AI Blog": { domain: "blog.google", color: "#4285f4" },
+};
+
+const FALLBACK_REPORT: DailyReport = {
+  title: "AI RSS 日报",
+  date: "2026-07-18",
+  generatedAt: "2026-07-18T08:00:00+08:00",
+  summary: "这是示例日报。真实报告同步到 /reports/latest.json 后，页面会自动切换到当天内容。",
+  highlights: [
+    "四个固定 RSS 源统一进入一份早报，适合早上快速浏览。",
+    "DeepSeek 摘要只在 n8n/VPS 侧生成，前端只读取静态 JSON。",
+    "历史日报由 index.json 管理，可以逐步扩展归档、筛选和搜索。",
+  ],
+  trends: ["模型发布", "开发者工具", "开源社区", "AI 基础设施"],
+  sources: [
+    { name: "HuggingFace Blog", count: 3, url: "https://huggingface.co/blog" },
+    { name: "OpenAI News", count: 3, url: "https://openai.com/news" },
+    { name: "Hacker News", count: 6, url: "https://news.ycombinator.com" },
+    { name: "Google AI Blog", count: 3, url: "https://blog.google/technology/ai/" },
+  ],
+  items: [
+    {
+      title: "示例：AI 产品发布节奏继续加快",
+      source: "OpenAI News",
+      url: "https://openai.com/news/",
+      summary: "日报会把原始新闻压缩成可执行摘要：发生了什么、为什么重要、是否需要继续跟进。",
+      tags: ["产品", "模型"],
+      importance: "high",
+    },
+    {
+      title: "示例：开源模型生态更新",
+      source: "HuggingFace Blog",
+      url: "https://huggingface.co/blog",
+      summary: "来自 HuggingFace 的文章更适合跟踪开源模型、数据集、推理框架和社区实践。",
+      tags: ["开源", "推理"],
+      importance: "medium",
+    },
+    {
+      title: "示例：开发者社区热点",
+      source: "Hacker News",
+      url: "https://news.ycombinator.com",
+      summary: "Hacker News 条目适合发现工程侧讨论，例如成本、部署、工具链和实际使用反馈。",
+      tags: ["工程", "社区"],
+      importance: "medium",
+    },
+  ],
+  sample: true,
+};
+
+const DEFAULT_INDEX: ReportIndex = {
+  latest: "/reports/latest.json",
+  reports: [
+    {
+      date: FALLBACK_REPORT.date,
+      title: FALLBACK_REPORT.title,
+      path: "/reports/latest.json",
+      itemCount: FALLBACK_REPORT.items.length,
+    },
+  ],
+};
+
+function resolveReportPath(path: string) {
+  if (!path) return "/reports/latest.json";
+  if (path.startsWith("http") || path.startsWith("/")) return path;
+  return `/reports/${path}`;
+}
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  }).format(date);
+}
+
+function formatDateTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function sourceProfile(source: string) {
+  return SOURCE_PROFILES[source] ?? { domain: source, color: "#64748b" };
+}
+
+function sourceIconUrl(source: string) {
+  const profile = sourceProfile(source);
+  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(profile.domain)}&sz=64`;
+}
+
+function statusText(state: LoadState, report: DailyReport) {
+  if (state === "loading") return "同步中";
+  if (state === "error") return "读取失败";
+  if (state === "fallback" || report.sample) return "示例数据";
+  return "已同步";
+}
 
 export default function Home() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
+  const [report, setReport] = useState<DailyReport>(FALLBACK_REPORT);
+  const [reportIndex, setReportIndex] = useState<ReportIndex>(DEFAULT_INDEX);
+  const [selectedPath, setSelectedPath] = useState(DEFAULT_INDEX.latest);
+  const [loadState, setLoadState] = useState<LoadState>("loading");
 
   useEffect(() => {
+    let cancelled = false;
+
+    async function loadLatestReport() {
+      try {
+        const indexResponse = await fetch("/reports/index.json", { cache: "no-store" });
+        const nextIndex = indexResponse.ok ? ((await indexResponse.json()) as ReportIndex) : DEFAULT_INDEX;
+        const nextPath = resolveReportPath(nextIndex.latest || nextIndex.reports?.[0]?.path || DEFAULT_INDEX.latest);
+        const reportResponse = await fetch(nextPath, { cache: "no-store" });
+
+        if (!reportResponse.ok) throw new Error("Report JSON is not available");
+
+        const nextReport = (await reportResponse.json()) as DailyReport;
+        if (!cancelled) {
+          setReportIndex(nextIndex);
+          setSelectedPath(nextPath);
+          setReport(nextReport);
+          setLoadState(nextReport.sample ? "fallback" : "ready");
+        }
+      } catch {
+        if (!cancelled) {
+          setReportIndex(DEFAULT_INDEX);
+          setSelectedPath(DEFAULT_INDEX.latest);
+          setReport(FALLBACK_REPORT);
+          setLoadState("fallback");
+        }
+      }
+    }
+
+    loadLatestReport();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const totalItems = report.items.length;
+  const totalSources = report.sources.length;
+  const highPriority = useMemo(
+    () => report.items.filter((item) => item.importance === "high").length,
+    [report.items],
+  );
+  const availableReports = reportIndex.reports.length > 0 ? reportIndex.reports : DEFAULT_INDEX.reports;
+
+  async function loadReport(path: string) {
+    const nextPath = resolveReportPath(path);
+    setLoadState("loading");
+    try {
+      const response = await fetch(nextPath, { cache: "no-store" });
+      if (!response.ok) throw new Error("Report JSON is not available");
+      const nextReport = (await response.json()) as DailyReport;
+      setSelectedPath(nextPath);
+      setReport(nextReport);
+      setLoadState(nextReport.sample ? "fallback" : "ready");
+    } catch {
+      setLoadState("error");
+    }
+  }
+
+  function openWorkspace() {
     if (status === "authenticated") {
       router.push("/dashboard");
+      return;
     }
-  }, [status, router]);
+
+    signIn("github", { callbackUrl: "/dashboard" });
+  }
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-blue-500/30 overflow-x-hidden">
-      {/* Background Gradient Effect */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
-        <div className="absolute top-[20%] -right-[10%] w-[30%] h-[30%] bg-purple-600/10 blur-[120px] rounded-full" />
-      </div>
-
-      {/* Nav */}
-      <nav className="relative z-10 flex items-center justify-between p-6 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+    <main className="min-h-screen bg-[#f4f7fb] text-slate-950 selection:bg-emerald-200">
+      <header className="border-b border-slate-200 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-sm font-bold text-white">
+              LW
+            </div>
+            <div>
+              <p className="text-sm font-semibold uppercase text-slate-500">LogicWeaver</p>
+              <h1 className="text-xl font-semibold text-slate-950">AI RSS Daily</h1>
+            </div>
           </div>
-          <span className="text-xl font-bold tracking-tight">IoT Hardware Hub</span>
-        </div>
-        <div>
-          <button 
-            onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
-            className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
-          >
-            Sign In
-          </button>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <main className="relative z-10 pt-20 pb-32 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium mb-6 animate-fade-in">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+              {statusText(loadState, report)} · 每天 08:00
             </span>
-            Now supporting Gemini 3.1 Analysis
-          </div>
-          
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500 leading-tight">
-            Design, Track, and Manage <br /> Your Embedded Hardware.
-          </h1>
-          
-          <p className="text-lg md:text-xl text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed">
-            The ultimate project command center for firmware engineers. 
-            Document pinouts, track milestones, and audit code structures with AI.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button 
-              onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
-              className="w-full sm:w-auto px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-all shadow-xl shadow-white/10 flex items-center justify-center gap-3 active:scale-95"
+            <button
+              onClick={openWorkspace}
+              className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" /></svg>
-              Sign In with GitHub
+              {status === "authenticated" ? "进入项目台" : "GitHub 登录"}
             </button>
-            <a 
-              href="https://github.com/kongzhuww" 
-              target="_blank"
-              className="w-full sm:w-auto px-8 py-4 bg-gray-900 border border-gray-800 text-white font-bold rounded-xl hover:bg-gray-800 transition-all"
-            >
-              Explore Open Source
-            </a>
           </div>
         </div>
-      </main>
+      </header>
 
-      {/* Features Grid */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 pb-40">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          
-          {/* Feature 1 */}
-          <div className="group p-8 rounded-3xl bg-gray-900/50 border border-gray-800 hover:border-blue-500/50 transition-all duration-500">
-            <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>
+      <section className="border-b border-slate-200 bg-[#101820] text-white">
+        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 lg:grid-cols-[1.35fr_0.65fr] lg:py-10">
+          <div className="relative overflow-hidden rounded-lg border border-white/10 bg-[#121f2a] p-6 shadow-sm md:p-8">
+            <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:32px_32px]" />
+            <div className="relative">
+              <div className="mb-8 flex flex-wrap items-center gap-3">
+                {report.sources.map((source) => (
+                  <span
+                    key={source.name}
+                    className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/10 px-3 py-2 text-sm text-slate-100"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="h-5 w-5 rounded bg-white bg-center bg-contain bg-no-repeat"
+                      style={{ backgroundImage: `url(${sourceIconUrl(source.name)})` }}
+                    />
+                    {source.name}
+                  </span>
+                ))}
+              </div>
+
+              <p className="mb-3 text-sm font-semibold uppercase text-emerald-300">{formatDate(report.date)}</p>
+              <h2 className="max-w-3xl text-4xl font-semibold text-white md:text-6xl">{report.title}</h2>
+              <p className="mt-5 max-w-3xl text-base leading-7 text-slate-300 md:text-lg">{report.summary}</p>
+
+              <div className="mt-8 grid gap-3 md:grid-cols-3">
+                <Metric label="来源" value={totalSources.toString()} accent="#10b981" />
+                <Metric label="条目" value={totalItems.toString()} accent="#38bdf8" />
+                <Metric label="重点" value={highPriority.toString()} accent="#f59e0b" />
+              </div>
             </div>
-            <h3 className="text-xl font-bold mb-3">Hardware Pin Registry</h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Never lose track of your PA9, PB6, or UART connections again. 
-              Document how your hardware is wired for every project in the cloud.
-            </p>
           </div>
 
-          {/* Feature 2 */}
-          <div className="group p-8 rounded-3xl bg-gray-900/50 border border-gray-800 hover:border-purple-500/50 transition-all duration-500">
-            <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          <aside className="rounded-lg border border-slate-700 bg-slate-900 p-5 text-white">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm text-slate-400">生成时间</p>
+                <p className="mt-1 text-lg font-semibold">{formatDateTime(report.generatedAt)}</p>
+              </div>
+              <span className="rounded-md bg-emerald-400/10 px-3 py-2 text-sm font-semibold text-emerald-200">
+                JSON
+              </span>
             </div>
-            <h3 className="text-xl font-bold mb-3">AI Project Audit</h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Instantly analyze GitHub repo structures. Identify build systems, 
-              detect peripheral drivers, and understand architecture styles automatically.
-            </p>
-          </div>
 
-          {/* Feature 3 */}
-          <div className="group p-8 rounded-3xl bg-gray-900/50 border border-gray-800 hover:border-green-500/50 transition-all duration-500">
-            <div className="w-12 h-12 bg-green-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+            <div className="space-y-3">
+              {report.sources.map((source) => {
+                const profile = sourceProfile(source.name);
+                return (
+                  <a
+                    key={source.name}
+                    href={source.url || `https://${profile.domain}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-between rounded-md border border-slate-700 bg-slate-800 px-3 py-3 transition hover:border-slate-500"
+                  >
+                    <span className="flex min-w-0 items-center gap-3">
+                      <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: profile.color }} aria-hidden="true" />
+                      <span className="truncate text-sm text-slate-200">{source.name}</span>
+                    </span>
+                    <span className="text-sm font-semibold text-slate-300">{source.count}</span>
+                  </a>
+                );
+              })}
             </div>
-            <h3 className="text-xl font-bold mb-3">Project Roadmap</h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Integrated Todo lists tailored for embedded development. 
-              Plan your milestones from bootloader logic to application deployment.
-            </p>
-          </div>
-
+          </aside>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-gray-900 py-12 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-gray-500 text-sm">
-          <p>© 2026 IoT Hardware Hub. Built for makers, by makers.</p>
-          <div className="flex gap-8">
-            <a href="#" className="hover:text-white transition-colors">Documentation</a>
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-          </div>
+      <section className="mx-auto grid max-w-7xl gap-6 px-5 py-6 lg:grid-cols-[0.78fr_1.22fr]">
+        <div className="space-y-6">
+          <Panel title="今日信号">
+            <div className="space-y-3">
+              {report.highlights.map((highlight) => (
+                <div key={highlight} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                  <p className="text-sm leading-6 text-slate-700">{highlight}</p>
+                </div>
+              ))}
+            </div>
+          </Panel>
+
+          <Panel title="趋势标签">
+            <div className="flex flex-wrap gap-2">
+              {report.trends.map((trend) => (
+                <span key={trend} className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                  {trend}
+                </span>
+              ))}
+            </div>
+          </Panel>
+
+          <Panel title="历史日报">
+            <div className="space-y-2">
+              {availableReports.map((item) => {
+                const path = resolveReportPath(item.path);
+                const active = path === selectedPath;
+                return (
+                  <button
+                    key={`${item.date}-${item.path}`}
+                    onClick={() => loadReport(item.path)}
+                    className={`w-full rounded-md border px-3 py-3 text-left transition ${
+                      active
+                        ? "border-slate-950 bg-slate-950 text-white"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold">{item.title}</span>
+                    <span className={`mt-1 block text-xs ${active ? "text-slate-300" : "text-slate-500"}`}>
+                      {item.date} · {item.itemCount ?? "-"} 条
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </Panel>
         </div>
-      </footer>
+
+        <Panel title="新闻条目">
+          {loadState === "loading" ? (
+            <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">正在读取日报 JSON...</div>
+          ) : loadState === "error" ? (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-700">日报文件读取失败，请检查 JSON 路径。</div>
+          ) : (
+            <div className="grid gap-4">
+              {report.items.map((item) => (
+                <article key={`${item.source}-${item.title}`} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600">
+                      <span
+                        aria-hidden="true"
+                        className="h-5 w-5 rounded bg-slate-100 bg-center bg-contain bg-no-repeat"
+                        style={{ backgroundImage: `url(${sourceIconUrl(item.source)})` }}
+                      />
+                      {item.source}
+                    </span>
+                    <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold uppercase text-slate-500">
+                      {item.importance || "normal"}
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-semibold text-slate-950">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{item.summary}</p>
+
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                    <div className="flex flex-wrap gap-2">
+                      {(item.tags || []).map((tag) => (
+                        <span key={tag} className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-950 hover:text-slate-950"
+                    >
+                      阅读原文
+                    </a>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </Panel>
+      </section>
+    </main>
+  );
+}
+
+function Metric({ label, value, accent }: { label: string; value: string; accent: string }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/10 p-4">
+      <div className="mb-3 h-1 w-10 rounded-sm" style={{ backgroundColor: accent }} />
+      <p className="text-sm text-slate-400">{label}</p>
+      <p className="mt-1 text-3xl font-semibold text-white">{value}</p>
     </div>
+  );
+}
+
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <div className="mb-3 flex items-center justify-between gap-4">
+        <h2 className="text-base font-semibold text-slate-950">{title}</h2>
+      </div>
+      {children}
+    </section>
   );
 }

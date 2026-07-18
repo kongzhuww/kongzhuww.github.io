@@ -1,0 +1,45 @@
+{
+  "title": "AI RSS 日报",
+  "date": "2026-07-18",
+  "generatedAt": "2026-07-18T08:00:00+08:00",
+  "summary": "这是示例日报。n8n 每天生成真实 latest.json 后，首页会自动展示最新内容。",
+  "highlights": [
+    "四个固定 RSS 源统一汇总成一份早报。",
+    "DeepSeek 只在 n8n/VPS 侧调用，网站前端只读取静态 JSON。",
+    "后续只要追加 index.json，就能形成日报归档。"
+  ],
+  "trends": ["模型更新", "开发者工具", "开源生态", "AI 基础设施"],
+  "sources": [
+    { "name": "HuggingFace Blog", "count": 3, "url": "https://huggingface.co/blog" },
+    { "name": "OpenAI News", "count": 3, "url": "https://openai.com/news" },
+    { "name": "Hacker News", "count": 6, "url": "https://news.ycombinator.com" },
+    { "name": "Google AI Blog", "count": 3, "url": "https://blog.google/technology/ai/" }
+  ],
+  "items": [
+    {
+      "title": "示例：AI 产品发布节奏继续加快",
+      "source": "OpenAI News",
+      "url": "https://openai.com/news/",
+      "summary": "日报会把原始新闻压缩成可执行摘要：发生了什么、为什么重要、是否需要继续跟进。",
+      "tags": ["产品", "模型"],
+      "importance": "high"
+    },
+    {
+      "title": "示例：开源模型生态更新",
+      "source": "HuggingFace Blog",
+      "url": "https://huggingface.co/blog",
+      "summary": "来自 HuggingFace 的文章更适合跟踪开源模型、数据集、推理框架和社区实践。",
+      "tags": ["开源", "推理"],
+      "importance": "medium"
+    },
+    {
+      "title": "示例：开发者社区热点",
+      "source": "Hacker News",
+      "url": "https://news.ycombinator.com",
+      "summary": "Hacker News 条目适合发现工程侧讨论，例如成本、部署、工具链和实际使用反馈。",
+      "tags": ["工程", "社区"],
+      "importance": "medium"
+    }
+  ],
+  "sample": true
+}

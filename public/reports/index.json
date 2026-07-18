@@ -1,0 +1,11 @@
+{
+  "latest": "/reports/latest.json",
+  "reports": [
+    {
+      "date": "2026-07-18",
+      "title": "AI RSS 日报",
+      "path": "/reports/latest.json",
+      "itemCount": 3
+    }
+  ]
+}

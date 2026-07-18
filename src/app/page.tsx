@@ -1,7 +1,5 @@
 "use client";
 
-import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 type SourceName = "HuggingFace Blog" | "OpenAI News" | "Hacker News" | "Google AI Blog";
@@ -151,8 +149,6 @@ function statusText(state: LoadState, report: DailyReport) {
 }
 
 export default function Home() {
-  const { status } = useSession();
-  const router = useRouter();
   const [report, setReport] = useState<DailyReport>(FALLBACK_REPORT);
   const [reportIndex, setReportIndex] = useState<ReportIndex>(DEFAULT_INDEX);
   const [selectedPath, setSelectedPath] = useState(DEFAULT_INDEX.latest);
@@ -216,14 +212,6 @@ export default function Home() {
     }
   }
 
-  function openWorkspace() {
-    if (status === "authenticated") {
-      router.push("/dashboard");
-      return;
-    }
-
-    signIn("github", { callbackUrl: "/dashboard" });
-  }
 
   return (
     <main className="min-h-screen bg-[#f4f7fb] text-slate-950 selection:bg-emerald-200">
@@ -242,12 +230,20 @@ export default function Home() {
             <span className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
               {statusText(loadState, report)} · 每天 08:00
             </span>
-            <button
-              onClick={openWorkspace}
+            <a
+              href="/reports/latest.json"
+              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-950 hover:text-slate-950"
+            >
+              查看 JSON
+            </a>
+            <a
+              href="https://github.com/kongzhuww/kongzhuww.github.io"
+              target="_blank"
+              rel="noreferrer"
               className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
-              {status === "authenticated" ? "进入项目台" : "GitHub 登录"}
-            </button>
+              GitHub
+            </a>
           </div>
         </div>
       </header>

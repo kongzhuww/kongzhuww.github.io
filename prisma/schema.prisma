@@ -1,0 +1,34 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model devices {
+  id         String   @id @default(uuid()) @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz
+  user_email String
+  name       String
+  mqtt_topic String
+  location   String?  @default("Unknown")
+  status     String?  @default("Offline")
+}
+
+model repo_pins {
+  id         String   @id @default(uuid()) @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz
+  user_email String
+  repo_id    String   // GitHub repo ID
+  repo_name  String   // GitHub repo name
+  pin_name   String   // e.g. "UART1_TX"
+  pin_number String   // e.g. "PA9"
+  peripheral String   // e.g. "K230 AI Camera"
+  notes      String?  // Any additional notes
+}

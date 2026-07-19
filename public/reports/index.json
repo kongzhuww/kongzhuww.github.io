@@ -2,6 +2,12 @@
   "latest": "/reports/latest.json",
   "reports": [
     {
+      "date": "2026-07-19",
+      "title": "AI RSS 日报",
+      "path": "/reports/2026-07-19.json",
+      "itemCount": 21
+    },
+    {
       "date": "2026-07-18",
       "title": "AI RSS 日报",
       "path": "/reports/2026-07-18.json",

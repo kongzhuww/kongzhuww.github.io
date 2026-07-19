@@ -1,6 +1,6 @@
 # LogicWeaver AI RSS Daily
 
-这是一个 Next.js 前端，首页展示由 n8n 每天生成的 AI RSS 日报。现有 GitHub 登录后的项目管理功能仍保留在 `/dashboard`。
+这是一个 Next.js 前端，首页展示由 n8n 每天生成的 AI RSS 日报。旧的 GitHub 登录、IoT dashboard 和 Supabase 数据接口已移除，当前站点按静态日报展示部署。
 
 ## n8n 对接方式
 
@@ -68,3 +68,12 @@ npm run dev
 ```bash
 npm run build
 ```
+## Cloudflare Worker 部署
+
+这个仓库现在按静态导出部署：
+
+- Build command: `npm run build`
+- Deploy command: `npx wrangler deploy`
+- Static output: `out/`
+
+`wrangler.toml` 指向 `out/` 静态资源目录，不配置 Worker service binding，也不需要 `WORKER_SELF_REFERENCE`。

@@ -1,30 +1,34 @@
 {
   "title": "AI RSS 日报",
   "date": "2026-07-19",
-  "generatedAt": "2026-07-19T01:13:43.775430",
-  "summary": "今日AI科技领域亮点纷呈：OpenAI的GPT-5.6在数学优化上取得突破，引发社区热议；Agent频繁重置配额的现象暴露了LLM服务的稳定性瓶颈；大型语言模型对传统问答社区（如Stack Overflow）的影响已清晰可视化。同时，AI合规监管出现新动向，旧金山市长禁止房东使用AI图像虚假宣传；开发者工具生态活跃，Gleam语言迎来新平台、Elixir官网焕新，Quake 3地图编辑器、Mac远程控制Claude等实用项目涌现。此外，NVIDIA与HuggingFace合作推出大规模视频/图像模型微调方案，DeepMind与Isomorphic Labs发布生物弹性研究，AI正深度渗透各领域。",
+  "generatedAt": "2026-07-19T01:17:40.135381",
+  "summary": "AI 日报摘要",
   "highlights": [
-    "GPT-5.6利用提示词解决凸优化领域30年未解难题，展示大模型在数学推理上的潜力",
-    "Agent服务频繁重置配额引发开发者不满，指向大模型商业化中的资源分配挑战",
-    "Stack Overflow被AI冲击的数据可视化图揭示社区参与度断崖式下跌"
+    "今日 AI 新闻汇总已生成"
   ],
   "trends": [
-    "大模型在数学与科学发现中的突破性应用",
-    "AI Agent服务的可靠性与配额管理问题",
-    "传统知识社区（如Stack Overflow）受到生成式AI的挤压",
-    "AI生成内容的监管与法律边界收紧",
-    "开源开发者工具与独立Web运动持续活跃"
+    "AI 日报"
   ],
   "sources": [
     {
       "name": "HuggingFace Blog",
-      "count": 1,
+      "count": 10,
       "url": "https://huggingface.co/blog"
     },
     {
+      "name": "OpenAI News",
+      "count": 10,
+      "url": "https://openai.com/news"
+    },
+    {
       "name": "Hacker News",
-      "count": 20,
+      "count": 10,
       "url": "https://news.ycombinator.com"
+    },
+    {
+      "name": "Google AI Blog",
+      "count": 10,
+      "url": "https://blog.google/technology/ai/"
     }
   ],
   "items": [
@@ -32,32 +36,99 @@
       "title": "Fine-tune video and image models at scale with NVIDIA NeMo Automodel and 🤗 Diffusers",
       "source": "HuggingFace Blog",
       "url": "https://huggingface.co/blog/nvidia/scale-diffusers-finetuning-nemo-automodel",
-      "summary": "NVIDIA NeMo与HuggingFace Diffusers集成，支持大规模微调视频和图像模型。",
+      "summary": "",
       "tags": [
-        "模型微调",
-        "NVIDIA"
+        "HuggingFace"
       ],
-      "importance": "high"
+      "importance": "medium"
+    },
+    {
+      "title": "A scorecard for the AI age",
+      "source": "OpenAI News",
+      "url": "https://openai.com/index/a-scorecard-for-the-ai-age",
+      "summary": "Sarah Friar, CFO of OpenAI, introduces a practical AI scorecard to measure ROI through useful work, cost per successful task, dependability, and retur",
+      "tags": [
+        "OpenAI"
+      ],
+      "importance": "medium"
     },
     {
       "title": "Popular sugar substitutes linked to faster brain aging",
       "source": "Hacker News",
       "url": "https://www.sciencedaily.com/releases/2026/07/260717033213.htm",
-      "summary": "新研究发现流行代糖可能导致大脑加速衰老。",
+      "summary": "Article URL: https://www.sciencedaily.com/releases/2026/07/260717033213.htm Comments URL: https://news.ycombinator.com/item?id=48963484 Points: 17 # C",
       "tags": [
-        "健康",
-        "食品安全"
+        "Hacker"
       ],
-      "importance": "low"
+      "importance": "medium"
+    },
+    {
+      "title": "Connect more of your apps to Search",
+      "source": "Google AI Blog",
+      "url": "https://blog.google/products-and-platforms/products/search/connected-apps/",
+      "summary": "You’ll be able to securely link and interact with your go-to services directly in AI Mode.",
+      "tags": [
+        "Google AI"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "Newer Models, Same Advantage",
+      "source": "HuggingFace Blog",
+      "url": "https://huggingface.co/blog/Dharma-AI/newer-models-same-advantages",
+      "summary": "",
+      "tags": [
+        "HuggingFace"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "Why teens deserve access to safe AI",
+      "source": "OpenAI News",
+      "url": "https://openai.com/index/why-teens-deserve-access-safe-ai",
+      "summary": "Learn how OpenAI is making ChatGPT safer for teens with age-appropriate protections, learning tools, parental controls, and expert partnerships.",
+      "tags": [
+        "OpenAI"
+      ],
+      "importance": "medium"
     },
     {
       "title": "Codex Resets",
       "source": "Hacker News",
       "url": "https://codex-resets.com/",
-      "summary": "讨论开发者遭遇的Codex API配额频繁重置现象。",
+      "summary": "Article URL: https://codex-resets.com/ Comments URL: https://news.ycombinator.com/item?id=48963465 Points: 70 # Comments: 58",
       "tags": [
-        "API",
-        "配额"
+        "Hacker"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "Create, edit and star in videos with two Google Vids updates",
+      "source": "Google AI Blog",
+      "url": "https://blog.google/products-and-platforms/products/workspace/gemini-omni-personal-avatars/",
+      "summary": "Gemini Omni and personal avatars in Google Vids make video creation easier than ever.",
+      "tags": [
+        "Google AI"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "Security incident disclosure — July 2026",
+      "source": "HuggingFace Blog",
+      "url": "https://huggingface.co/blog/security-incident-july-2026",
+      "summary": "",
+      "tags": [
+        "HuggingFace"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "How Cars24 scales conversations and builds faster with OpenAI",
+      "source": "OpenAI News",
+      "url": "https://openai.com/index/cars24",
+      "summary": "Cars24 uses OpenAI-powered voice and chat agents to handle 1M+ monthly conversation minutes, recover 12% of lost leads, and bring agentic workflows to",
+      "tags": [
+        "OpenAI"
       ],
       "importance": "medium"
     },
@@ -65,54 +136,199 @@
       "title": "Mayor Mamdani Says Landlords Can't Use AI Images to Advertise",
       "source": "Hacker News",
       "url": "https://petapixel.com/2026/07/16/mayor-mamdani-says-landlords-cant-secretly-use-ai-images-to-advertise-properties/",
-      "summary": "旧金山市长Mamdani禁止房东使用AI图像虚假宣传房产。",
+      "summary": "Article URL: https://petapixel.com/2026/07/16/mayor-mamdani-says-landlords-cant-secretly-use-ai-images-to-advertise-properties/ Comments URL: https://",
       "tags": [
-        "AI监管",
-        "虚假广告"
+        "Hacker"
       ],
-      "importance": "high"
+      "importance": "medium"
+    },
+    {
+      "title": "Celebrating 25 years of visual search innovation",
+      "source": "Google AI Blog",
+      "url": "https://blog.google/products-and-platforms/products/search/google-images-25th-anniversary/",
+      "summary": "Google Images is turning 25. Here’s a look back at some major milestones — and new ways to explore and create visual content.",
+      "tags": [
+        "Google AI"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "What building Shippy taught us about building agents",
+      "source": "HuggingFace Blog",
+      "url": "https://huggingface.co/blog/allenai/shippy-tech-blog",
+      "summary": "",
+      "tags": [
+        "HuggingFace"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "The US is advancing AI safety through state and federal action",
+      "source": "OpenAI News",
+      "url": "https://openai.com/index/advancing-ai-safety-through-state-and-federal-action",
+      "summary": "OpenAI outlines a “reverse federalism” approach to AI governance, where state laws help build a national framework for safe, democratic AI.",
+      "tags": [
+        "OpenAI"
+      ],
+      "importance": "medium"
     },
     {
       "title": "Real-Time LuaTeX: Recompiling Large Documents in 1ms [pdf]",
       "source": "Hacker News",
       "url": "https://www.tug.org/tug2026/preprints/lode-realtime.pdf",
-      "summary": "一篇PDF介绍如何在1ms内重新编译大型LuaTeX文档，实现实时排版。",
+      "summary": "Article URL: https://www.tug.org/tug2026/preprints/lode-realtime.pdf Comments URL: https://news.ycombinator.com/item?id=48962944 Points: 25 # Comments",
       "tags": [
-        "排版",
-        "实时编译"
+        "Hacker"
       ],
-      "importance": "low"
+      "importance": "medium"
+    },
+    {
+      "title": "Expanding Managed Agents in Gemini API: background tasks, remote MCP and more",
+      "source": "Google AI Blog",
+      "url": "https://blog.google/innovation-and-ai/technology/developers-tools/expanding-managed-agents-gemini-api/",
+      "summary": "We’re announcing new capabilities in Managed Agents in Gemini API so developers can build reliable, production-ready agents.",
+      "tags": [
+        "Google AI"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "Model Routing Is Simple. Until It Isn’t.",
+      "source": "HuggingFace Blog",
+      "url": "https://huggingface.co/blog/ibm-research/model-routing-is-simple-until-it-isnt",
+      "summary": "",
+      "tags": [
+        "HuggingFace"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "GPT-Red: Unlocking Self-Improvement for Robustness",
+      "source": "OpenAI News",
+      "url": "https://openai.com/index/unlocking-self-improvement-gpt-red",
+      "summary": "Explore GPT-Red, OpenAI’s automated red teaming system that uses self-play to improve AI safety, alignment, and prompt injection robustness.",
+      "tags": [
+        "OpenAI"
+      ],
+      "importance": "medium"
     },
     {
       "title": "Judge a book by its first pages",
       "source": "Hacker News",
       "url": "https://uncovered.ink",
-      "summary": "通过书籍首页判断是否可读的趣味网站。",
+      "summary": "Article URL: https://uncovered.ink Comments URL: https://news.ycombinator.com/item?id=48962893 Points: 38 # Comments: 30",
       "tags": [
-        "阅读",
-        "趣味工具"
+        "Hacker"
       ],
-      "importance": "low"
+      "importance": "medium"
+    },
+    {
+      "title": "The latest AI news we announced in June 2026",
+      "source": "Google AI Blog",
+      "url": "https://blog.google/innovation-and-ai/technology/ai/google-ai-updates-june-2026/",
+      "summary": "Here are Google’s latest AI updates from June 2026.",
+      "tags": [
+        "Google AI"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "Welcome Inkling by Thinking Machines",
+      "source": "HuggingFace Blog",
+      "url": "https://huggingface.co/blog/thinkingmachines-inkling",
+      "summary": "",
+      "tags": [
+        "HuggingFace"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "How to manage AI investments in the agentic era",
+      "source": "OpenAI News",
+      "url": "https://openai.com/index/managing-ai-investments-in-agentic-era",
+      "summary": "Learn how enterprises can manage AI investments in the agentic era by measuring useful work per dollar, improving efficiency, and scaling high-value w",
+      "tags": [
+        "OpenAI"
+      ],
+      "importance": "medium"
     },
     {
       "title": "Classic Amiga titles, free to download",
       "source": "Hacker News",
       "url": "https://amigafreeware.downer.tech/",
-      "summary": "经典Amiga游戏免费下载资源汇总。",
+      "summary": "Article URL: https://amigafreeware.downer.tech/ Comments URL: https://news.ycombinator.com/item?id=48962838 Points: 42 # Comments: 7",
       "tags": [
-        "复古游戏",
-        "免费"
+        "Hacker"
       ],
-      "importance": "low"
+      "importance": "medium"
+    },
+    {
+      "title": "New York City educators and industry leaders gathered at Google’s offices to shape the future of AI in classrooms.",
+      "source": "Google AI Blog",
+      "url": "https://blog.google/products-and-platforms/products/education/nyc-ai-summit/",
+      "summary": "Google, the New York Jobs CEO Council and Urban Assembly hosted an AI summit for 150 education and industry leaders.",
+      "tags": [
+        "Google AI"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "Introducing Real World VoiceEQ: Measuring the human quality of voice AI",
+      "source": "HuggingFace Blog",
+      "url": "https://huggingface.co/blog/real-world-voiceeq",
+      "summary": "",
+      "tags": [
+        "HuggingFace"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "How sales teams use ChatGPT Work",
+      "source": "OpenAI News",
+      "url": "https://openai.com/academy/codex-for-work/how-sales-teams-use-codex",
+      "summary": "See how sales teams can use ChatGPT Work to create pipeline briefs, meeting prep packets, forecast reviews, account plans, and stalled-deal diagnoses ",
+      "tags": [
+        "OpenAI"
+      ],
+      "importance": "medium"
     },
     {
       "title": "Hardcore IndieWeb: Run your own website 100% independently for only $0.01/day",
       "source": "Hacker News",
       "url": "https://www.neatnik.net/hardcore-indieweb",
-      "summary": "硬核独立Web运动：每天1分钱独立运行个人网站。",
+      "summary": "Article URL: https://www.neatnik.net/hardcore-indieweb Comments URL: https://news.ycombinator.com/item?id=48962758 Points: 65 # Comments: 54",
       "tags": [
-        "独立Web",
-        "低成本"
+        "Hacker"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "Unlocking Britain’s next era of productivity: Building a nation of AI trailblazers",
+      "source": "Google AI Blog",
+      "url": "https://blog.google/company-news/inside-google/around-the-globe/google-europe/united-kingdom/unlocking-britains-next-era-of-productivity-building-a-nation-of-ai-trailblazers/",
+      "summary": "Google UK shares its latest Economic Impact Report and how to enable more people to unlock the benefits of AI-powered technologies.",
+      "tags": [
+        "Google AI"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "Profiling in PyTorch (Part 3): Attention is all you profile",
+      "source": "HuggingFace Blog",
+      "url": "https://huggingface.co/blog/torch-attention-profile",
+      "summary": "",
+      "tags": [
+        "HuggingFace"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "How data science teams use ChatGPT Work",
+      "source": "OpenAI News",
+      "url": "https://openai.com/academy/codex-for-work/how-data-science-teams-use-codex",
+      "summary": "See how data science teams can use ChatGPT Work to build root-cause briefs, impact readouts, KPI memos, scoped analyses, and dashboard specs from real",
+      "tags": [
+        "OpenAI"
       ],
       "importance": "medium"
     },
@@ -120,10 +336,39 @@
       "title": "Co-evolution of self-replication and function in a digital primordial soup",
       "source": "Hacker News",
       "url": "https://arxiv.org/abs/2607.09211",
-      "summary": "论文研究数字原始汤中自复制与功能的协同进化。",
+      "summary": "Article URL: https://arxiv.org/abs/2607.09211 Comments URL: https://news.ycombinator.com/item?id=48962429 Points: 19 # Comments: 4",
       "tags": [
-        "人工生命",
-        "进化"
+        "Hacker"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "Ask an AI expert: What exactly is the full stack?",
+      "source": "Google AI Blog",
+      "url": "https://blog.google/innovation-and-ai/technology/ai/full-stack-ai-explainer/",
+      "summary": "A Google expert explains what it means to take a full-stack approach to AI and why it’s been the foundation of our AI work for so long.",
+      "tags": [
+        "Google AI"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "Native-speed vLLM transformers modeling backend",
+      "source": "HuggingFace Blog",
+      "url": "https://huggingface.co/blog/native-speed-vllm-transformers-backend",
+      "summary": "",
+      "tags": [
+        "HuggingFace"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "How Deutsche Telekom is rewiring telecommunications with AI",
+      "source": "OpenAI News",
+      "url": "https://openai.com/index/deutsche-telekom",
+      "summary": "How Deutsche Telekom is becoming an AI-native telco with OpenAI-transforming customer service, employee workflows, network operations, and the future ",
+      "tags": [
+        "OpenAI"
       ],
       "importance": "medium"
     },
@@ -131,10 +376,39 @@
       "title": "Typing Speed Test, but for Developers",
       "source": "Hacker News",
       "url": "https://haxxorwpm.0s.is/",
-      "summary": "面向开发者的打字速度测试工具上线。",
+      "summary": "Article URL: https://haxxorwpm.0s.is/ Comments URL: https://news.ycombinator.com/item?id=48961504 Points: 79 # Comments: 55",
       "tags": [
-        "开发工具",
-        "打字测试"
+        "Hacker"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "Our latest Google Finance upgrades, including a new app",
+      "source": "Google AI Blog",
+      "url": "https://blog.google/products-and-platforms/products/search/google-finance-updates-june-2026/",
+      "summary": "The new Google Finance is coming out of beta and launching a new Android app.",
+      "tags": [
+        "Google AI"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "From Hugging Face to Amazon SageMaker Studio in one click",
+      "source": "HuggingFace Blog",
+      "url": "https://huggingface.co/blog/amazon/one-click-to-sagemaker-studio",
+      "summary": "",
+      "tags": [
+        "HuggingFace"
+      ],
+      "importance": "medium"
+    },
+    {
+      "title": "Getting started with ChatGPT",
+      "source": "OpenAI News",
+      "url": "https://openai.com/academy/getting-started",
+      "summary": "Learn how to use ChatGPT, start your first conversation, and discover simple ways to write, brainstorm, and solve problems with AI.",
+      "tags": [
+        "OpenAI"
       ],
       "importance": "medium"
     },
@@ -142,122 +416,21 @@
       "title": "What's the deal with all the random weekly quota resets for agents lately?",
       "source": "Hacker News",
       "url": "https://minimaxir.com/2026/07/agent-quota-reset/",
-      "summary": "分析近期多个AI Agent服务频繁重置每周配额的背后原因。",
+      "summary": "Article URL: https://minimaxir.com/2026/07/agent-quota-reset/ Comments URL: https://news.ycombinator.com/item?id=48961157 Points: 20 # Comments: 24",
       "tags": [
-        "Agent",
-        "配额重置"
-      ],
-      "importance": "high"
-    },
-    {
-      "title": "The Kimi K3 Moment",
-      "source": "Hacker News",
-      "url": "https://stephen.bochinski.dev/blog/2026/07/18/the-kimi-k3-moment/",
-      "summary": "Kimi K3时刻：一篇引发大量讨论的个人反思文章。",
-      "tags": [
-        "Kimi",
-        "社区热点"
-      ],
-      "importance": "high"
-    },
-    {
-      "title": "Setting up your spare Mac for Claude Code to control, a step-by-step guide",
-      "source": "Hacker News",
-      "url": "https://ykdojo.github.io/claude-controls-mac/",
-      "summary": "详细指南教你用Claude Code远程控制闲置Mac电脑。",
-      "tags": [
-        "Claude",
-        "自动化"
-      ],
-      "importance": "high"
-    },
-    {
-      "title": "Our Approach to Bioresilience: Isomorphic Labs and Google DeepMind",
-      "source": "Hacker News",
-      "url": "https://deepmind.google/blog/our-approach-to-bioresilience/",
-      "summary": "Isomorphic Labs与Google DeepMind联合发布生物弹性（Bioresilience）研究路径。",
-      "tags": [
-        "生物弹性",
-        "AI制药"
-      ],
-      "importance": "high"
-    },
-    {
-      "title": "Gleam Is Now on Tangled",
-      "source": "Hacker News",
-      "url": "https://tangled.org/gleam.run/gleam",
-      "summary": "Gleam语言正式上线Tangled平台，获得社区广泛关注。",
-      "tags": [
-        "Gleam",
-        "新平台"
-      ],
-      "importance": "high"
-    },
-    {
-      "title": "If You Build It, They Will Come",
-      "source": "Hacker News",
-      "url": "https://www.benlandautaylor.com/p/if-you-build-it-they-will-come",
-      "summary": "一篇关于“如果你建造了，他们就会来”的创业与技术文章引发热议。",
-      "tags": [
-        "创业",
-        "技术哲学"
+        "Hacker"
       ],
       "importance": "medium"
     },
     {
-      "title": "Elixir-lang.org has a new design",
-      "source": "Hacker News",
-      "url": "https://elixir-lang.org/",
-      "summary": "Elixir语言官网推出全新设计，社区反响热烈。",
+      "title": "New research shows how AMIE, our medical AI, could help manage health conditions.",
+      "source": "Google AI Blog",
+      "url": "https://blog.google/innovation-and-ai/models-and-research/google-research/amie-for-disease-management-in-nature/",
+      "summary": "Research in “Nature” shows our conversational AI system matches primary care physicians in complex disease management.",
       "tags": [
-        "Elixir",
-        "网页设计"
+        "Google AI"
       ],
       "importance": "medium"
-    },
-    {
-      "title": "Show HN: Q3Edit – Edit and play Quake 3 maps in the browser",
-      "source": "Hacker News",
-      "url": "https://q3edit.com",
-      "summary": "Q3Edit：一个在浏览器中编辑并实时游玩Quake 3地图的开源项目。",
-      "tags": [
-        "游戏开发",
-        "WebAssembly"
-      ],
-      "importance": "medium"
-    },
-    {
-      "title": "GPT-5.6 used a prompt to close a 30-year gap in convex optimization",
-      "source": "Hacker News",
-      "url": "https://old.reddit.com/r/math/comments/1uxj3cy/after_openais_cdc_proof_announcement_gpt56_used_a/",
-      "summary": "GPT-5.6通过一个提示词解决了凸优化领域30年悬而未决的问题，成为今日最热门话题。",
-      "tags": [
-        "GPT-5.6",
-        "数学突破"
-      ],
-      "importance": "high"
-    },
-    {
-      "title": "What AI did to stackoverflow in a graph",
-      "source": "Hacker News",
-      "url": "https://data.stackexchange.com/stackoverflow/query/1953768#graph",
-      "summary": "一张图表清晰展示AI对Stack Overflow社区流量和回答数的巨大冲击。",
-      "tags": [
-        "Stack Overflow",
-        "AI影响"
-      ],
-      "importance": "high"
-    },
-    {
-      "title": "Fable 5 vs. GPT-5.6 Sol on an NP-Hard Problem: Does /goal help?",
-      "source": "Hacker News",
-      "url": "https://charlesazam.com/blog/fable-5-gpt-5-6-sol-goal/",
-      "summary": "对比测试Fable 5与GPT-5.6 Sol在NP困难问题上的表现，探讨/goal指令的帮助。",
-      "tags": [
-        "模型对比",
-        "NP-Hard"
-      ],
-      "importance": "high"
     }
   ],
   "sample": false

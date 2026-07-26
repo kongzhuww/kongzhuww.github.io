@@ -377,12 +377,12 @@ export default function KnowledgeBase() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="打开知识库"
-        className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-xs font-semibold text-[var(--heading)] transition hover:-translate-y-0.5 hover:border-emerald-400/40"
+        className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2 text-xs font-semibold text-[var(--heading)] transition hover:-translate-y-0.5 hover:border-emerald-400/40 sm:px-3.5"
       >
         <span className="grid h-5 w-5 place-items-center rounded-md bg-gradient-to-br from-emerald-400 to-sky-400 text-[#08121a]">
           <BookIcon />
         </span>
-        知识库
+        <span className="hidden sm:inline">知识库</span>
         {mounted && entries.length > 0 ? (
           <span className="rounded-full bg-[var(--surface-hover)] px-2 py-0.5 text-xs text-[var(--text)]">{entries.length}</span>
         ) : null}

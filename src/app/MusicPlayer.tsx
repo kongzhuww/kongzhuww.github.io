@@ -169,7 +169,7 @@ export default function MusicPlayer() {
       {!open ? (
         <button
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] py-1 pl-1 pr-3.5 text-xs font-semibold text-[var(--heading)] transition hover:-translate-y-0.5 hover:border-violet-400/40"
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] py-1 pl-1 pr-2 text-xs font-semibold text-[var(--heading)] transition hover:-translate-y-0.5 hover:border-violet-400/40 sm:pr-3.5"
         >
           <span className="grid h-6 w-6 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-400 text-[#08121a]">
             {current?.coverUrl ? (
@@ -180,9 +180,9 @@ export default function MusicPlayer() {
             )}
           </span>
           {mounted && current ? (
-            <span className="max-w-[7rem] truncate">{current.name}</span>
+            <span className="hidden max-w-[7rem] truncate sm:inline">{current.name}</span>
           ) : (
-            <span>塞壬电台</span>
+            <span className="hidden sm:inline">塞壬电台</span>
           )}
           {mounted && current ? (
             <span

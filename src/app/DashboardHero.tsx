@@ -144,11 +144,11 @@ export default function DashboardHero({
   return (
     <section className="relative w-full overflow-hidden border-b border-[var(--border)]">
       <div className="aurora-bg pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
-      <div className="relative mx-auto grid max-w-[1600px] gap-4 px-5 py-8 lg:grid-cols-[1.5fr_1fr]">
+      <div className="relative mx-auto grid max-w-[1600px] gap-3 px-4 py-6 sm:gap-4 sm:px-5 sm:py-8 lg:grid-cols-[1.5fr_1fr]">
         {/* Clock */}
-        <div className="glass rounded-3xl p-6">
+        <div className="glass rounded-3xl p-5 sm:p-6">
           <p className="text-sm font-medium text-[var(--muted)]">{greeting(h)}</p>
-          <p className="mt-2 font-mono text-5xl font-bold tabular-nums text-[var(--heading)] md:text-6xl" suppressHydrationWarning>
+          <p className="mt-2 font-mono text-4xl font-bold tabular-nums text-[var(--heading)] sm:text-5xl md:text-6xl" suppressHydrationWarning>
             {hh}:{mm}
             <span className="text-2xl text-[var(--muted)] md:text-3xl">:{ss}</span>
           </p>
@@ -158,13 +158,13 @@ export default function DashboardHero({
         </div>
 
         {/* Weather */}
-        <div className="glass rounded-3xl p-6">
+        <div className="glass rounded-3xl p-5 sm:p-6">
           <p className="text-sm font-medium text-[var(--muted)]">武汉 · 天气</p>
           {weather && w ? (
             <>
               <div className="mt-2 flex items-center gap-3">
-                <span className="text-5xl leading-none">{w.emoji}</span>
-                <span className="text-5xl font-bold tabular-nums text-[var(--heading)]">{weather.temp}°</span>
+                <span className="text-4xl leading-none sm:text-5xl">{w.emoji}</span>
+                <span className="text-4xl font-bold tabular-nums text-[var(--heading)] sm:text-5xl">{weather.temp}°</span>
               </div>
               <p className="mt-2 text-sm text-[var(--muted)]">
                 {w.label} · 最高 {weather.max}° / 最低 {weather.min}°

@@ -242,12 +242,12 @@ export default function TodoPanel() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="打开待办"
-        className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-xs font-semibold text-[var(--heading)] transition hover:-translate-y-0.5 hover:border-sky-400/40"
+        className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2 text-xs font-semibold text-[var(--heading)] transition hover:-translate-y-0.5 hover:border-sky-400/40 sm:px-3.5"
       >
         <span className="grid h-5 w-5 place-items-center rounded-md bg-gradient-to-br from-sky-400 to-indigo-400 text-[#08121a]">
           <CheckIcon />
         </span>
-        待办
+        <span className="hidden sm:inline">待办</span>
         {mounted && signedIn && total > 0 ? (
           <span className="rounded-full bg-[var(--surface-hover)] px-2 py-0.5 text-xs text-[var(--muted)]">{total}</span>
         ) : null}

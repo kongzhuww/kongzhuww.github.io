@@ -2,20 +2,22 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-type Row = {
-  repo_name: string;
+type Repo = {
+  id: number;
+  full_name: string;
+  html_url: string;
   description: string | null;
-  stars: string | number;
-  forks: string | number;
   language: string | null;
-  total_score?: string | number;
+  stargazers_count: number;
+  forks_count: number;
+  topics?: string[];
 };
 
-type Period = { key: string; label: string; value: string };
+type Period = { key: string; label: string; days: number };
 const PERIODS: Period[] = [
-  { key: "day", label: "今日", value: "past_24_hours" },
-  { key: "week", label: "本周", value: "past_week" },
-  { key: "month", label: "本月", value: "past_month" },
+  { key: "day", label: "今日", days: 2 },
+  { key: "week", label: "本周", days: 7 },
+  { key: "month", label: "本月", days: 30 },
 ];
 
 const LANGS = ["全部", "Python", "TypeScript", "JavaScript", "Go", "Rust", "C++", "Java"];
@@ -30,16 +32,19 @@ const LANG_COLOR: Record<string, string> = {
   Java: "#b07219",
 };
 
-function num(v: string | number | undefined) {
-  const n = typeof v === "number" ? v : parseInt(String(v ?? "0").replace(/[^0-9]/g, ""), 10);
-  if (Number.isNaN(n)) return "0";
+function num(n: number) {
   return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+}
+
+function sinceDate(days: number) {
+  const d = new Date(Date.now() - days * 86400000);
+  return d.toISOString().slice(0, 10);
 }
 
 type LoadState = "loading" | "ready" | "error";
 
 export default function Trending() {
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rows, setRows] = useState<Repo[]>([]);
   const [state, setState] = useState<LoadState>("loading");
   const [period, setPeriod] = useState<Period>(PERIODS[0]);
   const [lang, setLang] = useState("全部");
@@ -47,14 +52,14 @@ export default function Trending() {
   const load = useCallback(async () => {
     setState("loading");
     try {
-      const url = new URL("https://api.ossinsight.io/v1/trending/repos/");
-      url.searchParams.set("period", period.value);
-      if (lang !== "全部") url.searchParams.set("language", lang);
-      const res = await fetch(url.toString());
-      if (!res.ok) throw new Error(`ossinsight ${res.status}`);
+      const q =
+        `created:>${sinceDate(period.days)} stars:>0` + (lang !== "全部" ? ` language:${lang}` : "");
+      const url =
+        `https://api.github.com/search/repositories?q=${encodeURIComponent(q)}&sort=stars&order=desc&per_page=15`;
+      const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
+      if (!res.ok) throw new Error(`GitHub ${res.status}`);
       const data = await res.json();
-      const list = (data?.data?.rows ?? []) as Row[];
-      setRows(list.slice(0, 15));
+      setRows((data.items ?? []) as Repo[]);
       setState("ready");
     } catch {
       setState("error");
@@ -72,7 +77,7 @@ export default function Trending() {
           <span className="h-4 w-1 rounded-full bg-gradient-to-b from-orange-400 to-rose-400" aria-hidden="true" />
           <h2 className="text-xl font-semibold text-[var(--heading)]">GitHub 热榜</h2>
           <span className="rounded-full bg-[var(--surface)] px-2.5 py-0.5 text-xs font-medium text-[var(--muted)]">
-            🔥 Trending
+            🔥 新星榜
           </span>
         </div>
         <div className="flex rounded-full border border-[var(--border)] p-0.5">
@@ -90,7 +95,6 @@ export default function Trending() {
         </div>
       </div>
 
-      {/* language filter */}
       <div className="mb-5 flex flex-wrap gap-1.5">
         {LANGS.map((l) => (
           <button
@@ -115,25 +119,27 @@ export default function Trending() {
         </div>
       ) : state === "error" ? (
         <div className="glass rounded-2xl p-6 text-sm text-[var(--muted)]">
-          热榜数据源暂时不可用，稍后再试。
+          热榜暂时不可用（GitHub 搜索接口有频率限制，稍等一分钟再切换即可）。
         </div>
       ) : rows.length === 0 ? (
         <div className="glass rounded-2xl p-6 text-sm text-[var(--muted)]">这个筛选下暂无数据。</div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map((r, i) => {
-            const [owner, name] = r.repo_name.split("/");
+            const [owner, name] = r.full_name.split("/");
             return (
               <a
-                key={r.repo_name}
-                href={`https://github.com/${r.repo_name}`}
+                key={r.id}
+                href={r.html_url}
                 target="_blank"
                 rel="noreferrer"
                 className="glass glass-hover group flex gap-3 rounded-2xl p-4"
               >
                 <span
                   className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg text-sm font-bold ${
-                    i < 3 ? "bg-gradient-to-br from-orange-400 to-rose-400 text-[#08121a]" : "bg-[var(--surface-hover)] text-[var(--muted)]"
+                    i < 3
+                      ? "bg-gradient-to-br from-orange-400 to-rose-400 text-[#08121a]"
+                      : "bg-[var(--surface-hover)] text-[var(--muted)]"
                   }`}
                 >
                   {i + 1}
@@ -154,8 +160,8 @@ export default function Trending() {
                         {r.language}
                       </span>
                     ) : null}
-                    <span>⭐ {num(r.stars)}</span>
-                    {Number(r.forks) > 0 ? <span>⑂ {num(r.forks)}</span> : null}
+                    <span>⭐ {num(r.stargazers_count)}</span>
+                    {r.forks_count > 0 ? <span>⑂ {num(r.forks_count)}</span> : null}
                   </div>
                 </div>
               </a>

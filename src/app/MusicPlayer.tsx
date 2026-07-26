@@ -16,6 +16,9 @@ type SongDetail = {
   lyricUrl?: string;
   artists?: string[];
   albumCid?: string;
+  // Monster Siren serves official MVs for some songs on its own CDN.
+  mvUrl?: string;
+  mvCoverUrl?: string;
 };
 
 async function api<T>(path: string): Promise<T> {
@@ -38,9 +41,24 @@ function fmtTime(s: number) {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
+// Seek an element once it has enough metadata for currentTime to stick.
+function seekWhenReady(el: HTMLMediaElement | null, t: number) {
+  if (!el || !t) return;
+  if (el.readyState >= 1) {
+    el.currentTime = t;
+  } else {
+    const h = () => {
+      el.currentTime = t;
+      el.removeEventListener("loadedmetadata", h);
+    };
+    el.addEventListener("loadedmetadata", h);
+  }
+}
+
 export default function MusicPlayer() {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
+  const [focus, setFocus] = useState(false);
 
   const [albums, setAlbums] = useState<Album[]>([]);
   const [albumsState, setAlbumsState] = useState<"idle" | "loading" | "ready" | "error">("idle");
@@ -56,9 +74,17 @@ export default function MusicPlayer() {
   const [buffering, setBuffering] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const sourceCache = useRef<Map<string, SongDetail>>(new Map());
+  const prevCidRef = useRef<string | undefined>(undefined);
 
   useEffect(() => setMounted(true), []);
+
+  const usingVideo = focus && !!current?.mvUrl;
+  const activeEl = useCallback(
+    (): HTMLMediaElement | null => (usingVideo ? videoRef.current : audioRef.current),
+    [usingVideo],
+  );
 
   const loadAlbums = useCallback(async () => {
     if (albumsState === "ready" || albumsState === "loading") return;
@@ -105,13 +131,8 @@ export default function MusicPlayer() {
       setBuffering(true);
       try {
         const detail = await getSong(songs[i].cid);
-        setCurrent(detail);
-        const audio = audioRef.current;
-        if (audio) {
-          audio.src = detail.sourceUrl;
-          await audio.play();
-          setPlaying(true);
-        }
+        setCurrent(detail); // the playback effect below routes it to <audio>/<video>
+        setPlaying(true);
       } catch {
         setBuffering(false);
       }
@@ -119,14 +140,50 @@ export default function MusicPlayer() {
     [songs, getSong],
   );
 
-  function togglePlay() {
+  // Playback engine: route the current song to the <video> element (when in
+  // focus mode and it has an official MV) or the <audio> element otherwise,
+  // carrying the position across engine switches for the same song.
+  useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !current) return;
-    if (audio.paused) {
-      audio.play();
+    const video = videoRef.current;
+    if (!current) return;
+    const useVideo = focus && !!current.mvUrl;
+    const sameSong = prevCidRef.current === current.cid;
+    prevCidRef.current = current.cid;
+
+    if (useVideo && video) {
+      const mv = https(current.mvUrl)!;
+      if (video.getAttribute("src") !== mv) video.src = mv;
+      audio?.pause();
+      if (sameSong && audio && audio.currentTime) seekWhenReady(video, audio.currentTime);
+      video.play().catch(() => {});
+    } else if (audio) {
+      video?.pause();
+      if (audio.getAttribute("src") !== current.sourceUrl) audio.src = current.sourceUrl;
+      if (sameSong && video && video.currentTime) seekWhenReady(audio, video.currentTime);
+      audio.play().catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus, current]);
+
+  // Esc leaves focus mode
+  useEffect(() => {
+    if (!focus) return;
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFocus(false);
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [focus]);
+
+  function togglePlay() {
+    const el = activeEl();
+    if (!el || !current) return;
+    if (el.paused) {
+      el.play();
       setPlaying(true);
     } else {
-      audio.pause();
+      el.pause();
       setPlaying(false);
     }
   }
@@ -142,30 +199,37 @@ export default function MusicPlayer() {
   }, [index, songs, playAt]);
 
   function seek(e: React.ChangeEvent<HTMLInputElement>) {
-    const audio = audioRef.current;
-    if (!audio || !duration) return;
+    const el = activeEl();
+    if (!el || !duration) return;
     const t = (Number(e.target.value) / 100) * duration;
-    audio.currentTime = t;
+    el.currentTime = t;
     setProgress(t);
   }
+
+  // shared media event handlers (attached to both <audio> and <video>)
+  const onTime = (e: React.SyntheticEvent<HTMLMediaElement>) => setProgress(e.currentTarget.currentTime);
+  const onMeta = (e: React.SyntheticEvent<HTMLMediaElement>) => setDuration(e.currentTarget.duration);
+  const onPlayingEv = () => {
+    setBuffering(false);
+    setPlaying(true);
+  };
 
   return (
     <>
       {/* hidden audio element persists playback across panel open/close */}
       <audio
         ref={audioRef}
-        onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
-        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-        onPlaying={() => {
-          setBuffering(false);
-          setPlaying(true);
-        }}
+        onTimeUpdate={onTime}
+        onLoadedMetadata={onMeta}
+        onPlaying={onPlayingEv}
         onWaiting={() => setBuffering(true)}
-        onPause={() => setPlaying(false)}
+        onPause={() => {
+          if (activeEl() === audioRef.current) setPlaying(false);
+        }}
         onEnded={next}
       />
 
-      {/* Launcher / now-playing pill (bottom center) */}
+      {/* Launcher / now-playing pill */}
       {!open ? (
         <button
           onClick={() => setOpen(true)}
@@ -248,15 +312,12 @@ export default function MusicPlayer() {
             ) : !album ? (
               <div className="grid grid-cols-2 gap-3">
                 {albums.map((a) => (
-                  <button
-                    key={a.cid}
-                    onClick={() => openAlbum(a)}
-                    className="group text-left"
-                  >
+                  <button key={a.cid} onClick={() => openAlbum(a)} className="group text-left">
                     <div className="aspect-square overflow-hidden rounded-xl border border-[var(--border)]">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={https(a.coverUrl)} referrerPolicy="no-referrer"
+                        src={https(a.coverUrl)}
+                        referrerPolicy="no-referrer"
                         alt={a.name}
                         loading="lazy"
                         className="h-full w-full object-cover transition group-hover:scale-105"
@@ -314,6 +375,17 @@ export default function MusicPlayer() {
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setFocus(true)}
+                    title={current.mvUrl ? "专注模式 · 播放官方 MV" : "专注模式"}
+                    className={`grid h-8 w-8 place-items-center rounded-lg border transition ${
+                      current.mvUrl
+                        ? "border-violet-400/40 bg-violet-400/15 text-violet-300"
+                        : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--heading)]"
+                    }`}
+                  >
+                    <FocusIcon />
+                  </button>
                   <IconButton title="上一首" onClick={prev}><PrevIcon /></IconButton>
                   <button
                     onClick={togglePlay}
@@ -340,6 +412,78 @@ export default function MusicPlayer() {
           ) : null}
         </section>
       ) : null}
+
+      {/* Focus mode overlay (always mounted so <video> keeps its ref; hidden unless focused) */}
+      <div className={`fixed inset-0 z-[70] ${focus ? "flex" : "hidden"} flex-col bg-black`}>
+        <div className="flex items-center justify-between gap-3 px-5 py-4">
+          <div className="min-w-0">
+            <p className="truncate text-base font-semibold text-white">{current?.name ?? "专注模式"}</p>
+            <p className="truncate text-xs text-white/50">
+              {current?.mvUrl ? "明日方舟 · 官方 MV" : "明日方舟 · Monster Siren"}
+            </p>
+          </div>
+          <button
+            onClick={() => setFocus(false)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+          >
+            ✕ 退出专注
+          </button>
+        </div>
+
+        <div className="relative flex flex-1 items-center justify-center overflow-hidden">
+          <video
+            ref={videoRef}
+            playsInline
+            onTimeUpdate={onTime}
+            onLoadedMetadata={onMeta}
+            onPlaying={onPlayingEv}
+            onWaiting={() => setBuffering(true)}
+            onPause={() => {
+              if (activeEl() === videoRef.current) setPlaying(false);
+            }}
+            onEnded={next}
+            className={`max-h-full max-w-full ${current?.mvUrl ? "block" : "hidden"}`}
+          />
+          {!current?.mvUrl ? (
+            <div className="flex flex-col items-center gap-5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={https(current?.coverUrl || album?.coverUrl)}
+                referrerPolicy="no-referrer"
+                alt=""
+                className={`h-64 w-64 rounded-full object-cover shadow-2xl ring-4 ring-white/10 ${playing ? "animate-spin-slow" : ""}`}
+              />
+              <p className="text-sm text-white/50">本曲暂无官方 MV · 享受纯音乐 🎧</p>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="px-5 py-5">
+          <div className="mx-auto flex max-w-2xl items-center gap-3 text-[11px] text-white/60">
+            <span className="tabular-nums">{fmtTime(progress)}</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={duration ? (progress / duration) * 100 : 0}
+              onChange={seek}
+              className="h-1 flex-1 accent-violet-400"
+            />
+            <span className="tabular-nums">{fmtTime(duration)}</span>
+          </div>
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <button onClick={prev} className="grid h-11 w-11 place-items-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20">
+              <PrevIcon />
+            </button>
+            <button onClick={togglePlay} className="grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-400 text-[#08121a]">
+              {buffering ? <span className="text-sm">…</span> : playing ? <PauseIcon /> : <PlayIcon />}
+            </button>
+            <button onClick={next} className="grid h-11 w-11 place-items-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20">
+              <NextIcon />
+            </button>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
@@ -363,6 +507,14 @@ function MusicIcon() {
       <path d="M9 18V5l12-2v13" />
       <circle cx="6" cy="18" r="3" />
       <circle cx="18" cy="16" r="3" />
+    </svg>
+  );
+}
+function FocusIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" />
+      <circle cx="12" cy="12" r="3" />
     </svg>
   );
 }

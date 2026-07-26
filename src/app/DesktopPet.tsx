@@ -12,6 +12,7 @@ const CUR_KEY = "lw-pet-current";
 const DL_KEY = "lw-pet-downloaded";
 const SCALE_KEY = "lw-pet-scale";
 const FACE_KEY = "lw-pet-face";
+const WALK_KEY = "lw-pet-walk";
 
 const IDLE_ANIMS = ["Relax", "Idle", "Sit", "Interact_1", "Interact"];
 const MOVE_ANIMS = ["Move", "Walk", "Run", "move"];
@@ -54,9 +55,10 @@ export default function DesktopPet() {
   const [downloaded, setDownloaded] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(0.7); // default 小
   const [facing, setFacing] = useState<1 | -1>(1);
-  const [walking, setWalking] = useState(false);
+  const [walking, setWalking] = useState(true); // default 走路开
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const hostRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,6 +92,8 @@ export default function DesktopPet() {
       if (s > 0) setScale(s);
       const f = localStorage.getItem(FACE_KEY);
       if (f === "-1") setFacing(-1);
+      const wk = localStorage.getItem(WALK_KEY);
+      if (wk === "0") setWalking(false);
     } catch {
       /* ignore */
     }
@@ -266,6 +270,15 @@ export default function DesktopPet() {
     }
   }
 
+  function changeWalking(w: boolean) {
+    setWalking(w);
+    try {
+      localStorage.setItem(WALK_KEY, w ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }
+
   const interact = useCallback(() => {
     const player = playerRef.current;
     if (!player?.animationState) return;
@@ -328,23 +341,14 @@ export default function DesktopPet() {
       {/* Active pet */}
       {current ? (
         <div className="group fixed z-40 select-none" style={style}>
-          {/* control toolbar */}
-          <div className="mb-1 flex flex-wrap items-center justify-center gap-1 opacity-0 transition group-hover:opacity-100">
-            <button onClick={() => changeScale(0.7)} title="小" className={scale === 0.7 ? ctrlOn : ctrlBtn}>小</button>
-            <button onClick={() => changeScale(1)} title="中" className={scale === 1 ? ctrlOn : ctrlBtn}>中</button>
-            <button onClick={() => changeScale(1.4)} title="大" className={scale === 1.4 ? ctrlOn : ctrlBtn}>大</button>
-            <span className="mx-0.5 text-[var(--dim)]">·</span>
-            <button onClick={() => changeFacing(-1)} title="朝左" className={facing === -1 ? ctrlOn : ctrlBtn}>⬅</button>
-            <button onClick={() => changeFacing(1)} title="朝右" className={facing === 1 ? ctrlOn : ctrlBtn}>➡</button>
-            <span className="mx-0.5 text-[var(--dim)]">·</span>
-            <button onClick={() => setWalking((w) => !w)} title="走路" className={walking ? ctrlOn : ctrlBtn}>🚶</button>
-            <button onClick={openPicker} title="换干员" className={ctrlBtn}>🔀</button>
-            <button onClick={dismiss} title="收起" className={ctrlBtn}>✕</button>
-          </div>
           <div
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setMenuOpen((v) => !v);
+            }}
             className="relative cursor-grab touch-none active:cursor-grabbing"
             style={{ width: BASE_W, height: BASE_H }}
           >
@@ -359,9 +363,51 @@ export default function DesktopPet() {
               <div className="pointer-events-none absolute inset-x-0 bottom-0 text-center text-[10px] text-rose-400">加载失败</div>
             ) : null}
             <div className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white opacity-0 transition group-hover:opacity-100">
-              {current.name}
+              {current.name} · 右键设置
             </div>
           </div>
+
+          {/* Right-click config menu */}
+          {menuOpen ? (
+            <>
+              <div className="fixed inset-0 z-[45]" onClick={() => setMenuOpen(false)} onContextMenu={(e) => { e.preventDefault(); setMenuOpen(false); }} aria-hidden="true" />
+              <div className="absolute bottom-full left-1/2 z-[46] mb-2 w-44 -translate-x-1/2 rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-2.5 text-sm shadow-2xl">
+                <p className="mb-2 truncate px-1 text-[11px] font-semibold text-[var(--heading)]">{current.name}</p>
+
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-[var(--muted)]">走路</span>
+                  <button
+                    onClick={() => changeWalking(!walking)}
+                    className={walking ? ctrlOn : ctrlBtn}
+                  >
+                    {walking ? "开" : "关"}
+                  </button>
+                </div>
+
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-[var(--muted)]">大小</span>
+                  <div className="flex gap-1">
+                    <button onClick={() => changeScale(0.7)} className={scale === 0.7 ? ctrlOn : ctrlBtn}>小</button>
+                    <button onClick={() => changeScale(1)} className={scale === 1 ? ctrlOn : ctrlBtn}>中</button>
+                    <button onClick={() => changeScale(1.4)} className={scale === 1.4 ? ctrlOn : ctrlBtn}>大</button>
+                  </div>
+                </div>
+
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-[var(--muted)]">朝向</span>
+                  <div className="flex gap-1">
+                    <button onClick={() => changeFacing(-1)} className={facing === -1 ? ctrlOn : ctrlBtn}>⬅</button>
+                    <button onClick={() => changeFacing(1)} className={facing === 1 ? ctrlOn : ctrlBtn}>➡</button>
+                  </div>
+                </div>
+
+                <div className="mt-2 flex gap-1 border-t border-[var(--border)] pt-2">
+                  <button onClick={() => { setMenuOpen(false); openPicker(); }} className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[11px] text-[var(--muted)] transition hover:text-[var(--heading)]">🔀 换干员</button>
+                  <button onClick={() => { setMenuOpen(false); dismiss(); }} className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[11px] text-[var(--muted)] transition hover:text-[var(--heading)]">✕ 隐藏</button>
+                </div>
+              </div>
+            </>
+          ) : null}
         </div>
       ) : null}
 

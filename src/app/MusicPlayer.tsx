@@ -25,6 +25,12 @@ async function api<T>(path: string): Promise<T> {
   return (json && json.data !== undefined ? json.data : json) as T;
 }
 
+// Cover images can come back as http:// which a https page blocks as mixed
+// content — force https.
+function https(u?: string) {
+  return u ? u.replace(/^http:\/\//, "https://") : u;
+}
+
 function fmtTime(s: number) {
   if (!Number.isFinite(s) || s < 0) return "0:00";
   const m = Math.floor(s / 60);
@@ -168,7 +174,7 @@ export default function MusicPlayer() {
           <span className="grid h-8 w-8 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-400 text-[#08121a]">
             {current?.coverUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={current.coverUrl} alt="" className={`h-full w-full object-cover ${playing ? "animate-spin-slow" : ""}`} />
+              <img src={https(current.coverUrl)} referrerPolicy="no-referrer" alt="" className={`h-full w-full object-cover ${playing ? "animate-spin-slow" : ""}`} />
             ) : (
               <MusicIcon />
             )}
@@ -250,7 +256,7 @@ export default function MusicPlayer() {
                     <div className="aspect-square overflow-hidden rounded-xl border border-[var(--border)]">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={a.coverUrl}
+                        src={https(a.coverUrl)} referrerPolicy="no-referrer"
                         alt={a.name}
                         loading="lazy"
                         className="h-full w-full object-cover transition group-hover:scale-105"
@@ -264,7 +270,7 @@ export default function MusicPlayer() {
               <div>
                 <div className="mb-4 flex gap-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={album.coverUrl} alt="" className="h-20 w-20 rounded-xl border border-[var(--border)] object-cover" />
+                  <img src={https(album.coverUrl)} referrerPolicy="no-referrer" alt="" className="h-20 w-20 rounded-xl border border-[var(--border)] object-cover" />
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-[var(--heading)]">{album.name}</p>
                     <p className="mt-1 text-xs text-[var(--muted)]">{songsLoading ? "加载中…" : `${songs.length} 首`}</p>
@@ -300,7 +306,7 @@ export default function MusicPlayer() {
             <div className="border-t border-[var(--border)] bg-[var(--surface)] px-4 py-3">
               <div className="mb-2 flex items-center gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={current.coverUrl || album?.coverUrl} alt="" className="h-10 w-10 rounded-lg object-cover" />
+                <img src={https(current.coverUrl || album?.coverUrl)} referrerPolicy="no-referrer" alt="" className="h-10 w-10 rounded-lg object-cover" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-[var(--heading)]">{current.name}</p>
                   <p className="truncate text-[11px] text-[var(--muted)]">

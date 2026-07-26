@@ -14,8 +14,8 @@ const PROXIES = {
 // exposes /stats. Requests from a VPS IP are not risk-controlled like Cloudflare
 // IPs. IMPORTANT: Cloudflare Workers cannot fetch a raw IP (error 1003) — this
 // MUST be a hostname. vps.logicweaver.me is a grey-cloud (DNS-only) A record
-// pointing at the VPS, which listens on 443 (plain HTTP on that port).
-const BILI_VPS = "http://vps.logicweaver.me:443";
+// pointing at the VPS, which listens on 8080 (plain HTTP on that port).
+const BILI_VPS = "http://vps.logicweaver.me:8080";
 
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
@@ -86,7 +86,7 @@ export default {
 
     // Version probe so we can confirm which worker build is live.
     if (url.pathname === "/__version") {
-      return new Response("worker v6 · bili->vps.logicweaver.me:443 · /vps route · from-github", {
+      return new Response("worker v9 · bili->vps.logicweaver.me:8080 · /vps/* route · from-github", {
         headers: { "Content-Type": "text/plain", "Access-Control-Allow-Origin": "*" },
       });
     }
@@ -112,7 +112,7 @@ export default {
       }
     }
 
-    // VPS probe: /vps/stats -> http://<vps>:8080/stats
+    // VPS probe: /vps/* -> VPS /*  (e.g. /vps/stats -> VPS /stats)
     if (url.pathname.startsWith("/vps/")) {
       try {
         const ctrl = new AbortController();

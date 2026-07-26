@@ -8,7 +8,6 @@ import { getSupabase, SUPABASE_ENABLED } from "./supabaseClient";
 
 const WEATHER_URL =
   "https://api.open-meteo.com/v1/forecast?latitude=30.59&longitude=114.31&current=temperature_2m,weather_code,apparent_temperature&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FShanghai";
-const HITOKOTO_URL = "https://v1.hitokoto.cn/?c=a&c=b&c=d&c=i&c=k&encode=json";
 const GH_EVENTS_URL = "https://api.github.com/users/kongzhuww/events/public?per_page=10";
 
 const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
@@ -77,7 +76,6 @@ export default function DashboardHero({
 }) {
   const [now, setNow] = useState<Date | null>(null);
   const [weather, setWeather] = useState<{ temp: number; code: number; max: number; min: number } | null>(null);
-  const [quote, setQuote] = useState<{ text: string; from: string } | null>(null);
   const [playing, setPlaying] = useState<{ name: string; title: string } | null>(null);
   const [event, setEvent] = useState<EventDesc | null>(null);
 
@@ -99,11 +97,6 @@ export default function DashboardHero({
         });
       })
       .catch(() => {});
-
-    fetch(HITOKOTO_URL)
-      .then((r) => r.json())
-      .then((d) => setQuote({ text: d.hitokoto, from: d.from || "" }))
-      .catch(() => setQuote({ text: "道路终会汇聚。", from: "" }));
 
     fetch(GH_EVENTS_URL)
       .then((r) => (r.ok ? r.json() : []))
@@ -151,7 +144,7 @@ export default function DashboardHero({
   return (
     <section className="relative w-full overflow-hidden border-b border-[var(--border)]">
       <div className="aurora-bg pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
-      <div className="relative mx-auto grid max-w-[1600px] gap-4 px-5 py-8 lg:grid-cols-[1.5fr_1fr_1.2fr]">
+      <div className="relative mx-auto grid max-w-[1600px] gap-4 px-5 py-8 lg:grid-cols-[1.5fr_1fr]">
         {/* Clock */}
         <div className="glass rounded-3xl p-6">
           <p className="text-sm font-medium text-[var(--muted)]">{greeting(h)}</p>
@@ -179,19 +172,6 @@ export default function DashboardHero({
             </>
           ) : (
             <div className="mt-3 h-16 animate-pulse rounded-xl bg-[var(--surface-hover)]" />
-          )}
-        </div>
-
-        {/* Hitokoto */}
-        <div className="glass flex flex-col justify-center rounded-3xl p-6">
-          <span className="text-3xl leading-none text-[var(--dim)]">“</span>
-          {quote ? (
-            <>
-              <p className="text-lg font-medium leading-relaxed text-[var(--text)]">{quote.text}</p>
-              {quote.from ? <p className="mt-2 text-right text-sm text-[var(--muted)]">—— {quote.from}</p> : null}
-            </>
-          ) : (
-            <div className="h-12 animate-pulse rounded-xl bg-[var(--surface-hover)]" />
           )}
         </div>
 

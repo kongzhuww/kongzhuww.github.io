@@ -13,11 +13,13 @@ type TodoistTask = {
   priority?: number; // 1..4, 4 = urgent
   due?: TodoistDue;
   project_id?: string;
+  section_id?: string | null;
+  labels?: string[];
   is_completed?: boolean;
-  url?: string;
 };
 
-type TodoistProject = { id: string; name: string; color?: string };
+type TodoistProject = { id: string; name: string; color?: string; is_inbox_project?: boolean };
+type TodoistSection = { id: string; name: string; order?: number; project_id?: string };
 
 type Filter = { key: string; label: string; query?: string };
 
@@ -27,7 +29,6 @@ const FILTERS: Filter[] = [
   { key: "all", label: "全部" },
 ];
 
-// Todoist REST priority: 4=urgent ... 1=normal. Map to colour + label.
 const PRIORITY: Record<number, { color: string; label: string }> = {
   4: { color: "#ef4444", label: "P1" },
   3: { color: "#f59e0b", label: "P2" },
@@ -40,24 +41,34 @@ function dueLabel(due: TodoistDue): { text: string; overdue: boolean } | null {
   const raw = due.datetime || due.date!;
   const d = new Date(raw);
   if (Number.isNaN(d.getTime())) return { text: due.string || "", overdue: false };
-  const today = new Date();
-  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const startOfDue = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const overdue = startOfDue.getTime() < startOfToday.getTime();
-  const fmt = new Intl.DateTimeFormat("zh-CN", { month: "2-digit", day: "2-digit" }).format(d);
-  return { text: fmt, overdue };
+  const now = new Date();
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startDue = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const overdue = startDue.getTime() < startToday.getTime();
+  const text = new Intl.DateTimeFormat("zh-CN", { month: "2-digit", day: "2-digit" }).format(d);
+  return { text, overdue };
 }
 
 export default function TodoPanel() {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [view, setView] = useState<"list" | "board">("list");
+
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
 
   const [tasks, setTasks] = useState<TodoistTask[]>([]);
-  const [projects, setProjects] = useState<Record<string, string>>({});
+  const [projectsMap, setProjectsMap] = useState<Record<string, string>>({});
   const [filter, setFilter] = useState<Filter>(FILTERS[0]);
+
+  // board state
+  const [projects, setProjects] = useState<TodoistProject[]>([]);
+  const [boardProjectId, setBoardProjectId] = useState<string | null>(null);
+  const [sections, setSections] = useState<TodoistSection[]>([]);
+  const [boardTasks, setBoardTasks] = useState<TodoistTask[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [draft, setDraft] = useState("");
@@ -90,39 +101,68 @@ export default function TodoPanel() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const loadTasks = useCallback(async () => {
-    const supabase = getSupabase();
-    if (!supabase || !session) return;
+  const invoke = useCallback(
+    async (payload: Record<string, unknown>): Promise<Record<string, unknown>> => {
+      const supabase = getSupabase();
+      if (!supabase) return { error: "no client" };
+      const { data, error: err } = await supabase.functions.invoke("todoist", { body: payload });
+      if (err && !data) return { error: err.message };
+      return (data ?? {}) as Record<string, unknown>;
+    },
+    [],
+  );
+
+  const loadList = useCallback(async () => {
+    if (!session) return;
     setLoading(true);
     setError("");
-    const { data, error: err } = await supabase.functions.invoke("todoist", {
-      body: { action: "list", filter: filter.query },
-    });
+    const data = await invoke({ action: "list", filter: filter.query });
     setLoading(false);
-    if (err || (data && data.error)) {
-      setError((data && data.error) || err?.message || "读取失败");
-      return;
-    }
-    const list = (data?.tasks ?? []) as TodoistTask[];
-    const projList = (data?.projects ?? []) as TodoistProject[];
+    if (data?.error) return setError(String(data.error));
     const pmap: Record<string, string> = {};
-    for (const p of projList) pmap[p.id] = p.name;
-    setProjects(pmap);
-    setTasks(list);
-  }, [session, filter]);
+    for (const p of (data.projects ?? []) as TodoistProject[]) pmap[p.id] = p.name;
+    setProjectsMap(pmap);
+    setTasks((data.tasks ?? []) as TodoistTask[]);
+  }, [session, filter, invoke]);
+
+  const loadBoard = useCallback(
+    async (projectId?: string | null) => {
+      if (!session) return;
+      setLoading(true);
+      setError("");
+      const data = await invoke({ action: "board", project_id: projectId ?? undefined });
+      setLoading(false);
+      if (data?.error) return setError(String(data.error));
+      setProjects((data.projects ?? []) as TodoistProject[]);
+      setSections((data.sections ?? []) as TodoistSection[]);
+      setBoardTasks((data.tasks ?? []) as TodoistTask[]);
+      setBoardProjectId((data.projectId as string) ?? null);
+    },
+    [session, invoke],
+  );
 
   useEffect(() => {
-    if (open && signedIn) loadTasks();
-  }, [open, signedIn, loadTasks]);
+    if (!open || !signedIn) return;
+    if (view === "list") loadList();
+    else loadBoard(boardProjectId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, signedIn, view, filter]);
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setFullscreen((fs) => {
+        if (fs) return false;
+        setOpen(false);
+        return fs;
+      });
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const sorted = useMemo(() => {
+  const sortedList = useMemo(() => {
     return [...tasks].sort((a, b) => {
       const da = a.due?.datetime || a.due?.date || "9999";
       const db = b.due?.datetime || b.due?.date || "9999";
@@ -131,15 +171,33 @@ export default function TodoPanel() {
     });
   }, [tasks]);
 
+  const columns = useMemo(() => {
+    const secs = [...sections].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const bySection: Record<string, TodoistTask[]> = { none: [] };
+    for (const s of secs) bySection[s.id] = [];
+    for (const t of boardTasks) {
+      const key = t.section_id && bySection[t.section_id] ? t.section_id : "none";
+      bySection[key].push(t);
+    }
+    const cols: { id: string; name: string; tasks: TodoistTask[] }[] = [
+      { id: "none", name: "无分区", tasks: bySection.none },
+      ...secs.map((s) => ({ id: s.id, name: s.name, tasks: bySection[s.id] ?? [] })),
+    ];
+    return cols.filter((c) => c.id !== "none" || c.tasks.length > 0);
+  }, [sections, boardTasks]);
+
+  function removeLocal(id: string) {
+    setTasks((t) => t.filter((x) => x.id !== id));
+    setBoardTasks((t) => t.filter((x) => x.id !== id));
+  }
+
   async function completeTask(id: string) {
-    const prev = tasks;
-    setTasks((t) => t.filter((x) => x.id !== id)); // optimistic
-    const supabase = getSupabase();
-    const { data, error: err } = await supabase!.functions.invoke("todoist", {
-      body: { action: "complete", id },
-    });
-    if (err || (data && data.error) || (data && data.ok === false)) {
-      setTasks(prev); // rollback
+    const prevA = tasks, prevB = boardTasks;
+    removeLocal(id);
+    const data = await invoke({ action: "complete", id });
+    if (data?.error || data?.ok === false) {
+      setTasks(prevA);
+      setBoardTasks(prevB);
       flash("完成失败");
       return;
     }
@@ -151,19 +209,16 @@ export default function TodoPanel() {
     const content = draft.trim();
     if (!content) return;
     setAdding(true);
-    const supabase = getSupabase();
-    const { data, error: err } = await supabase!.functions.invoke("todoist", {
-      body: { action: "add", content, due: draftDue.trim() || undefined },
-    });
+    const payload: Record<string, unknown> = { action: "add", content, due: draftDue.trim() || undefined };
+    if (view === "board" && boardProjectId) payload.project_id = boardProjectId;
+    const data = await invoke(payload);
     setAdding(false);
-    if (err || (data && data.error) || (data && data.ok === false)) {
-      flash("添加失败");
-      return;
-    }
+    if (data?.error || data?.ok === false) return flash("添加失败");
     setDraft("");
     setDraftDue("");
     flash("已添加");
-    loadTasks();
+    if (view === "list") loadList();
+    else loadBoard(boardProjectId);
   }
 
   async function handleGithubLogin() {
@@ -179,9 +234,11 @@ export default function TodoPanel() {
 
   if (!cloud) return null;
 
+  const total = view === "board" ? boardTasks.length : tasks.length;
+
   return (
     <>
-      {/* Launcher (bottom-left, opposite the knowledge base) */}
+      {/* Launcher (bottom-left) */}
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="打开待办"
@@ -193,10 +250,8 @@ export default function TodoPanel() {
           <CheckIcon />
         </span>
         待办
-        {mounted && signedIn && tasks.length > 0 ? (
-          <span className="rounded-full bg-[var(--surface-hover)] px-2 py-0.5 text-xs text-[var(--muted)]">
-            {tasks.length}
-          </span>
+        {mounted && signedIn && total > 0 ? (
+          <span className="rounded-full bg-[var(--surface-hover)] px-2 py-0.5 text-xs text-[var(--muted)]">{total}</span>
         ) : null}
       </button>
 
@@ -208,7 +263,11 @@ export default function TodoPanel() {
         <section
           role="dialog"
           aria-label="待办"
-          className="fixed inset-x-3 bottom-3 top-16 z-50 flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--panel)] shadow-2xl sm:inset-auto sm:bottom-5 sm:left-5 sm:top-auto sm:h-[78vh] sm:max-h-[720px] sm:w-[400px]"
+          className={
+            fullscreen
+              ? "fixed inset-0 z-50 flex flex-col overflow-hidden bg-[var(--panel)]"
+              : "fixed inset-x-3 bottom-3 top-16 z-50 flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--panel)] shadow-2xl sm:inset-auto sm:bottom-5 sm:left-5 sm:top-auto sm:h-[80vh] sm:max-h-[760px] sm:w-[440px]"
+          }
         >
           {/* Title bar */}
           <header className="flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3">
@@ -219,17 +278,28 @@ export default function TodoPanel() {
               <div className="leading-tight">
                 <p className="text-sm font-semibold text-[var(--heading)]">待办 · Todoist</p>
                 <p className="text-[11px] text-[var(--muted)]">
-                  {!mounted ? "加载中…" : !signedIn ? "请先登录" : `${tasks.length} 项${loading ? " · 同步中" : ""}`}
+                  {!mounted ? "加载中…" : !signedIn ? "请先登录" : `${total} 项${loading ? " · 同步中" : ""}`}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-1">
               {signedIn ? (
-                <IconButton title="刷新" onClick={loadTasks}>
-                  <RefreshIcon />
-                </IconButton>
+                <>
+                  <IconButton title="刷新" onClick={() => (view === "list" ? loadList() : loadBoard(boardProjectId))}>
+                    <RefreshIcon />
+                  </IconButton>
+                  <IconButton title={fullscreen ? "收起" : "展开整页"} onClick={() => setFullscreen((v) => !v)}>
+                    {fullscreen ? <MinimizeIcon /> : <MaximizeIcon />}
+                  </IconButton>
+                </>
               ) : null}
-              <IconButton title="关闭" onClick={() => setOpen(false)}>
+              <IconButton
+                title="关闭"
+                onClick={() => {
+                  setOpen(false);
+                  setFullscreen(false);
+                }}
+              >
                 <CloseIcon />
               </IconButton>
             </div>
@@ -253,107 +323,86 @@ export default function TodoPanel() {
           ) : (
             <>
               {/* Quick add */}
-              <form onSubmit={addTask} className="space-y-2 border-b border-[var(--border)] px-4 py-3">
+              <form onSubmit={addTask} className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-3">
                 <input
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   placeholder="添加任务…"
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--dim)] outline-none focus:border-sky-400/40"
+                  className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--dim)] outline-none focus:border-sky-400/40"
                 />
-                <div className="flex items-center gap-2">
-                  <input
-                    value={draftDue}
-                    onChange={(e) => setDraftDue(e.target.value)}
-                    placeholder="何时（今天/明天/下周一，可空）"
-                    className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs text-[var(--text)] placeholder:text-[var(--dim)] outline-none focus:border-sky-400/40"
-                  />
-                  <button
-                    type="submit"
-                    disabled={adding || !draft.trim()}
-                    className="shrink-0 rounded-lg bg-gradient-to-br from-sky-400 to-indigo-400 px-3 py-2 text-sm font-semibold text-[#08121a] transition hover:opacity-90 disabled:opacity-50"
-                  >
-                    + 添加
-                  </button>
-                </div>
+                <input
+                  value={draftDue}
+                  onChange={(e) => setDraftDue(e.target.value)}
+                  placeholder="何时"
+                  className="w-24 shrink-0 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2 text-xs text-[var(--text)] placeholder:text-[var(--dim)] outline-none focus:border-sky-400/40"
+                />
+                <button
+                  type="submit"
+                  disabled={adding || !draft.trim()}
+                  className="shrink-0 rounded-lg bg-gradient-to-br from-sky-400 to-indigo-400 px-3 py-2 text-sm font-semibold text-[#08121a] transition hover:opacity-90 disabled:opacity-50"
+                >
+                  +
+                </button>
               </form>
 
-              {/* Filters */}
-              <div className="flex gap-1.5 border-b border-[var(--border)] px-4 py-2.5">
-                {FILTERS.map((f) => (
-                  <button
-                    key={f.key}
-                    onClick={() => setFilter(f)}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                      filter.key === f.key
-                        ? "bg-sky-400 text-[#08121a]"
-                        : "border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--border-strong)]"
-                    }`}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
+              {/* View switch + context */}
+              <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-2.5">
+                <div className="flex rounded-lg border border-[var(--border)] p-0.5">
+                  <ViewTab active={view === "list"} onClick={() => setView("list")}>
+                    列表
+                  </ViewTab>
+                  <ViewTab active={view === "board"} onClick={() => setView("board")}>
+                    看板
+                  </ViewTab>
+                </div>
 
-              {/* Task list */}
-              <div className="flex-1 overflow-y-auto px-4 py-3">
-                {error ? (
-                  <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-300">
-                    {error}
-                  </div>
-                ) : loading && tasks.length === 0 ? (
-                  <div className="space-y-2">
-                    {[0, 1, 2, 3].map((i) => (
-                      <div key={i} className="h-12 animate-pulse rounded-xl bg-[var(--surface)]" />
+                {view === "list" ? (
+                  <div className="flex gap-1.5">
+                    {FILTERS.map((f) => (
+                      <button
+                        key={f.key}
+                        onClick={() => setFilter(f)}
+                        className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                          filter.key === f.key
+                            ? "bg-sky-400 text-[#08121a]"
+                            : "border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--border-strong)]"
+                        }`}
+                      >
+                        {f.label}
+                      </button>
                     ))}
                   </div>
-                ) : sorted.length === 0 ? (
-                  <div className="grid h-full place-items-center px-6 text-center">
-                    <div>
-                      <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] text-sky-400">
-                        <CheckIcon />
-                      </div>
-                      <p className="text-sm font-medium text-[var(--text)]">没有任务 🎉</p>
-                      <p className="mt-1 text-xs text-[var(--dim)]">这个筛选下没有待办</p>
-                    </div>
-                  </div>
                 ) : (
-                  <div className="space-y-1.5">
-                    {sorted.map((task) => {
-                      const pr = PRIORITY[task.priority ?? 1] ?? PRIORITY[1];
-                      const due = dueLabel(task.due ?? null);
-                      return (
-                        <div
-                          key={task.id}
-                          className="group flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 transition hover:border-[var(--border-strong)]"
-                        >
-                          <button
-                            onClick={() => completeTask(task.id)}
-                            aria-label="完成"
-                            className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition hover:bg-sky-400/20"
-                            style={{ borderColor: pr.color }}
-                          >
-                            <span className="opacity-0 transition group-hover:opacity-100" style={{ color: pr.color }}>
-                              <TinyCheck />
-                            </span>
-                          </button>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm leading-snug text-[var(--text)]">{task.content}</p>
-                            <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px]">
-                              {due ? (
-                                <span className={due.overdue ? "font-semibold text-rose-400" : "text-[var(--muted)]"}>
-                                  {task.due?.is_recurring ? "🔁 " : ""}
-                                  {due.text}
-                                </span>
-                              ) : null}
-                              {task.project_id && projects[task.project_id] ? (
-                                <span className="text-[var(--dim)]">#{projects[task.project_id]}</span>
-                              ) : null}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <select
+                    value={boardProjectId ?? ""}
+                    onChange={(e) => loadBoard(e.target.value)}
+                    className="max-w-[55%] truncate rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-xs text-[var(--text)] outline-none focus:border-sky-400/40"
+                  >
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.is_inbox_project ? "收件箱" : p.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {view === "board" && !fullscreen ? (
+                  <span className="ml-auto text-[10px] text-[var(--dim)]">建议展开 ⤢</span>
+                ) : null}
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-hidden">
+                {error ? (
+                  <div className="m-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-300">{error}</div>
+                ) : view === "list" ? (
+                  <ListView
+                    tasks={sortedList}
+                    loading={loading}
+                    projectsMap={projectsMap}
+                    onComplete={completeTask}
+                  />
+                ) : (
+                  <BoardView columns={columns} loading={loading} onComplete={completeTask} />
                 )}
               </div>
             </>
@@ -367,6 +416,161 @@ export default function TodoPanel() {
         </section>
       ) : null}
     </>
+  );
+}
+
+function ListView({
+  tasks,
+  loading,
+  projectsMap,
+  onComplete,
+}: {
+  tasks: TodoistTask[];
+  loading: boolean;
+  projectsMap: Record<string, string>;
+  onComplete: (id: string) => void;
+}) {
+  if (loading && tasks.length === 0) {
+    return (
+      <div className="space-y-2 p-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="h-12 animate-pulse rounded-xl bg-[var(--surface)]" />
+        ))}
+      </div>
+    );
+  }
+  if (tasks.length === 0) return <EmptyState />;
+  return (
+    <div className="h-full overflow-y-auto px-4 py-3">
+      <div className="mx-auto max-w-3xl space-y-1.5">
+        {tasks.map((t) => (
+          <TaskCard key={t.id} task={t} projectName={t.project_id ? projectsMap[t.project_id] : undefined} onComplete={onComplete} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BoardView({
+  columns,
+  loading,
+  onComplete,
+}: {
+  columns: { id: string; name: string; tasks: TodoistTask[] }[];
+  loading: boolean;
+  onComplete: (id: string) => void;
+}) {
+  if (loading && columns.every((c) => c.tasks.length === 0)) {
+    return (
+      <div className="flex h-full gap-3 overflow-x-auto p-4">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="h-40 w-72 shrink-0 animate-pulse rounded-2xl bg-[var(--surface)]" />
+        ))}
+      </div>
+    );
+  }
+  if (columns.length === 0) return <EmptyState />;
+  return (
+    <div className="flex h-full gap-3 overflow-x-auto overflow-y-hidden p-4">
+      {columns.map((col) => (
+        <div key={col.id} className="flex h-full w-72 shrink-0 flex-col">
+          <div className="mb-2 flex items-center gap-2 px-1">
+            <h3 className="text-sm font-semibold text-[var(--heading)]">{col.name}</h3>
+            <span className="rounded-full bg-[var(--surface-hover)] px-1.5 py-0.5 text-[10px] text-[var(--muted)]">
+              {col.tasks.length}
+            </span>
+          </div>
+          <div className="flex-1 space-y-2 overflow-y-auto pr-1">
+            {col.tasks.map((t) => (
+              <TaskCard key={t.id} task={t} onComplete={onComplete} card />
+            ))}
+            {col.tasks.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-[var(--border)] p-4 text-center text-xs text-[var(--dim)]">空</div>
+            ) : null}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TaskCard({
+  task,
+  projectName,
+  onComplete,
+  card,
+}: {
+  task: TodoistTask;
+  projectName?: string;
+  onComplete: (id: string) => void;
+  card?: boolean;
+}) {
+  const pr = PRIORITY[task.priority ?? 1] ?? PRIORITY[1];
+  const due = dueLabel(task.due ?? null);
+  return (
+    <div
+      className={`group flex items-start gap-3 border border-[var(--border)] bg-[var(--surface)] p-3 transition hover:border-[var(--border-strong)] ${
+        card ? "rounded-2xl" : "rounded-xl"
+      }`}
+    >
+      <button
+        onClick={() => onComplete(task.id)}
+        aria-label="完成"
+        className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition hover:bg-sky-400/20"
+        style={{ borderColor: pr.color }}
+      >
+        <span className="opacity-0 transition group-hover:opacity-100" style={{ color: pr.color }}>
+          <TinyCheck />
+        </span>
+      </button>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm leading-snug text-[var(--text)]">{task.content}</p>
+        {task.description ? (
+          <p className="mt-0.5 line-clamp-2 text-[11px] leading-5 text-[var(--dim)]">{task.description}</p>
+        ) : null}
+        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px]">
+          {due ? (
+            <span className={due.overdue ? "font-semibold text-rose-400" : "text-[var(--muted)]"}>
+              {task.due?.is_recurring ? "🔁 " : "📅 "}
+              {due.text}
+            </span>
+          ) : null}
+          {projectName ? <span className="text-[var(--dim)]">#{projectName}</span> : null}
+          {(task.labels ?? []).map((l) => (
+            <span key={l} className="rounded-full bg-sky-400/10 px-1.5 py-0.5 text-[10px] text-sky-300">
+              @{l}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="grid h-full place-items-center px-6 text-center">
+      <div>
+        <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] text-sky-400">
+          <CheckIcon />
+        </div>
+        <p className="text-sm font-medium text-[var(--text)]">没有任务 🎉</p>
+        <p className="mt-1 text-xs text-[var(--dim)]">这里是空的</p>
+      </div>
+    </div>
+  );
+}
+
+function ViewTab({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
+        active ? "bg-sky-400 text-[#08121a]" : "text-[var(--muted)] hover:text-[var(--heading)]"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -408,6 +612,20 @@ function RefreshIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5" />
+    </svg>
+  );
+}
+function MaximizeIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+    </svg>
+  );
+}
+function MinimizeIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M16 21v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
     </svg>
   );
 }

@@ -261,10 +261,10 @@ export default function Home() {
               <span className="text-[var(--text)]">{status.text} · 每天 08:00</span>
             </span>
             <a
-              href="/reports/latest.json"
+              href="#bili"
               className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-xs font-semibold text-[var(--text)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
             >
-              查看 JSON
+              B站收藏
             </a>
             <a
               href="https://github.com/kongzhuww/kongzhuww.github.io"

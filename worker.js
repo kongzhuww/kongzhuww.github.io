@@ -18,6 +18,59 @@ const UA =
 // Cached across requests in the same isolate.
 let biliCookie = null;
 
+// Minimal browser-fingerprint payload used to "activate" a fresh buvid so the
+// favourites endpoints stop returning HTTP 412 (risk control).
+function activatePayload(uuid) {
+  return {
+    "3064": 1,
+    "5062": String(1700000000000),
+    "03bf": "https://www.bilibili.com/",
+    "39c8": "333.1007.fp.risk",
+    "34f1": "",
+    "d402": "",
+    "654a": "",
+    "6e7c": "1920x1080",
+    "3c43": {
+      "2673": 0,
+      "5766": 24,
+      "6527": 0,
+      "7003": 1,
+      "807e": 1,
+      "b8ce": UA,
+      "641c": 0,
+      "07a4": "zh-CN",
+      "1c57": "not available",
+      "0bd0": 16,
+      "748e": [1920, 1080],
+      "d61f": [1920, 1040],
+      "fc9d": -480,
+      "6aa9": "Asia/Shanghai",
+      "75b8": 1,
+      "3b21": 1,
+      "8a1c": 0,
+      "d52f": "not available",
+      "b8c6": "",
+      "ba75": "",
+      "9dff": "",
+      "5271": 0,
+      "f4c2": uuid,
+    },
+    "54ef": "{}",
+    "8b94": "",
+    "df35": uuid,
+    "07a4": "zh-CN",
+    "5f45": null,
+    "db46": 0,
+  };
+}
+
+function uuid() {
+  const s = "0123456789abcdef";
+  let out = "";
+  for (let i = 0; i < 32; i++) out += s[(i * 7 + 13) % 16];
+  return `${out.slice(0, 8)}-${out.slice(8, 12)}-${out.slice(12, 16)}-${out.slice(16, 20)}-${out.slice(20)}infoc`;
+}
+
 async function getBiliCookie() {
   if (biliCookie) return biliCookie;
   try {
@@ -27,7 +80,24 @@ async function getBiliCookie() {
     const j = await r.json();
     const b3 = j?.data?.b_3;
     const b4 = j?.data?.b_4;
-    if (b3) biliCookie = `buvid3=${b3}; buvid4=${b4 || ""}`;
+    if (!b3) return "";
+    const cookie = `buvid3=${b3}; buvid4=${b4 || ""}; b_nut=${Math.floor(Date.now() / 1000)}; _uuid=${uuid()}`;
+    // Activate the buvid so the risk-control (HTTP 412) is cleared.
+    try {
+      await fetch("https://api.bilibili.com/x/internal/gaia-gateway/ExClimbWuzhi", {
+        method: "POST",
+        headers: {
+          "User-Agent": UA,
+          Referer: "https://www.bilibili.com/",
+          "Content-Type": "application/json",
+          Cookie: cookie,
+        },
+        body: JSON.stringify({ payload: JSON.stringify(activatePayload(uuid())) }),
+      });
+    } catch {
+      /* activation best-effort */
+    }
+    biliCookie = cookie;
   } catch {
     /* ignore */
   }

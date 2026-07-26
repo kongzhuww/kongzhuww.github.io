@@ -10,9 +10,11 @@ const PROXIES = {
   "/aihot/": { base: "https://aihot.virxact.com/api" },
 };
 
-// The user's VPS runs a tiny Bilibili proxy (see bili-proxy.py). Requests from
-// a VPS IP are not risk-controlled the way Cloudflare IPs are.
-const BILI_VPS = "http://161.33.198.117:8787";
+// The user's VPS runs a tiny proxy (bili-proxy.py) that forwards to Bilibili and
+// exposes /stats. Requests from a VPS IP are not risk-controlled like Cloudflare
+// IPs. NOTE: Cloudflare Workers may only fetch a fixed set of ports — 8080 is
+// allowed, 8787 is NOT.
+const BILI_VPS = "http://161.33.198.117:8080";
 
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
@@ -97,6 +99,25 @@ export default {
       } catch (e) {
         return new Response(JSON.stringify({ error: String(e) }), {
           status: 502,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        });
+      }
+    }
+
+    // VPS probe: /vps/stats -> http://<vps>:8080/stats
+    if (url.pathname.startsWith("/vps/")) {
+      try {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 4000);
+        const upstream = await fetch(BILI_VPS + url.pathname.slice("/vps".length) + url.search, {
+          headers: { Accept: "application/json" },
+          signal: ctrl.signal,
+        });
+        clearTimeout(t);
+        return corsJson(upstream);
+      } catch (e) {
+        return new Response(JSON.stringify({ error: String(e), offline: true }), {
+          status: 200,
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
         });
       }

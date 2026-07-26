@@ -6,6 +6,7 @@ import TodoPanel from "./TodoPanel";
 import Projects from "./Projects";
 import Bili from "./Bili";
 import Heybox from "./Heybox";
+import VpsProbe from "./VpsProbe";
 import Trending from "./Trending";
 import AiHot from "./AiHot";
 import MusicPlayer from "./MusicPlayer";
@@ -482,6 +483,9 @@ export default function Home() {
 
       {/* ---------- Heybox favourites (jump link) ---------- */}
       <Heybox />
+
+      {/* ---------- VPS probe ---------- */}
+      <VpsProbe />
 
       {/* ---------- Footer ---------- */}
       <footer className="border-t border-[var(--border)]">

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import KnowledgeBase from "./KnowledgeBase";
 import TodoPanel from "./TodoPanel";
 import Projects from "./Projects";
+import Bili from "./Bili";
 import Trending from "./Trending";
 import MusicPlayer from "./MusicPlayer";
 
@@ -518,6 +519,9 @@ export default function Home() {
 
       {/* ---------- GitHub projects ---------- */}
       <Projects />
+
+      {/* ---------- Bilibili favourites ---------- */}
+      <Bili />
 
       {/* ---------- Footer ---------- */}
       <footer className="border-t border-[var(--border)]">

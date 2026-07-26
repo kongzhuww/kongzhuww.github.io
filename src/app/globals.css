@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #060911;
+  --foreground: #e6edf6;
 }
 
 @theme inline {
@@ -12,15 +12,168 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Aurora / mesh backdrop that lives behind the whole page */
+.aurora-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background:
+    radial-gradient(60rem 60rem at 12% -10%, rgba(16, 185, 129, 0.16), transparent 60%),
+    radial-gradient(50rem 50rem at 100% 0%, rgba(56, 189, 248, 0.14), transparent 55%),
+    radial-gradient(48rem 48rem at 50% 120%, rgba(139, 92, 246, 0.14), transparent 55%),
+    var(--background);
+}
+
+.aurora-bg::before,
+.aurora-bg::after {
+  content: "";
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.aurora-bg::before {
+  width: 40rem;
+  height: 40rem;
+  top: -10rem;
+  left: -8rem;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.5), transparent 65%);
+  animation: drift 22s ease-in-out infinite;
+}
+
+.aurora-bg::after {
+  width: 34rem;
+  height: 34rem;
+  top: 20%;
+  right: -10rem;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.45), transparent 65%);
+  animation: drift 28s ease-in-out infinite reverse;
+}
+
+/* Faint grid overlay for a technical feel */
+.grid-overlay {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(120% 120% at 50% 0%, #000 30%, transparent 75%);
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(3rem, 2rem, 0) scale(1.12); }
+}
+
+/* Glass surface */
+.glass {
+  background: color-mix(in srgb, #0d1420 78%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-hover {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s ease, box-shadow 0.35s ease, background 0.35s ease;
+}
+
+.glass-hover:hover {
+  transform: translateY(-3px);
+  border-color: rgba(52, 211, 153, 0.35);
+  box-shadow: 0 20px 45px -25px rgba(16, 185, 129, 0.55);
+}
+
+/* Gradient text */
+.text-gradient {
+  background: linear-gradient(120deg, #ffffff 0%, #a7f3d0 45%, #7dd3fc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Animated conic ring for the logo */
+.ring-spin {
+  background: conic-gradient(from 0deg, #34d399, #38bdf8, #a78bfa, #34d399);
+  animation: spin 6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Entrance animation */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-rise {
+  animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Status pulse dot */
+.pulse-dot {
+  position: relative;
+}
+.pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+  opacity: 0.6;
+  animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.4);
+  background-clip: content-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  .aurora-bg::before,
+  .aurora-bg::after,
+  .ring-spin,
+  .animate-rise {
+    animation: none !important;
+  }
+  html { scroll-behavior: auto; }
 }

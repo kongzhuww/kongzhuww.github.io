@@ -38,9 +38,15 @@ function fmtTime(s: number) {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
-// Look up a Bilibili video for a song (its official/most-relevant MV) via the
-// Worker's /bili proxy, which forwards to Bilibili through the user's VPS.
-async function searchBiliBvid(keyword: string): Promise<string | null> {
+// Official Arknights uploaders on Bilibili (MVs come from these accounts).
+const OFFICIAL_MIDS = new Set([161775300]); // 明日方舟
+const OFFICIAL_NAMES = new Set(["明日方舟", "塞壬唱片-MSR", "塞壬唱片"]);
+
+type BiliHit = { bvid: string | null; official: boolean };
+
+// Look up a Bilibili video for a song (prefer the official MV) via the Worker's
+// /bili proxy, which forwards to Bilibili through the user's VPS.
+async function searchBiliBvid(keyword: string): Promise<BiliHit> {
   try {
     const r = await fetch(
       `/bili/x/web-interface/search/type?search_type=video&page=1&keyword=${encodeURIComponent(keyword)}`,
@@ -48,11 +54,13 @@ async function searchBiliBvid(keyword: string): Promise<string | null> {
     );
     const j = await r.json();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const list: any[] = j?.data?.result ?? [];
-    const hit = list.find((v) => v?.bvid);
-    return hit?.bvid ?? null;
+    const list: any[] = (j?.data?.result ?? []).filter((v: any) => v?.bvid);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const official = list.find((v: any) => OFFICIAL_MIDS.has(v.mid) || OFFICIAL_NAMES.has(v.author));
+    if (official) return { bvid: official.bvid, official: true };
+    return { bvid: list[0]?.bvid ?? null, official: false };
   } catch {
-    return null;
+    return { bvid: null, official: false };
   }
 }
 
@@ -76,11 +84,12 @@ export default function MusicPlayer() {
 
   // Bilibili MV state for focus mode
   const [bvid, setBvid] = useState<string | null>(null);
+  const [bvidOfficial, setBvidOfficial] = useState(false);
   const [bvidState, setBvidState] = useState<"idle" | "loading" | "ready" | "empty">("idle");
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const sourceCache = useRef<Map<string, SongDetail>>(new Map());
-  const bvidCache = useRef<Map<string, string | null>>(new Map());
+  const bvidCache = useRef<Map<string, BiliHit>>(new Map());
   const currentRef = useRef<SongDetail | null>(null);
   const wasPlayingRef = useRef(false);
   currentRef.current = current;
@@ -207,19 +216,21 @@ export default function MusicPlayer() {
     if (!focus || !current) return;
     let cancelled = false;
     const cid = current.cid;
+    const apply = (hit: BiliHit) => {
+      setBvid(hit.bvid);
+      setBvidOfficial(hit.official);
+      setBvidState(hit.bvid ? "ready" : "empty");
+    };
     if (bvidCache.current.has(cid)) {
-      const cached = bvidCache.current.get(cid) ?? null;
-      setBvid(cached);
-      setBvidState(cached ? "ready" : "empty");
+      apply(bvidCache.current.get(cid)!);
       return;
     }
     setBvid(null);
     setBvidState("loading");
-    searchBiliBvid(`${current.name} 明日方舟`).then((bv) => {
+    searchBiliBvid(`${current.name} 明日方舟`).then((hit) => {
       if (cancelled) return;
-      bvidCache.current.set(cid, bv);
-      setBvid(bv);
-      setBvidState(bv ? "ready" : "empty");
+      bvidCache.current.set(cid, hit);
+      apply(hit);
     });
     return () => {
       cancelled = true;
@@ -441,7 +452,9 @@ export default function MusicPlayer() {
           <div className="flex items-center justify-between gap-3 px-5 py-4">
             <div className="min-w-0">
               <p className="truncate text-base font-semibold text-white">{current?.name ?? "专注模式"}</p>
-              <p className="truncate text-xs text-white/50">明日方舟 · 来自 Bilibili</p>
+              <p className="truncate text-xs text-white/50">
+                {bvidState === "ready" ? (bvidOfficial ? "明日方舟 · 官方 MV" : "Bilibili · 相关视频（非官方）") : "明日方舟 · Bilibili"}
+              </p>
             </div>
             <button
               onClick={() => setFocus(false)}

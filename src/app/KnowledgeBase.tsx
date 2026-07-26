@@ -70,6 +70,9 @@ export default function KnowledgeBase() {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const [showTags, setShowTags] = useState(true);
+  const listRef = useRef<HTMLDivElement>(null);
+  const lastScrollY = useRef(0);
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
@@ -187,6 +190,16 @@ export default function KnowledgeBase() {
       })
       .sort((a, b) => b.updatedAt - a.updatedAt);
   }, [entries, query, activeTag]);
+
+  function onListScroll() {
+    const el = listRef.current;
+    if (!el) return;
+    const y = el.scrollTop;
+    if (y < 48) setShowTags(true);
+    else if (y > lastScrollY.current + 6) setShowTags(false);
+    else if (y < lastScrollY.current - 6) setShowTags(true);
+    lastScrollY.current = y;
+  }
 
   function resetDraft() {
     setEditingId(null);
@@ -486,6 +499,15 @@ export default function KnowledgeBase() {
                       className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2 pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus:border-emerald-400/40 focus:bg-white/[0.06]"
                     />
                   </div>
+                  {allTags.length > 0 ? (
+                    <button
+                      onClick={() => setShowTags((v) => !v)}
+                      title={showTags ? "收起标签" : "展开标签"}
+                      className="shrink-0 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-slate-300 transition hover:border-white/25"
+                    >
+                      标签 {showTags ? "▴" : "▾"}
+                    </button>
+                  ) : null}
                   <button
                     onClick={openComposer}
                     className="shrink-0 rounded-xl bg-gradient-to-br from-emerald-400 to-sky-400 px-3 py-2 text-sm font-semibold text-[#08121a] transition hover:opacity-90"
@@ -494,15 +516,21 @@ export default function KnowledgeBase() {
                   </button>
                 </div>
                 {allTags.length > 0 ? (
-                  <div className={`mt-2.5 flex flex-wrap gap-1.5 ${fullscreen ? "mx-auto w-full max-w-5xl" : ""}`}>
-                    <TagChip active={activeTag === null} onClick={() => setActiveTag(null)}>
-                      全部
-                    </TagChip>
-                    {allTags.map((t) => (
-                      <TagChip key={t} active={activeTag === t} onClick={() => setActiveTag(activeTag === t ? null : t)}>
-                        #{t}
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${
+                      showTags ? "mt-2.5 max-h-36 opacity-100" : "max-h-0 opacity-0"
+                    } ${fullscreen ? "mx-auto w-full max-w-5xl" : ""}`}
+                  >
+                    <div className="flex max-h-36 flex-wrap gap-1.5 overflow-y-auto pr-1">
+                      <TagChip active={activeTag === null} onClick={() => setActiveTag(null)}>
+                        全部
                       </TagChip>
-                    ))}
+                      {allTags.map((t) => (
+                        <TagChip key={t} active={activeTag === t} onClick={() => setActiveTag(activeTag === t ? null : t)}>
+                          #{t}
+                        </TagChip>
+                      ))}
+                    </div>
                   </div>
                 ) : null}
               </div>
@@ -551,7 +579,11 @@ export default function KnowledgeBase() {
               ) : null}
 
               {/* List */}
-              <div className={`flex-1 overflow-y-auto py-3 ${fullscreen ? "px-4 sm:px-6" : "px-4"}`}>
+              <div
+                ref={listRef}
+                onScroll={onListScroll}
+                className={`flex-1 overflow-y-auto py-3 ${fullscreen ? "px-4 sm:px-6" : "px-4"}`}
+              >
                 {!mounted ? null : filtered.length === 0 ? (
                   <EmptyState hasEntries={entries.length > 0} onAdd={openComposer} />
                 ) : (

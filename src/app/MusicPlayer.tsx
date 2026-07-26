@@ -38,6 +38,23 @@ function fmtTime(s: number) {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
+type LyricLine = { t: number; text: string };
+
+// Parse an LRC lyric file into timestamped lines.
+function parseLRC(txt: string): LyricLine[] {
+  const out: LyricLine[] = [];
+  for (const line of txt.split(/\r?\n/)) {
+    const stamps = [...line.matchAll(/\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?\]/g)];
+    const text = line.replace(/\[[^\]]*\]/g, "").trim();
+    if (!stamps.length || !text) continue;
+    for (const g of stamps) {
+      const t = Number(g[1]) * 60 + Number(g[2]) + (g[3] ? Number(`0.${g[3]}`) : 0);
+      out.push({ t, text });
+    }
+  }
+  return out.sort((a, b) => a.t - b.t);
+}
+
 // Known Arknights-official uploaders on Bilibili (used to boost, then badge).
 const OFFICIAL_MIDS = new Set([161775300]); // 明日方舟
 const OFFICIAL_NAMES = new Set(["明日方舟", "塞壬唱片-MSR", "塞壬唱片"]);
@@ -92,6 +109,7 @@ export default function MusicPlayer() {
   const [bvidAuthor, setBvidAuthor] = useState("");
   const [bvidState, setBvidState] = useState<"idle" | "loading" | "ready" | "empty">("idle");
   const [tvPos, setTvPos] = useState<{ x: number; y: number } | null>(null);
+  const [lyrics, setLyrics] = useState<LyricLine[]>([]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const sourceCache = useRef<Map<string, SongDetail>>(new Map());
@@ -140,6 +158,23 @@ export default function MusicPlayer() {
     sourceCache.current.set(cid, d);
     return d;
   }, []);
+
+  // Load synced lyrics (LRC) for the current song.
+  useEffect(() => {
+    setLyrics([]);
+    const url = current?.lyricUrl;
+    if (!url) return;
+    let cancelled = false;
+    fetch(https(url)!)
+      .then((r) => r.text())
+      .then((txt) => {
+        if (!cancelled) setLyrics(parseLRC(txt));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [current]);
 
   const playAt = useCallback(
     async (i: number) => {
@@ -269,6 +304,15 @@ export default function MusicPlayer() {
     ? { left: tvPos.x, top: tvPos.y, right: "auto", bottom: "auto" }
     : { right: 20, bottom: 20 };
 
+  // current synced lyric line
+  let li = -1;
+  for (let i = 0; i < lyrics.length; i++) {
+    if (lyrics[i].t <= progress + 0.2) li = i;
+    else break;
+  }
+  const curLyric = li >= 0 ? lyrics[li].text : lyrics.length ? "♪ ♪ ♪" : "";
+  const nextLyric = li + 1 < lyrics.length ? lyrics[li + 1].text : "";
+
   return (
     <>
       {/* hidden audio element persists playback across panel open/close */}
@@ -300,7 +344,7 @@ export default function MusicPlayer() {
             )}
           </span>
           {mounted && current ? (
-            <span className="hidden max-w-[7rem] truncate sm:inline">{current.name}</span>
+            <span className="hidden max-w-[6rem] truncate lg:inline">{current.name}</span>
           ) : (
             <span className="hidden sm:inline">塞壬电台</span>
           )}
@@ -453,6 +497,12 @@ export default function MusicPlayer() {
                   <IconButton title="下一首" onClick={next}><NextIcon /></IconButton>
                 </div>
               </div>
+              {lyrics.length > 0 ? (
+                <div className="mb-2 rounded-xl bg-[var(--surface-hover)]/60 px-3 py-2 text-center">
+                  <p className="truncate text-sm font-semibold text-violet-300">{curLyric}</p>
+                  <p className="truncate text-[11px] text-[var(--dim)]">{nextLyric || "​"}</p>
+                </div>
+              ) : null}
               <div className="flex items-center gap-2 text-[10px] text-[var(--dim)]">
                 <span className="tabular-nums">{fmtTime(progress)}</span>
                 <input

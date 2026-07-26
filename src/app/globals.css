@@ -16,16 +16,19 @@
   border-color: color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+}
+
+/* Skip rendering work for cards that are scrolled off-screen.
+   contain-intrinsic-size reserves an estimated height so the scrollbar
+   stays stable. Big win for long lists on lower-powered devices. */
+.card-cv {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
 }
 
 /* Aurora / mesh backdrop that lives behind the whole page.
@@ -36,6 +39,9 @@ body {
   inset: 0;
   z-index: -1;
   overflow: hidden;
+  transform: translateZ(0);
+  will-change: transform;
+  contain: strict;
   background:
     radial-gradient(60rem 60rem at 12% -10%, rgba(16, 185, 129, 0.18), transparent 60%),
     radial-gradient(50rem 50rem at 100% 0%, rgba(56, 189, 248, 0.15), transparent 55%),

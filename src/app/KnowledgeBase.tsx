@@ -566,7 +566,7 @@ export default function KnowledgeBase() {
                       <article
                         key={entry.id}
                         className={`group rounded-xl border border-white/8 bg-white/[0.03] transition hover:border-white/20 hover:bg-white/[0.05] ${
-                          fullscreen ? "p-5" : "p-3.5"
+                          fullscreen ? "p-5" : "p-3.5 card-cv"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">

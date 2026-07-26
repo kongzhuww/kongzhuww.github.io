@@ -96,7 +96,7 @@ export default function Bili() {
 
   if (foldersState === "error") {
     return (
-      <section className="mx-auto max-w-7xl px-5 py-10">
+      <section id="bili" className="mx-auto max-w-7xl px-5 py-10 scroll-mt-20">
         <div className="mb-5 flex items-center gap-3">
           <span className="h-4 w-1 rounded-full bg-gradient-to-b from-pink-400 to-rose-400" aria-hidden="true" />
           <h2 className="text-xl font-semibold text-[var(--heading)]">B站收藏</h2>
@@ -109,7 +109,7 @@ export default function Bili() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-5 py-10">
+    <section id="bili" className="mx-auto max-w-7xl px-5 py-10 scroll-mt-20">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="h-4 w-1 rounded-full bg-gradient-to-b from-pink-400 to-rose-400" aria-hidden="true" />

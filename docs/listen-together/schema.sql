@@ -26,5 +26,10 @@ create policy "now_playing public read"
 -- No anon INSERT/UPDATE policy: all writes go through the `now-playing`
 -- Edge Function using the service-role key (which bypasses RLS).
 
+-- Table-level grants: the Edge Function writes as service_role; the website
+-- reads as anon. (Without these you get "permission denied for table".)
+grant all privileges on table public.now_playing to service_role;
+grant select on table public.now_playing to anon, authenticated;
+
 -- Enable Realtime so the website updates live.
 alter publication supabase_realtime add table public.now_playing;

@@ -165,7 +165,8 @@ export default function MusicPlayer() {
     const url = current?.lyricUrl;
     if (!url) return;
     let cancelled = false;
-    fetch(https(url)!)
+    // Route through the Worker's /lyric proxy — the CDN has no CORS headers.
+    fetch(`/lyric?url=${encodeURIComponent(https(url)!)}`)
       .then((r) => r.text())
       .then((txt) => {
         if (!cancelled) setLyrics(parseLRC(txt));
@@ -343,11 +344,7 @@ export default function MusicPlayer() {
               <MusicIcon />
             )}
           </span>
-          {mounted && current ? (
-            <span className="hidden max-w-[6rem] truncate lg:inline">{current.name}</span>
-          ) : (
-            <span className="hidden sm:inline">塞壬电台</span>
-          )}
+          {mounted && current ? null : <span className="hidden sm:inline">塞壬电台</span>}
           {mounted && current ? (
             <span
               onClick={(e) => {

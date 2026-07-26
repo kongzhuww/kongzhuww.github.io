@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import KnowledgeBase from "./KnowledgeBase";
 import TodoPanel from "./TodoPanel";
 import Projects from "./Projects";
+import GitHubStars from "./GitHubStars";
 import Bili from "./Bili";
 import Heybox from "./Heybox";
 import VpsProbe from "./VpsProbe";
@@ -514,6 +515,9 @@ export default function Home() {
         </section>
       </div>
       ) : null}
+
+      {/* ---------- GitHub starred repos, categorised ---------- */}
+      <GitHubStars />
 
       {/* ---------- GitHub projects ---------- */}
       <Projects />

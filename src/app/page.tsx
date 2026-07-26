@@ -5,6 +5,7 @@ import KnowledgeBase from "./KnowledgeBase";
 import TodoPanel from "./TodoPanel";
 import Projects from "./Projects";
 import Bili from "./Bili";
+import Heybox from "./Heybox";
 import Trending from "./Trending";
 import AiHot from "./AiHot";
 import MusicPlayer from "./MusicPlayer";
@@ -526,6 +527,9 @@ export default function Home() {
 
       {/* ---------- Bilibili favourites ---------- */}
       <Bili />
+
+      {/* ---------- Heybox favourites (jump link) ---------- */}
+      <Heybox />
 
       {/* ---------- Footer ---------- */}
       <footer className="border-t border-[var(--border)]">

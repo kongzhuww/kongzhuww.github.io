@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import KnowledgeBase from "./KnowledgeBase";
+import TodoPanel from "./TodoPanel";
 
 type SourceName = "HuggingFace Blog" | "OpenAI News" | "Hacker News" | "Google AI Blog";
 
@@ -522,8 +523,9 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Floating personal knowledge base */}
+      {/* Floating personal knowledge base + Todoist sync */}
       <KnowledgeBase />
+      <TodoPanel />
     </main>
   );
 }

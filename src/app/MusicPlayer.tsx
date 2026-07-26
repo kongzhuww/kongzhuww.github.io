@@ -104,6 +104,7 @@ export default function MusicPlayer() {
   const [album, setAlbum] = useState<Album | null>(null);
   const [songs, setSongs] = useState<Song[]>([]);
   const [songsLoading, setSongsLoading] = useState(false);
+  const [allSongs, setAllSongs] = useState<Song[]>([]); // whole library = play queue
 
   const [current, setCurrent] = useState<SongDetail | null>(null);
   const [index, setIndex] = useState(-1);
@@ -171,6 +172,15 @@ export default function MusicPlayer() {
     if (open) loadAlbums();
   }, [open, loadAlbums]);
 
+  // The playback queue is the whole Monster Siren catalog, so prev/next can
+  // cross album boundaries. Fetch it once when the panel first opens.
+  useEffect(() => {
+    if (!open || allSongs.length) return;
+    api<{ list: Song[] }>("/songs")
+      .then((d) => setAllSongs(d.list ?? []))
+      .catch(() => {});
+  }, [open, allSongs.length]);
+
   async function openAlbum(a: Album) {
     setAlbum(a);
     setSongs([]);
@@ -213,11 +223,11 @@ export default function MusicPlayer() {
 
   const playAt = useCallback(
     async (i: number) => {
-      if (i < 0 || i >= songs.length) return;
+      if (i < 0 || i >= allSongs.length) return;
       setIndex(i);
       setBuffering(true);
       try {
-        const detail = await getSong(songs[i].cid);
+        const detail = await getSong(allSongs[i].cid);
         setCurrent(detail);
         const audio = audioRef.current;
         if (audio && !tv) {
@@ -231,7 +241,35 @@ export default function MusicPlayer() {
         setBuffering(false);
       }
     },
-    [songs, getSong, tv],
+    [allSongs, getSong, tv],
+  );
+
+  // Play a song by cid, locating it in the global queue (used by the album list).
+  const playByCid = useCallback(
+    async (cid: string) => {
+      const gi = allSongs.findIndex((s) => s.cid === cid);
+      if (gi >= 0) {
+        playAt(gi);
+        return;
+      }
+      // queue not ready yet — play it standalone
+      setBuffering(true);
+      try {
+        const detail = await getSong(cid);
+        setCurrent(detail);
+        const audio = audioRef.current;
+        if (audio && !tv) {
+          audio.src = detail.sourceUrl;
+          await audio.play();
+          setPlaying(true);
+        } else {
+          setBuffering(false);
+        }
+      } catch {
+        setBuffering(false);
+      }
+    },
+    [allSongs, playAt, getSong, tv],
   );
 
   function togglePlay() {
@@ -247,20 +285,22 @@ export default function MusicPlayer() {
   }
 
   const next = useCallback(() => {
-    if (songs.length === 0) return;
-    if (mode === "shuffle" && songs.length > 1) {
+    const n = allSongs.length;
+    if (n === 0) return;
+    if (mode === "shuffle" && n > 1) {
       let r = index;
-      while (r === index) r = Math.floor(Math.random() * songs.length);
+      while (r === index) r = Math.floor(Math.random() * n);
       playAt(r);
       return;
     }
-    playAt((index + 1) % songs.length);
-  }, [index, songs, playAt, mode]);
+    playAt((index + 1) % n);
+  }, [index, allSongs, playAt, mode]);
 
   const prev = useCallback(() => {
-    if (songs.length === 0) return;
-    playAt((index - 1 + songs.length) % songs.length);
-  }, [index, songs, playAt]);
+    const n = allSongs.length;
+    if (n === 0) return;
+    playAt((index - 1 + n) % n);
+  }, [index, allSongs, playAt]);
 
   // end-of-track behaviour depends on the play mode
   const onEnded = useCallback(() => {
@@ -560,7 +600,7 @@ export default function MusicPlayer() {
                     return (
                       <button
                         key={s.cid}
-                        onClick={() => playAt(i)}
+                        onClick={() => playByCid(s.cid)}
                         className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition ${
                           active ? "bg-violet-400/15" : "hover:bg-[var(--surface)]"
                         }`}

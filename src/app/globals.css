@@ -113,6 +113,14 @@ body {
   box-shadow: 0 20px 45px -25px rgba(16, 185, 129, 0.55);
 }
 
+/* Slowly rotating album art on the music pill */
+@keyframes spin-slow-kf {
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow-kf 8s linear infinite;
+}
+
 /* Gradient text */
 .text-gradient {
   background: linear-gradient(120deg, var(--grad-a) 0%, var(--grad-b) 45%, var(--grad-c) 100%);

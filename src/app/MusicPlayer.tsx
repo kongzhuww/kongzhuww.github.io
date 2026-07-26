@@ -169,8 +169,14 @@ export default function MusicPlayer() {
   }, [albumsState]);
 
   useEffect(() => {
-    if (open) loadAlbums();
-  }, [open, loadAlbums]);
+    loadAlbums(); // on mount, so we have album covers for the pre-loaded track
+  }, [loadAlbums]);
+
+  const albumCover = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const a of albums) m[a.cid] = a.coverUrl;
+    return m;
+  }, [albums]);
 
   // The playback queue is the whole Monster Siren catalog, so prev/next can
   // cross album boundaries. Fetch it once on mount (so the bar can pre-load a song).
@@ -449,9 +455,10 @@ export default function MusicPlayer() {
   const barSub = instrumental ? "" : nextLyric;
 
   // publish now-playing state (title + line + controls state) to the header bar
+  const cover = https(current?.coverUrl || (current?.albumCid ? albumCover[current.albumCid] : "")) || "";
   useEffect(() => {
-    setNowPlaying({ title: current?.name ?? "", cover: https(current?.coverUrl) || "", line: barLine, sub: barSub, hasSong: !!current, playing, mode });
-  }, [barLine, barSub, current, playing, mode]);
+    setNowPlaying({ title: current?.name ?? "", cover, line: barLine, sub: barSub, hasSong: !!current, playing, mode });
+  }, [cover, barLine, barSub, current, playing, mode]);
   useEffect(() => () => setNowPlaying({ title: "", line: "", sub: "", hasSong: false, playing: false }), []);
 
   // register playback controls for the header bar (stable wrappers → latest fns)
@@ -571,9 +578,9 @@ export default function MusicPlayer() {
           className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] py-1 pl-1 pr-2 text-xs font-semibold text-[var(--heading)] transition hover:-translate-y-0.5 hover:border-violet-400/40 sm:pr-3.5"
         >
           <span className="grid h-6 w-6 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-400 text-[#08121a]">
-            {current?.coverUrl ? (
+            {cover ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={https(current.coverUrl)} referrerPolicy="no-referrer" alt="" className={`h-full w-full object-cover ${playing ? "animate-spin-slow" : ""}`} />
+              <img src={cover} referrerPolicy="no-referrer" alt="" className={`h-full w-full object-cover ${playing ? "animate-spin-slow" : ""}`} />
             ) : (
               <MusicIcon />
             )}

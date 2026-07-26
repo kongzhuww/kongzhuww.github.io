@@ -69,6 +69,7 @@ function formatWhen(ts: number) {
 export default function KnowledgeBase() {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
@@ -151,7 +152,14 @@ export default function KnowledgeBase() {
   // close on Escape
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setFullscreen((fs) => {
+        if (fs) return false;
+        setOpen(false);
+        return fs;
+      });
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
@@ -377,7 +385,11 @@ export default function KnowledgeBase() {
         <section
           role="dialog"
           aria-label="知识库"
-          className="fixed inset-x-3 bottom-3 top-16 z-50 flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0a121c]/95 shadow-2xl backdrop-blur-2xl sm:inset-auto sm:bottom-5 sm:right-5 sm:top-auto sm:h-[78vh] sm:max-h-[720px] sm:w-[420px]"
+          className={
+            fullscreen
+              ? "fixed inset-0 z-50 flex flex-col overflow-hidden border-0 bg-[#0a121c]/98 backdrop-blur-2xl"
+              : "fixed inset-x-3 bottom-3 top-16 z-50 flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0a121c]/95 shadow-2xl backdrop-blur-2xl sm:inset-auto sm:bottom-5 sm:right-5 sm:top-auto sm:h-[78vh] sm:max-h-[720px] sm:w-[420px]"
+          }
         >
           {/* Title bar */}
           <header className="flex items-center justify-between gap-3 border-b border-white/8 bg-white/[0.03] px-4 py-3">
@@ -406,7 +418,19 @@ export default function KnowledgeBase() {
                   <LogoutIcon />
                 </IconButton>
               ) : null}
-              <IconButton title="关闭" onClick={() => setOpen(false)}>
+              <IconButton
+                title={fullscreen ? "收起为小窗" : "展开为整页"}
+                onClick={() => setFullscreen((v) => !v)}
+              >
+                {fullscreen ? <MinimizeIcon /> : <MaximizeIcon />}
+              </IconButton>
+              <IconButton
+                title="关闭"
+                onClick={() => {
+                  setOpen(false);
+                  setFullscreen(false);
+                }}
+              >
                 <CloseIcon />
               </IconButton>
             </div>
@@ -450,7 +474,7 @@ export default function KnowledgeBase() {
             <>
               {/* Search + add */}
               <div className="border-b border-white/8 px-4 py-3">
-                <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-2 ${fullscreen ? "mx-auto w-full max-w-5xl" : ""}`}>
                   <div className="relative flex-1">
                     <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
                       <SearchIcon />
@@ -470,7 +494,7 @@ export default function KnowledgeBase() {
                   </button>
                 </div>
                 {allTags.length > 0 ? (
-                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  <div className={`mt-2.5 flex flex-wrap gap-1.5 ${fullscreen ? "mx-auto w-full max-w-5xl" : ""}`}>
                     <TagChip active={activeTag === null} onClick={() => setActiveTag(null)}>
                       全部
                     </TagChip>
@@ -527,19 +551,35 @@ export default function KnowledgeBase() {
               ) : null}
 
               {/* List */}
-              <div className="flex-1 overflow-y-auto px-4 py-3">
+              <div className={`flex-1 overflow-y-auto py-3 ${fullscreen ? "px-4 sm:px-6" : "px-4"}`}>
                 {!mounted ? null : filtered.length === 0 ? (
                   <EmptyState hasEntries={entries.length > 0} onAdd={openComposer} />
                 ) : (
-                  <div className="space-y-2.5">
+                  <div
+                    className={
+                      fullscreen
+                        ? "mx-auto w-full max-w-6xl gap-4 [column-fill:balance] [&>*]:mb-4 [&>*]:break-inside-avoid columns-1 md:columns-2 xl:columns-3"
+                        : "space-y-2.5"
+                    }
+                  >
                     {filtered.map((entry) => (
                       <article
                         key={entry.id}
-                        className="group rounded-xl border border-white/8 bg-white/[0.03] p-3.5 transition hover:border-white/20 hover:bg-white/[0.05]"
+                        className={`group rounded-xl border border-white/8 bg-white/[0.03] transition hover:border-white/20 hover:bg-white/[0.05] ${
+                          fullscreen ? "p-5" : "p-3.5"
+                        }`}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-sm font-semibold leading-snug text-white">{entry.title}</h3>
-                          <div className="flex shrink-0 items-center gap-1 opacity-0 transition group-hover:opacity-100">
+                          <h3
+                            className={`font-semibold leading-snug text-white ${fullscreen ? "text-base" : "text-sm"}`}
+                          >
+                            {entry.title}
+                          </h3>
+                          <div
+                            className={`flex shrink-0 items-center gap-1 transition ${
+                              fullscreen ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            }`}
+                          >
                             <IconButton title="编辑" small onClick={() => startEdit(entry)}>
                               <EditIcon />
                             </IconButton>
@@ -549,9 +589,15 @@ export default function KnowledgeBase() {
                           </div>
                         </div>
                         {entry.content ? (
-                          <p className="mt-1.5 whitespace-pre-wrap text-[13px] leading-6 text-slate-300">{entry.content}</p>
+                          <p
+                            className={`mt-2 whitespace-pre-wrap text-slate-300 ${
+                              fullscreen ? "text-sm leading-7" : "text-[13px] leading-6"
+                            }`}
+                          >
+                            {entry.content}
+                          </p>
                         ) : null}
-                        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                        <div className="mt-3 flex flex-wrap items-center gap-1.5">
                           {entry.tags.map((t) => (
                             <button
                               key={t}
@@ -703,6 +749,20 @@ function LogoutIcon() {
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <path d="M16 17l5-5-5-5M21 12H9" />
+    </svg>
+  );
+}
+function MaximizeIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+    </svg>
+  );
+}
+function MinimizeIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M16 21v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
     </svg>
   );
 }

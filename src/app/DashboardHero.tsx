@@ -80,16 +80,9 @@ export default function DashboardHero({
   rssCount?: number;
   onOpenReport?: () => void;
 }) {
-  const [now, setNow] = useState<Date | null>(null);
   const [weather, setWeather] = useState<Weather | null>(null);
   const [playing, setPlaying] = useState<{ name: string; title: string } | null>(null);
   const [event, setEvent] = useState<EventDesc | null>(null);
-
-  useEffect(() => {
-    setNow(new Date());
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
 
   useEffect(() => {
     fetch(WEATHER_URL)
@@ -168,10 +161,6 @@ export default function DashboardHero({
     return () => clearInterval(t);
   }, [loadPlaying]);
 
-  const h = now?.getHours() ?? 0;
-  const hh = String(h).padStart(2, "0");
-  const mm = String(now?.getMinutes() ?? 0).padStart(2, "0");
-  const ss = String(now?.getSeconds() ?? 0).padStart(2, "0");
   const w = weather ? weatherInfo(weather.code) : null;
   const np = useSyncExternalStore(subscribeNowPlaying, getNowPlaying, getServerNowPlaying);
 
@@ -181,16 +170,7 @@ export default function DashboardHero({
       <div className="relative mx-auto grid max-w-[1600px] gap-3 px-4 py-6 sm:gap-4 sm:px-5 sm:py-8 lg:grid-cols-[1.5fr_1fr]">
         {/* Clock + today's todos + spinning record */}
         <div className="glass flex flex-col gap-4 rounded-3xl p-5 sm:p-6 md:flex-row md:items-center md:gap-6">
-          <div className="min-w-0 shrink-0">
-            <p className="text-sm font-medium text-[var(--muted)]">{greeting(h)}</p>
-            <p className="mt-2 font-mono text-4xl font-bold tabular-nums text-[var(--heading)] sm:text-5xl md:text-6xl" suppressHydrationWarning>
-              {hh}:{mm}
-              <span className="text-2xl text-[var(--muted)] md:text-3xl">:{ss}</span>
-            </p>
-            <p className="mt-2 text-sm text-[var(--muted)]" suppressHydrationWarning>
-              {now ? `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 · ${WEEKDAYS[now.getDay()]}` : "—"}
-            </p>
-          </div>
+          <Clock />
 
           {/* today's todos (scrollable) */}
           <div className="min-w-0 flex-1 md:border-x md:border-[var(--border)] md:px-5">
@@ -297,5 +277,32 @@ export default function DashboardHero({
         </div>
       </div>
     </section>
+  );
+}
+
+// Isolated so its 1-second tick only re-renders the clock, not the whole hero
+// (which holds the todo list, weather, etc.).
+function Clock() {
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const h = now?.getHours() ?? 0;
+  const hh = String(h).padStart(2, "0");
+  const mm = String(now?.getMinutes() ?? 0).padStart(2, "0");
+  const ss = String(now?.getSeconds() ?? 0).padStart(2, "0");
+  return (
+    <div className="min-w-0 shrink-0">
+      <p className="text-sm font-medium text-[var(--muted)]">{greeting(h)}</p>
+      <p className="mt-2 font-mono text-4xl font-bold tabular-nums text-[var(--heading)] sm:text-5xl md:text-6xl" suppressHydrationWarning>
+        {hh}:{mm}
+        <span className="text-2xl text-[var(--muted)] md:text-3xl">:{ss}</span>
+      </p>
+      <p className="mt-2 text-sm text-[var(--muted)]" suppressHydrationWarning>
+        {now ? `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 · ${WEEKDAYS[now.getDay()]}` : "—"}
+      </p>
+    </div>
   );
 }

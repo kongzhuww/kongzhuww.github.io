@@ -17,11 +17,23 @@ import asyncio
 import base64
 import requests
 
-from winsdk.windows.media.control import (
-    GlobalSystemMediaTransportControlsSessionManager as MediaManager,
-    GlobalSystemMediaTransportControlsSessionPlaybackStatus as PlaybackStatus,
-)
-from winsdk.windows.storage.streams import DataReader, Buffer, InputStreamOptions
+# Works with either binding: PyWinRT split packages (prebuilt wheels, fast) or
+# the older monolithic winsdk (compiles from source). Install whichever you have:
+#   pip install winrt-runtime winrt-Windows.Media.Control winrt-Windows.Storage.Streams winrt-Windows.Foundation
+#   -- or --
+#   pip install winsdk
+try:
+    from winrt.windows.media.control import (
+        GlobalSystemMediaTransportControlsSessionManager as MediaManager,
+        GlobalSystemMediaTransportControlsSessionPlaybackStatus as PlaybackStatus,
+    )
+    from winrt.windows.storage.streams import DataReader, Buffer, InputStreamOptions
+except ImportError:
+    from winsdk.windows.media.control import (
+        GlobalSystemMediaTransportControlsSessionManager as MediaManager,
+        GlobalSystemMediaTransportControlsSessionPlaybackStatus as PlaybackStatus,
+    )
+    from winsdk.windows.storage.streams import DataReader, Buffer, InputStreamOptions
 
 # ------------------------- CONFIG -------------------------
 FUNCTION_URL = "https://auxlxuyhhzguxjvneanw.supabase.co/functions/v1/now-playing"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { setLyricLine } from "./nowPlayingStore";
+import { setNowPlaying, setControls, type PlayMode } from "./nowPlayingStore";
 
 // Same-origin proxy served by the Cloudflare Worker (see worker.js), which
 // forwards to the Monster Siren API. Same-origin means no CORS at all.
@@ -40,6 +40,14 @@ function fmtTime(s: number) {
 }
 
 type LyricLine = { t: number; text: string };
+
+const MODE_KEY = "lw-play-mode";
+
+// Credit lines (composer / arranger / vocals …) that instrumental tracks put in
+// their LRC. If a song has only these, treat it as pure music.
+function isCreditLine(t: string) {
+  return /(作曲|作词|編曲|编曲|演唱|和声|合声|混音|母带|制作|出品|监制|吉他|贝斯|钢琴|鼓|弦乐|Vocal|Compos|Arrang|Lyric|Writ|Mix|Master|Produc|Guitar|Bass|Piano|Drum|Strings|feat\.)/i.test(t);
+}
 
 // Parse an LRC lyric file into timestamped lines.
 function parseLRC(txt: string): LyricLine[] {
@@ -112,6 +120,7 @@ export default function MusicPlayer() {
   const [tvPos, setTvPos] = useState<{ x: number; y: number } | null>(null);
   const [panelPos, setPanelPos] = useState<{ x: number; y: number } | null>(null);
   const [lyrics, setLyrics] = useState<LyricLine[]>([]);
+  const [mode, setMode] = useState<PlayMode>("list");
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const sourceCache = useRef<Map<string, SongDetail>>(new Map());
@@ -123,7 +132,28 @@ export default function MusicPlayer() {
   const panelDrag = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
   currentRef.current = current;
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    try {
+      const m = localStorage.getItem(MODE_KEY);
+      if (m === "one" || m === "shuffle" || m === "list") setMode(m);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  function cycleMode() {
+    setMode((m) => {
+      const order: PlayMode[] = ["list", "one", "shuffle"];
+      const nx = order[(order.indexOf(m) + 1) % order.length];
+      try {
+        localStorage.setItem(MODE_KEY, nx);
+      } catch {
+        /* ignore */
+      }
+      return nx;
+    });
+  }
 
   const loadAlbums = useCallback(async () => {
     if (albumsState === "ready" || albumsState === "loading") return;
@@ -218,13 +248,32 @@ export default function MusicPlayer() {
 
   const next = useCallback(() => {
     if (songs.length === 0) return;
+    if (mode === "shuffle" && songs.length > 1) {
+      let r = index;
+      while (r === index) r = Math.floor(Math.random() * songs.length);
+      playAt(r);
+      return;
+    }
     playAt((index + 1) % songs.length);
-  }, [index, songs, playAt]);
+  }, [index, songs, playAt, mode]);
 
   const prev = useCallback(() => {
     if (songs.length === 0) return;
     playAt((index - 1 + songs.length) % songs.length);
   }, [index, songs, playAt]);
+
+  // end-of-track behaviour depends on the play mode
+  const onEnded = useCallback(() => {
+    if (mode === "one") {
+      const audio = audioRef.current;
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      }
+      return;
+    }
+    next();
+  }, [mode, next]);
 
   function seek(e: React.ChangeEvent<HTMLInputElement>) {
     const audio = audioRef.current;
@@ -336,12 +385,34 @@ export default function MusicPlayer() {
   }
   const curLyric = li >= 0 ? lyrics[li].text : lyrics.length ? "♪ ♪ ♪" : "";
   const nextLyric = li + 1 < lyrics.length ? lyrics[li + 1].text : "";
+  // pure music: no real (non-credit) lyric lines
+  const instrumental = !!current && !lyrics.some((l) => l.text && !isCreditLine(l.text));
+  const barLine = instrumental ? "纯音乐" : curLyric;
+  const barSub = instrumental ? "" : nextLyric;
 
-  // publish the current lyric line to the header bar
+  // publish now-playing state (line + controls state) to the header bar
   useEffect(() => {
-    setLyricLine(curLyric, nextLyric);
-  }, [curLyric, nextLyric]);
-  useEffect(() => () => setLyricLine("", ""), []);
+    setNowPlaying({ line: barLine, sub: barSub, hasSong: !!current, playing, mode });
+  }, [barLine, barSub, current, playing, mode]);
+  useEffect(() => () => setNowPlaying({ line: "", sub: "", hasSong: false, playing: false }), []);
+
+  // register playback controls for the header bar (stable wrappers → latest fns)
+  const prevRef = useRef(prev);
+  const nextRef = useRef(next);
+  const toggleRef = useRef(togglePlay);
+  const cycleRef = useRef(cycleMode);
+  prevRef.current = prev;
+  nextRef.current = next;
+  toggleRef.current = togglePlay;
+  cycleRef.current = cycleMode;
+  useEffect(() => {
+    setControls({
+      prev: () => prevRef.current(),
+      next: () => nextRef.current(),
+      toggle: () => toggleRef.current(),
+      cycleMode: () => cycleRef.current(),
+    });
+  }, []);
 
   return (
     <>
@@ -356,7 +427,7 @@ export default function MusicPlayer() {
         }}
         onWaiting={() => setBuffering(true)}
         onPause={() => setPlaying(false)}
-        onEnded={next}
+        onEnded={onEnded}
       />
 
       {/* Launcher / now-playing pill */}

@@ -15,7 +15,25 @@
 
 import asyncio
 import base64
+import os
+import time
 import requests
+
+# Log to a file next to this script, so silent background runs stay debuggable.
+LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "smtc-bridge.log")
+
+
+def log(msg):
+    line = time.strftime("%m-%d %H:%M:%S ") + str(msg)
+    print(line)
+    try:
+        # keep the log small: truncate if it grows past ~1 MB
+        if os.path.exists(LOG_FILE) and os.path.getsize(LOG_FILE) > 1_000_000:
+            open(LOG_FILE, "w").close()
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except Exception:
+        pass
 
 # Works with either binding: PyWinRT split packages (prebuilt wheels, fast) or
 # the older monolithic winsdk (compiles from source). Install whichever you have:
@@ -127,13 +145,13 @@ def push(payload):
             timeout=10,
         )
         if r.status_code != 200:
-            print("push failed", r.status_code, r.text[:200])
+            log(f"push failed {r.status_code} {r.text[:200]}")
     except Exception as e:
-        print("push error", e)
+        log(f"push error {e}")
 
 
 async def main():
-    print(f"SMTC bridge started for {DISPLAY_NAME} ({HANDLE}), every {INTERVAL}s")
+    log(f"SMTC bridge started for {DISPLAY_NAME} ({HANDLE}), every {INTERVAL}s")
     last_key = None
     while True:
         try:
@@ -145,13 +163,13 @@ async def main():
                     full = await snapshot(want_cover=True)
                     push(full or probe)
                     last_key = key
-                    print(f"♪ {probe['title']} - {probe['artist']} [{probe['status']}]")
+                    log(f"♪ {probe['title']} - {probe['artist']} [{probe['status']}]")
                 else:
                     # same track: send position/status only; null cover is ignored
                     push(probe)
-                    print(f"· {probe['title']} [{probe['status']}] {probe['position_ms'] // 1000}s")
+                    log(f"· {probe['title']} [{probe['status']}] {probe['position_ms'] // 1000}s")
         except Exception as e:
-            print("loop error", e)
+            log(f"loop error {e}")
         await asyncio.sleep(INTERVAL)
 
 

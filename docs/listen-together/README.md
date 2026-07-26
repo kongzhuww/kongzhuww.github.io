@@ -50,6 +50,20 @@ python smtc-bridge.py
 
 放首歌，网页顶栏「🎧 一起听」就会显示。好友各自跑一份自己的（改 `HANDLE`/`DISPLAY_NAME`，用同一个 `PUSH_TOKEN`）就能互相看到。
 
+## 开机自启 + 后台静默（可选）
+
+不想每次手动开 PowerShell、也不想留个黑框，就让它开机自动在后台跑：
+
+1. 把 `start-bridge.vbs` 放到 `smtcbridge.py` **同一个文件夹**。
+2. `Win+R` → 输入 `shell:startup` → 回车，打开「启动」文件夹。
+3. 把 `start-bridge.vbs` 的**快捷方式**拖进这个「启动」文件夹（右键 vbs → 创建快捷方式 → 把快捷方式剪切进去）。
+
+之后每次开机登录，桥接会用 `pythonw` 在后台静默运行（无窗口）。运行情况可以看脚本旁边自动生成的 `smtc-bridge.log`。
+
+> 若报找不到 `pythonw`：把 `start-bridge.vbs` 里的 `pythonw.exe` 换成完整路径，例如
+> `C:\Users\<你>\scoop\apps\miniforge3\current\pythonw.exe`。
+> 想临时停掉：任务管理器里结束 `pythonw.exe`；想取消自启：把「启动」文件夹里的快捷方式删掉。
+
 ## 说明与限制
 - **仅 Windows**（SMTC 是 Windows 的系统能力）。macOS/手机不适用。
 - 只同步**元数据**（歌名/歌手/封面/进度），好友**听不到你的音频流** —— 各自在自己客户端跟听。

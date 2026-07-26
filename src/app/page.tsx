@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import KnowledgeBase from "./KnowledgeBase";
 import TodoPanel from "./TodoPanel";
 import Projects from "./Projects";
+import Trending from "./Trending";
 
 type SourceName = "HuggingFace Blog" | "OpenAI News" | "Hacker News" | "Google AI Blog";
 
@@ -358,6 +359,9 @@ export default function Home() {
           </div>
         </aside>
       </section>
+
+      {/* ---------- GitHub Trending ---------- */}
+      <Trending />
 
       {/* ---------- Body ---------- */}
       <section className="mx-auto grid max-w-7xl gap-6 px-5 py-10 lg:grid-cols-[0.82fr_1.18fr]">

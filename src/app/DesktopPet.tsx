@@ -4,9 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 // Arknights Spine models (isHarryh/Ark-Models) via jsDelivr CDN (CORS-friendly).
 const CDN = "https://cdn.jsdelivr.net/gh/isHarryh/Ark-Models@main";
-// Spine 3.8 runtime (Arknights models are Spine 3.8).
-const SPINE_JS = "https://esotericsoftware.com/files/spine-ts/3.8/spine-player.js";
-const SPINE_CSS = "https://esotericsoftware.com/files/spine-ts/3.8/spine-player.css";
+// Spine 3.8 runtime (Arknights models are Spine 3.8), served over HTTPS via
+// jsDelivr — the official esotericsoftware host redirects to an insecure http
+// mirror that a https page blocks as mixed content.
+const SPINE_JS = "https://cdn.jsdelivr.net/gh/EsotericSoftware/spine-runtimes@3.8/spine-ts/build/spine-player.js";
+const SPINE_CSS = "https://cdn.jsdelivr.net/gh/EsotericSoftware/spine-runtimes@3.8/spine-ts/player/css/spine-player.css";
 
 const HIDE_KEY = "lw-pet-hidden";
 const IDLE_ANIMS = ["Relax", "Idle", "Sit", "Interact_1", "Interact"];

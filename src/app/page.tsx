@@ -173,6 +173,7 @@ export default function Home() {
   const [reportIndex, setReportIndex] = useState<ReportIndex>(DEFAULT_INDEX);
   const [selectedPath, setSelectedPath] = useState(DEFAULT_INDEX.latest);
   const [loadState, setLoadState] = useState<LoadState>("loading");
+  const [newsExpanded, setNewsExpanded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -414,7 +415,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid gap-4">
-              {report.items.map((item, i) => {
+              {(newsExpanded ? report.items : report.items.slice(0, 6)).map((item, i) => {
                 const imp = importanceStyle(item.importance);
                 return (
                   <article
@@ -470,6 +471,14 @@ export default function Home() {
                   </article>
                 );
               })}
+              {report.items.length > 6 ? (
+                <button
+                  onClick={() => setNewsExpanded((v) => !v)}
+                  className="mx-auto rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-2 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
+                >
+                  {newsExpanded ? "收起" : `展开全部 ${report.items.length} 条`}
+                </button>
+              ) : null}
             </div>
           )}
         </Panel>

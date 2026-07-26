@@ -283,6 +283,20 @@ export default function MusicPlayer() {
               </div>
             </div>
             <div className="flex items-center gap-1">
+              {current ? (
+                <button
+                  onClick={() => setFocus(true)}
+                  title={current.mvUrl ? "专注模式 · 播放官方 MV" : "专注模式"}
+                  className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
+                    current.mvUrl
+                      ? "border-violet-400/40 bg-violet-400/15 text-violet-300"
+                      : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--heading)]"
+                  }`}
+                >
+                  <FocusIcon />
+                  专注
+                </button>
+              ) : null}
               {album ? (
                 <button
                   onClick={() => setAlbum(null)}
@@ -375,17 +389,6 @@ export default function MusicPlayer() {
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setFocus(true)}
-                    title={current.mvUrl ? "专注模式 · 播放官方 MV" : "专注模式"}
-                    className={`grid h-8 w-8 place-items-center rounded-lg border transition ${
-                      current.mvUrl
-                        ? "border-violet-400/40 bg-violet-400/15 text-violet-300"
-                        : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--heading)]"
-                    }`}
-                  >
-                    <FocusIcon />
-                  </button>
                   <IconButton title="上一首" onClick={prev}><PrevIcon /></IconButton>
                   <button
                     onClick={togglePlay}

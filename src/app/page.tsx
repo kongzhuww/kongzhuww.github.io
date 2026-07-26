@@ -11,6 +11,7 @@ import Trending from "./Trending";
 import AiHot from "./AiHot";
 import MusicPlayer from "./MusicPlayer";
 import ListenTogether from "./ListenTogether";
+import DashboardHero from "./DashboardHero";
 import DesktopPet from "./DesktopPet";
 
 type SourceName = "HuggingFace Blog" | "OpenAI News" | "Hacker News" | "Google AI Blog";
@@ -299,6 +300,9 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* ---------- Dashboard cockpit (full width) ---------- */}
+      <DashboardHero rssCount={report.items.length} onOpenReport={() => setReportOpen(true)} />
 
       {/* ---------- AI HOT (primary) ---------- */}
       <div className="pt-6" />

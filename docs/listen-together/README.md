@@ -29,9 +29,13 @@ supabase secrets set NP_PUSH_TOKEN=<一串随机长字符串>
 
 前提：网易云 **3.0 以上**（老版本不报 SMTC）。
 
+装依赖（推荐 PyWinRT 拆分包，有预编译 wheel、秒装，不用 C++ 编译器）：
+
 ```bash
-pip install winsdk requests
+pip install requests winrt-runtime winrt-Windows.Media.Control winrt-Windows.Storage.Streams winrt-Windows.Foundation
 ```
+
+（老的 `pip install winsdk` 也行，但它常常要从源码编译、很慢，脚本两者都兼容。）
 
 编辑 `smtc-bridge.py` 顶部 CONFIG：
 - `PUSH_TOKEN` = 第 2 步设的 `NP_PUSH_TOKEN`

@@ -38,14 +38,17 @@ function fmtTime(s: number) {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
-// Official Arknights uploaders on Bilibili (MVs come from these accounts).
+// Known Arknights-official uploaders on Bilibili (used to boost, then badge).
 const OFFICIAL_MIDS = new Set([161775300]); // 明日方舟
 const OFFICIAL_NAMES = new Set(["明日方舟", "塞壬唱片-MSR", "塞壬唱片"]);
 
-type BiliHit = { bvid: string | null; official: boolean };
+type BiliHit = { bvid: string | null; author: string; official: boolean };
 
-// Look up a Bilibili video for a song (prefer the official MV) via the Worker's
-// /bili proxy, which forwards to Bilibili through the user's VPS.
+// Look up a Bilibili video for a song via the Worker's /bili proxy. Many
+// Arknights MVs live on the game's official account, but plenty are on the
+// artist's own official channel (Mili, Steve Aoki, …). So we pick the most
+// popular result (highest play count), preferring the Arknights-official
+// account when it has a result, and surface the uploader name either way.
 async function searchBiliBvid(keyword: string): Promise<BiliHit> {
   try {
     const r = await fetch(
@@ -55,12 +58,13 @@ async function searchBiliBvid(keyword: string): Promise<BiliHit> {
     const j = await r.json();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const list: any[] = (j?.data?.result ?? []).filter((v: any) => v?.bvid);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const official = list.find((v: any) => OFFICIAL_MIDS.has(v.mid) || OFFICIAL_NAMES.has(v.author));
-    if (official) return { bvid: official.bvid, official: true };
-    return { bvid: list[0]?.bvid ?? null, official: false };
+    if (list.length === 0) return { bvid: null, author: "", official: false };
+    const byPlay = [...list].sort((a, b) => (b.play || 0) - (a.play || 0));
+    const official = byPlay.find((v) => OFFICIAL_MIDS.has(v.mid) || OFFICIAL_NAMES.has(v.author));
+    const pick = official || byPlay[0];
+    return { bvid: pick.bvid, author: pick.author || "", official: !!official };
   } catch {
-    return { bvid: null, official: false };
+    return { bvid: null, author: "", official: false };
   }
 }
 
@@ -85,6 +89,7 @@ export default function MusicPlayer() {
   // Bilibili MV state for focus mode
   const [bvid, setBvid] = useState<string | null>(null);
   const [bvidOfficial, setBvidOfficial] = useState(false);
+  const [bvidAuthor, setBvidAuthor] = useState("");
   const [bvidState, setBvidState] = useState<"idle" | "loading" | "ready" | "empty">("idle");
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -219,6 +224,7 @@ export default function MusicPlayer() {
     const apply = (hit: BiliHit) => {
       setBvid(hit.bvid);
       setBvidOfficial(hit.official);
+      setBvidAuthor(hit.author);
       setBvidState(hit.bvid ? "ready" : "empty");
     };
     if (bvidCache.current.has(cid)) {
@@ -453,7 +459,9 @@ export default function MusicPlayer() {
             <div className="min-w-0">
               <p className="truncate text-base font-semibold text-white">{current?.name ?? "专注模式"}</p>
               <p className="truncate text-xs text-white/50">
-                {bvidState === "ready" ? (bvidOfficial ? "明日方舟 · 官方 MV" : "Bilibili · 相关视频（非官方）") : "明日方舟 · Bilibili"}
+                {bvidState === "ready"
+                  ? `UP · ${bvidAuthor || "Bilibili"}${bvidOfficial ? " · 官方" : ""}`
+                  : "明日方舟 · Bilibili"}
               </p>
             </div>
             <button

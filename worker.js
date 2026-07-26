@@ -1,14 +1,25 @@
-// Cloudflare Worker: serve the static site, and same-origin proxy the
-// Monster Siren (Arknights) music API under /siren/* so the browser never hits
-// a cross-origin request. Audio/cover files are streamed by the client directly.
+// Cloudflare Worker: serve the static site and same-origin proxy a couple of
+// cross-origin APIs so the browser never issues a cross-origin request.
+//   /siren/* -> Monster Siren (Arknights music) API
+//   /bili/*  -> Bilibili API (public favourites), with a bilibili Referer so the
+//               anti-crawl / risk-control check passes.
+// Media and image files are still loaded by the client directly.
 
-const SIREN_API = "https://monster-siren.hypergryph.com/api";
+const PROXIES = {
+  "/siren/": { base: "https://monster-siren.hypergryph.com/api" },
+  "/bili/": { base: "https://api.bilibili.com", referer: "https://www.bilibili.com" },
+};
+
+const UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (url.pathname.startsWith("/siren/")) {
+    for (const [prefix, cfg] of Object.entries(PROXIES)) {
+      if (!url.pathname.startsWith(prefix)) continue;
+
       if (request.method === "OPTIONS") {
         return new Response(null, {
           headers: {
@@ -18,17 +29,21 @@ export default {
           },
         });
       }
-      const target = SIREN_API + url.pathname.slice("/siren".length) + url.search;
+
+      const target = cfg.base + url.pathname.slice(prefix.length - 1) + url.search;
+      const headers = { Accept: "application/json", "User-Agent": UA };
+      if (cfg.referer) headers["Referer"] = cfg.referer;
+
       try {
         const upstream = await fetch(target, {
-          headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0" },
-          cf: { cacheTtl: 300, cacheEverything: true },
+          headers,
+          cf: { cacheTtl: 120, cacheEverything: true },
         });
-        const headers = new Headers();
-        headers.set("Content-Type", upstream.headers.get("Content-Type") || "application/json");
-        headers.set("Access-Control-Allow-Origin", "*");
-        headers.set("Cache-Control", "public, max-age=300");
-        return new Response(upstream.body, { status: upstream.status, headers });
+        const out = new Headers();
+        out.set("Content-Type", upstream.headers.get("Content-Type") || "application/json");
+        out.set("Access-Control-Allow-Origin", "*");
+        out.set("Cache-Control", "public, max-age=120");
+        return new Response(upstream.body, { status: upstream.status, headers: out });
       } catch (e) {
         return new Response(JSON.stringify({ error: String(e) }), {
           status: 502,

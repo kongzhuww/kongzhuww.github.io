@@ -154,9 +154,7 @@ export default function DashboardHero({
       <div className="relative mx-auto grid max-w-[1600px] gap-4 px-5 py-8 lg:grid-cols-[1.5fr_1fr_1.2fr]">
         {/* Clock */}
         <div className="glass rounded-3xl p-6">
-          <p className="text-sm font-medium text-[var(--muted)]">
-            {greeting(h)}，<span className="text-gradient font-semibold">w空竹w</span>
-          </p>
+          <p className="text-sm font-medium text-[var(--muted)]">{greeting(h)}</p>
           <p className="mt-2 font-mono text-5xl font-bold tabular-nums text-[var(--heading)] md:text-6xl" suppressHydrationWarning>
             {hh}:{mm}
             <span className="text-2xl text-[var(--muted)] md:text-3xl">:{ss}</span>

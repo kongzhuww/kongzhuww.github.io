@@ -82,8 +82,8 @@ export default function DashboardTodos() {
   if (!SUPABASE_ENABLED) return null;
 
   return (
-    <div className="glass rounded-3xl p-5 sm:p-6">
-      <div className="mb-3 flex items-center justify-between gap-3">
+    <div className="flex min-h-0 flex-col">
+      <div className="mb-2 flex shrink-0 items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-sky-400 to-indigo-400 text-sm text-[#08121a]">✓</span>
           <p className="text-sm font-semibold text-[var(--heading)]">今日待办</p>
@@ -98,6 +98,7 @@ export default function DashboardTodos() {
         ) : null}
       </div>
 
+      <div className="max-h-[150px] overflow-y-auto pr-1">
       {!authReady || (session && state === "loading") ? (
         <div className="space-y-2">
           {[0, 1, 2].map((i) => (
@@ -142,6 +143,7 @@ export default function DashboardTodos() {
           })}
         </ul>
       )}
+      </div>
     </div>
   );
 }

@@ -179,9 +179,9 @@ export default function DashboardHero({
     <section className="relative w-full overflow-hidden border-b border-[var(--border)]">
       <div className="aurora-bg pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
       <div className="relative mx-auto grid max-w-[1600px] gap-3 px-4 py-6 sm:gap-4 sm:px-5 sm:py-8 lg:grid-cols-[1.5fr_1fr]">
-        {/* Clock + spinning record */}
-        <div className="glass flex items-center justify-between gap-4 rounded-3xl p-5 sm:p-6">
-          <div className="min-w-0">
+        {/* Clock + today's todos + spinning record */}
+        <div className="glass flex flex-col gap-4 rounded-3xl p-5 sm:p-6 md:flex-row md:items-center md:gap-6">
+          <div className="min-w-0 shrink-0">
             <p className="text-sm font-medium text-[var(--muted)]">{greeting(h)}</p>
             <p className="mt-2 font-mono text-4xl font-bold tabular-nums text-[var(--heading)] sm:text-5xl md:text-6xl" suppressHydrationWarning>
               {hh}:{mm}
@@ -191,6 +191,12 @@ export default function DashboardHero({
               {now ? `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 · ${WEEKDAYS[now.getDay()]}` : "—"}
             </p>
           </div>
+
+          {/* today's todos (scrollable) */}
+          <div className="min-w-0 flex-1 md:border-x md:border-[var(--border)] md:px-5">
+            <DashboardTodos />
+          </div>
+
           {np.cover ? (
             <div className="relative hidden aspect-square w-24 shrink-0 sm:block md:w-28" title={np.title}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -288,11 +294,6 @@ export default function DashboardHero({
               </p>
             </div>
           </button>
-        </div>
-
-        {/* Today's todos */}
-        <div className="lg:col-span-3">
-          <DashboardTodos />
         </div>
       </div>
     </section>

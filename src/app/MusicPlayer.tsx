@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { setLyricLine } from "./nowPlayingStore";
 
 // Same-origin proxy served by the Cloudflare Worker (see worker.js), which
 // forwards to the Monster Siren API. Same-origin means no CORS at all.
@@ -109,6 +110,7 @@ export default function MusicPlayer() {
   const [bvidAuthor, setBvidAuthor] = useState("");
   const [bvidState, setBvidState] = useState<"idle" | "loading" | "ready" | "empty">("idle");
   const [tvPos, setTvPos] = useState<{ x: number; y: number } | null>(null);
+  const [panelPos, setPanelPos] = useState<{ x: number; y: number } | null>(null);
   const [lyrics, setLyrics] = useState<LyricLine[]>([]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -117,6 +119,8 @@ export default function MusicPlayer() {
   const currentRef = useRef<SongDetail | null>(null);
   const wasPlayingRef = useRef(false);
   const drag = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const panelDrag = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
   currentRef.current = current;
 
   useEffect(() => setMounted(true), []);
@@ -301,6 +305,25 @@ export default function MusicPlayer() {
     drag.current = null;
   }
 
+  // dragging the whole player panel by its header
+  function onPanelDown(e: React.PointerEvent) {
+    const rect = panelRef.current?.getBoundingClientRect();
+    panelDrag.current = { sx: e.clientX, sy: e.clientY, ox: rect?.left ?? 0, oy: rect?.top ?? 0 };
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+  }
+  function onPanelMove(e: React.PointerEvent) {
+    if (!panelDrag.current) return;
+    const x = panelDrag.current.ox + (e.clientX - panelDrag.current.sx);
+    const y = panelDrag.current.oy + (e.clientY - panelDrag.current.sy);
+    setPanelPos({
+      x: Math.max(0, Math.min(window.innerWidth - 160, x)),
+      y: Math.max(0, Math.min(window.innerHeight - 80, y)),
+    });
+  }
+  function onPanelUp() {
+    panelDrag.current = null;
+  }
+
   const tvStyle: React.CSSProperties = tvPos
     ? { left: tvPos.x, top: tvPos.y, right: "auto", bottom: "auto" }
     : { right: 20, bottom: 20 };
@@ -313,6 +336,12 @@ export default function MusicPlayer() {
   }
   const curLyric = li >= 0 ? lyrics[li].text : lyrics.length ? "♪ ♪ ♪" : "";
   const nextLyric = li + 1 < lyrics.length ? lyrics[li + 1].text : "";
+
+  // publish the current lyric line to the header bar
+  useEffect(() => {
+    setLyricLine(curLyric, nextLyric);
+  }, [curLyric, nextLyric]);
+  useEffect(() => () => setLyricLine("", ""), []);
 
   return (
     <>
@@ -365,12 +394,20 @@ export default function MusicPlayer() {
       ) : null}
       {open ? (
         <section
+          ref={panelRef}
           role="dialog"
           aria-label="塞壬电台"
+          style={panelPos ? { left: panelPos.x, top: panelPos.y, right: "auto", bottom: "auto", transform: "none" } : undefined}
           className="fixed inset-x-3 bottom-3 top-16 z-50 flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--panel)] shadow-2xl sm:inset-auto sm:bottom-5 sm:left-1/2 sm:top-auto sm:h-[80vh] sm:max-h-[760px] sm:w-[440px] sm:-translate-x-1/2"
         >
           <header className="flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <div className="flex items-center gap-2.5">
+            <div
+              onPointerDown={onPanelDown}
+              onPointerMove={onPanelMove}
+              onPointerUp={onPanelUp}
+              className="flex flex-1 cursor-grab touch-none items-center gap-2.5 active:cursor-grabbing"
+              title="拖动移动窗口"
+            >
               <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-violet-400 to-fuchsia-400 text-[#08121a]">
                 <MusicIcon />
               </span>
@@ -494,12 +531,6 @@ export default function MusicPlayer() {
                   <IconButton title="下一首" onClick={next}><NextIcon /></IconButton>
                 </div>
               </div>
-              {lyrics.length > 0 ? (
-                <div className="mb-2 rounded-xl bg-[var(--surface-hover)]/60 px-3 py-2 text-center">
-                  <p className="truncate text-sm font-semibold text-violet-300">{curLyric}</p>
-                  <p className="truncate text-[11px] text-[var(--dim)]">{nextLyric || "​"}</p>
-                </div>
-              ) : null}
               <div className="flex items-center gap-2 text-[10px] text-[var(--dim)]">
                 <span className="tabular-nums">{fmtTime(progress)}</span>
                 <input

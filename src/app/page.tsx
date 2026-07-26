@@ -11,6 +11,7 @@ import Trending from "./Trending";
 import AiHot from "./AiHot";
 import MusicPlayer from "./MusicPlayer";
 import ListenTogether from "./ListenTogether";
+import LyricBar from "./LyricBar";
 import DashboardHero from "./DashboardHero";
 import DesktopPet from "./DesktopPet";
 
@@ -299,6 +300,7 @@ export default function Home() {
             </a>
           </div>
         </div>
+        <LyricBar />
       </header>
 
       {/* ---------- Dashboard cockpit (full width) ---------- */}

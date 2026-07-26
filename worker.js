@@ -83,6 +83,13 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    // Version probe so we can confirm which worker build is live.
+    if (url.pathname === "/__version") {
+      return new Response("worker v3 · bili->vps:8080 · /vps route", {
+        headers: { "Content-Type": "text/plain", "Access-Control-Allow-Origin": "*" },
+      });
+    }
+
     if (request.method === "OPTIONS" && (url.pathname.startsWith("/bili/") || url.pathname.startsWith("/siren/") || url.pathname.startsWith("/aihot/"))) {
       return new Response(null, {
         headers: {

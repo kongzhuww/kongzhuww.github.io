@@ -47,6 +47,12 @@ const SOURCE_PROFILES: Record<string, { domain: string; color: string }> = {
   "Google AI Blog": { domain: "blog.google", color: "#4285f4" },
 };
 
+const IMPORTANCE_STYLES: Record<string, { label: string; dot: string; text: string; ring: string }> = {
+  high: { label: "重点", dot: "#f43f5e", text: "text-rose-300", ring: "ring-rose-500/30 bg-rose-500/10" },
+  medium: { label: "关注", dot: "#f59e0b", text: "text-amber-300", ring: "ring-amber-500/30 bg-amber-500/10" },
+  low: { label: "参考", dot: "#64748b", text: "text-slate-300", ring: "ring-slate-500/30 bg-slate-500/10" },
+};
+
 const FALLBACK_REPORT: DailyReport = {
   title: "AI RSS 日报",
   date: "2026-07-18",
@@ -141,11 +147,15 @@ function sourceIconUrl(source: string) {
   return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(profile.domain)}&sz=64`;
 }
 
-function statusText(state: LoadState, report: DailyReport) {
-  if (state === "loading") return "同步中";
-  if (state === "error") return "读取失败";
-  if (state === "fallback" || report.sample) return "示例数据";
-  return "已同步";
+function importanceStyle(importance?: string) {
+  return IMPORTANCE_STYLES[importance ?? ""] ?? IMPORTANCE_STYLES.low;
+}
+
+function statusMeta(state: LoadState, report: DailyReport): { text: string; color: string } {
+  if (state === "loading") return { text: "同步中", color: "#38bdf8" };
+  if (state === "error") return { text: "读取失败", color: "#f43f5e" };
+  if (state === "fallback" || report.sample) return { text: "示例数据", color: "#f59e0b" };
+  return { text: "已同步", color: "#34d399" };
 }
 
 export default function Home() {
@@ -212,27 +222,39 @@ export default function Home() {
     }
   }
 
+  const status = statusMeta(loadState, report);
 
   return (
-    <main className="min-h-screen bg-[#f4f7fb] text-slate-950 selection:bg-emerald-200">
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 md:flex-row md:items-center md:justify-between">
+    <main className="relative min-h-screen text-slate-100 selection:bg-emerald-400/30">
+      {/* ---------- Header ---------- */}
+      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#060911]/70 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-sm font-bold text-white">
-              LW
+            <div className="relative grid h-11 w-11 place-items-center rounded-2xl">
+              <span className="ring-spin absolute inset-0 rounded-2xl" aria-hidden="true" />
+              <span className="absolute inset-[2px] grid place-items-center rounded-[14px] bg-[#080c15] text-sm font-black tracking-tight text-white">
+                LW
+              </span>
             </div>
-            <div>
-              <p className="text-sm font-semibold uppercase text-slate-500">LogicWeaver</p>
-              <h1 className="text-xl font-semibold text-slate-950">AI RSS Daily</h1>
+            <div className="leading-tight">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-300/80">
+                LogicWeaver
+              </p>
+              <h1 className="text-lg font-semibold text-white">AI RSS Daily</h1>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-              {statusText(loadState, report)} · 每天 08:00
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-medium text-slate-300"
+              style={{ color: status.color }}
+            >
+              <span className="pulse-dot inline-block h-2 w-2 rounded-full" style={{ backgroundColor: status.color }} />
+              <span className="text-slate-300">{status.text} · 每天 08:00</span>
             </span>
             <a
               href="/reports/latest.json"
-              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-950 hover:text-slate-950"
+              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-white/25 hover:bg-white/10"
             >
               查看 JSON
             </a>
@@ -240,7 +262,7 @@ export default function Home() {
               href="https://github.com/kongzhuww/kongzhuww.github.io"
               target="_blank"
               rel="noreferrer"
-              className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+              className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-slate-900 transition hover:bg-emerald-300"
             >
               GitHub
             </a>
@@ -248,97 +270,122 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="border-b border-slate-200 bg-[#101820] text-white">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 lg:grid-cols-[1.35fr_0.65fr] lg:py-10">
-          <div className="relative overflow-hidden rounded-lg border border-white/10 bg-[#121f2a] p-6 shadow-sm md:p-8">
-            <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:32px_32px]" />
-            <div className="relative">
-              <div className="mb-8 flex flex-wrap items-center gap-3">
-                {report.sources.map((source) => (
+      {/* ---------- Hero ---------- */}
+      <section className="mx-auto grid max-w-7xl gap-6 px-5 pt-10 lg:grid-cols-[1.5fr_0.9fr]">
+        <div className="glass animate-rise relative overflow-hidden rounded-3xl p-7 md:p-10">
+          <div className="grid-overlay pointer-events-none absolute inset-0" aria-hidden="true" />
+          <div className="relative">
+            <div className="mb-7 flex flex-wrap items-center gap-2">
+              {report.sources.map((source) => (
+                <span
+                  key={source.name}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200"
+                >
                   <span
-                    key={source.name}
-                    className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/10 px-3 py-2 text-sm text-slate-100"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="h-5 w-5 rounded bg-white bg-center bg-contain bg-no-repeat"
-                      style={{ backgroundImage: `url(${sourceIconUrl(source.name)})` }}
-                    />
-                    {source.name}
-                  </span>
-                ))}
-              </div>
+                    aria-hidden="true"
+                    className="h-4 w-4 rounded-sm bg-white/90 bg-center bg-contain bg-no-repeat"
+                    style={{ backgroundImage: `url(${sourceIconUrl(source.name)})` }}
+                  />
+                  {source.name}
+                </span>
+              ))}
+            </div>
 
-              <p className="mb-3 text-sm font-semibold uppercase text-emerald-300">{formatDate(report.date)}</p>
-              <h2 className="max-w-3xl text-4xl font-semibold text-white md:text-6xl">{report.title}</h2>
-              <p className="mt-5 max-w-3xl text-base leading-7 text-slate-300 md:text-lg">{report.summary}</p>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              {formatDate(report.date)}
+            </div>
 
-              <div className="mt-8 grid gap-3 md:grid-cols-3">
-                <Metric label="来源" value={totalSources.toString()} accent="#10b981" />
-                <Metric label="条目" value={totalItems.toString()} accent="#38bdf8" />
-                <Metric label="重点" value={highPriority.toString()} accent="#f59e0b" />
-              </div>
+            <h2 className="max-w-3xl text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+              <span className="text-gradient">{report.title}</span>
+            </h2>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300 md:text-lg">
+              {report.summary}
+            </p>
+
+            <div className="mt-9 grid gap-3 sm:grid-cols-3">
+              <Metric label="信息来源" value={totalSources} accent="#34d399" hint="RSS 源" />
+              <Metric label="今日条目" value={totalItems} accent="#38bdf8" hint="篇文章" />
+              <Metric label="重点关注" value={highPriority} accent="#f59e0b" hint="高优先级" />
             </div>
           </div>
-
-          <aside className="rounded-lg border border-slate-700 bg-slate-900 p-5 text-white">
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm text-slate-400">生成时间</p>
-                <p className="mt-1 text-lg font-semibold">{formatDateTime(report.generatedAt)}</p>
-              </div>
-              <span className="rounded-md bg-emerald-400/10 px-3 py-2 text-sm font-semibold text-emerald-200">
-                JSON
-              </span>
-            </div>
-
-            <div className="space-y-3">
-              {report.sources.map((source) => {
-                const profile = sourceProfile(source.name);
-                return (
-                  <a
-                    key={source.name}
-                    href={source.url || `https://${profile.domain}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-between rounded-md border border-slate-700 bg-slate-800 px-3 py-3 transition hover:border-slate-500"
-                  >
-                    <span className="flex min-w-0 items-center gap-3">
-                      <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: profile.color }} aria-hidden="true" />
-                      <span className="truncate text-sm text-slate-200">{source.name}</span>
-                    </span>
-                    <span className="text-sm font-semibold text-slate-300">{source.count}</span>
-                  </a>
-                );
-              })}
-            </div>
-          </aside>
         </div>
+
+        {/* Sources aside */}
+        <aside className="glass animate-rise flex flex-col rounded-3xl p-6" style={{ animationDelay: "80ms" }}>
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">生成时间</p>
+              <p className="mt-1 text-lg font-semibold text-white">{formatDateTime(report.generatedAt)}</p>
+            </div>
+            <span className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 font-mono text-xs font-semibold text-emerald-300">
+              JSON
+            </span>
+          </div>
+
+          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">来源分布</p>
+          <div className="space-y-2.5">
+            {report.sources.map((source) => {
+              const profile = sourceProfile(source.name);
+              return (
+                <a
+                  key={source.name}
+                  href={source.url || `https://${profile.domain}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 transition hover:border-white/20 hover:bg-white/[0.06]"
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-full ring-4 ring-white/5"
+                      style={{ backgroundColor: profile.color }}
+                      aria-hidden="true"
+                    />
+                    <span className="truncate text-sm font-medium text-slate-200">{source.name}</span>
+                  </span>
+                  <span className="ml-3 shrink-0 rounded-full bg-white/5 px-2.5 py-0.5 text-xs font-semibold text-slate-300 transition group-hover:bg-white/10">
+                    {source.count}
+                  </span>
+                </a>
+              );
+            })}
+          </div>
+        </aside>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-5 py-6 lg:grid-cols-[0.78fr_1.22fr]">
+      {/* ---------- Body ---------- */}
+      <section className="mx-auto grid max-w-7xl gap-6 px-5 py-10 lg:grid-cols-[0.82fr_1.18fr]">
         <div className="space-y-6">
-          <Panel title="今日信号">
-            <div className="space-y-3">
-              {report.highlights.map((highlight) => (
-                <div key={highlight} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                  <p className="text-sm leading-6 text-slate-700">{highlight}</p>
+          <Panel title="今日信号" count={report.highlights.length}>
+            <div className="space-y-2.5">
+              {report.highlights.map((highlight, i) => (
+                <div
+                  key={highlight}
+                  className="glass glass-hover flex gap-3 rounded-2xl p-4"
+                >
+                  <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-emerald-400/15 text-xs font-bold text-emerald-300">
+                    {i + 1}
+                  </span>
+                  <p className="text-sm leading-6 text-slate-300">{highlight}</p>
                 </div>
               ))}
             </div>
           </Panel>
 
-          <Panel title="趋势标签">
+          <Panel title="趋势标签" count={report.trends.length}>
             <div className="flex flex-wrap gap-2">
               {report.trends.map((trend) => (
-                <span key={trend} className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-                  {trend}
+                <span
+                  key={trend}
+                  className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-sm font-medium text-slate-300 transition hover:border-emerald-400/30 hover:text-emerald-200"
+                >
+                  #{trend}
                 </span>
               ))}
             </div>
           </Panel>
 
-          <Panel title="历史日报">
+          <Panel title="历史日报" count={availableReports.length}>
             <div className="space-y-2">
               {availableReports.map((item) => {
                 const path = resolveReportPath(item.path);
@@ -347,15 +394,27 @@ export default function Home() {
                   <button
                     key={`${item.date}-${item.path}`}
                     onClick={() => loadReport(item.path)}
-                    className={`w-full rounded-md border px-3 py-3 text-left transition ${
+                    className={`group flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition ${
                       active
-                        ? "border-slate-950 bg-slate-950 text-white"
-                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
+                        ? "border-emerald-400/40 bg-emerald-400/10"
+                        : "border-white/8 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
                     }`}
                   >
-                    <span className="block text-sm font-semibold">{item.title}</span>
-                    <span className={`mt-1 block text-xs ${active ? "text-slate-300" : "text-slate-500"}`}>
-                      {item.date} · {item.itemCount ?? "-"} 条
+                    <span className="min-w-0">
+                      <span className={`block truncate text-sm font-semibold ${active ? "text-emerald-200" : "text-slate-200"}`}>
+                        {item.title}
+                      </span>
+                      <span className={`mt-0.5 block text-xs ${active ? "text-emerald-300/70" : "text-slate-500"}`}>
+                        {item.date} · {item.itemCount ?? "-"} 条
+                      </span>
+                    </span>
+                    <span
+                      className={`shrink-0 text-lg transition ${
+                        active ? "text-emerald-300" : "text-slate-600 group-hover:translate-x-0.5 group-hover:text-slate-300"
+                      }`}
+                      aria-hidden="true"
+                    >
+                      →
                     </span>
                   </button>
                 );
@@ -364,74 +423,149 @@ export default function Home() {
           </Panel>
         </div>
 
-        <Panel title="新闻条目">
+        <Panel title="新闻条目" count={loadState === "ready" || loadState === "fallback" ? report.items.length : undefined}>
           {loadState === "loading" ? (
-            <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">正在读取日报 JSON...</div>
+            <div className="space-y-4">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="glass rounded-2xl p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="h-4 w-28 animate-pulse rounded bg-white/10" />
+                    <div className="h-5 w-14 animate-pulse rounded-full bg-white/10" />
+                  </div>
+                  <div className="h-5 w-3/4 animate-pulse rounded bg-white/10" />
+                  <div className="mt-3 h-3 w-full animate-pulse rounded bg-white/5" />
+                  <div className="mt-2 h-3 w-5/6 animate-pulse rounded bg-white/5" />
+                </div>
+              ))}
+            </div>
           ) : loadState === "error" ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-700">日报文件读取失败，请检查 JSON 路径。</div>
+            <div className="glass rounded-2xl border-rose-500/30 bg-rose-500/5 p-6 text-sm text-rose-200">
+              日报文件读取失败，请检查 JSON 路径。
+            </div>
           ) : (
             <div className="grid gap-4">
-              {report.items.map((item) => (
-                <article key={`${item.source}-${item.title}`} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600">
+              {report.items.map((item, i) => {
+                const imp = importanceStyle(item.importance);
+                return (
+                  <article
+                    key={`${item.source}-${item.title}`}
+                    className="glass glass-hover animate-rise group rounded-2xl p-5 md:p-6"
+                    style={{ animationDelay: `${Math.min(i * 40, 320)}ms` }}
+                  >
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                      <span className="inline-flex items-center gap-2 text-sm font-medium text-slate-300">
+                        <span
+                          aria-hidden="true"
+                          className="h-5 w-5 rounded-md bg-white/90 bg-center bg-contain bg-no-repeat ring-1 ring-white/10"
+                          style={{ backgroundImage: `url(${sourceIconUrl(item.source)})` }}
+                        />
+                        {item.source}
+                      </span>
                       <span
-                        aria-hidden="true"
-                        className="h-5 w-5 rounded bg-slate-100 bg-center bg-contain bg-no-repeat"
-                        style={{ backgroundImage: `url(${sourceIconUrl(item.source)})` }}
-                      />
-                      {item.source}
-                    </span>
-                    <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold uppercase text-slate-500">
-                      {item.importance || "normal"}
-                    </span>
-                  </div>
-
-                  <h3 className="text-xl font-semibold text-slate-950">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">{item.summary}</p>
-
-                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-                    <div className="flex flex-wrap gap-2">
-                      {(item.tags || []).map((tag) => (
-                        <span key={tag} className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                          {tag}
-                        </span>
-                      ))}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ring-1 ${imp.ring} ${imp.text}`}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: imp.dot }} />
+                        {imp.label}
+                      </span>
                     </div>
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-950 hover:text-slate-950"
-                    >
-                      阅读原文
-                    </a>
-                  </div>
-                </article>
-              ))}
+
+                    <h3 className="text-lg font-semibold leading-snug text-white transition group-hover:text-emerald-100 md:text-xl">
+                      {item.title}
+                    </h3>
+                    {item.summary ? (
+                      <p className="mt-2.5 line-clamp-3 text-sm leading-6 text-slate-400">{item.summary}</p>
+                    ) : null}
+
+                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4">
+                      <div className="flex flex-wrap gap-2">
+                        {(item.tags || []).map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs font-medium text-emerald-300"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-xs font-semibold text-slate-200 transition hover:border-emerald-400/40 hover:bg-emerald-400/10 hover:text-emerald-200"
+                      >
+                        阅读原文
+                        <span className="transition group-hover:translate-x-0.5" aria-hidden="true">↗</span>
+                      </a>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </Panel>
       </section>
+
+      {/* ---------- Footer ---------- */}
+      <footer className="border-t border-white/5">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 py-8 text-sm text-slate-500 sm:flex-row">
+          <p>
+            <span className="font-semibold text-slate-300">LogicWeaver</span> · AI RSS Daily —
+            由 n8n 自动聚合，静态展示
+          </p>
+          <p className="font-mono text-xs">每天 08:00 · {formatDate(report.date)}</p>
+        </div>
+      </footer>
     </main>
   );
 }
 
-function Metric({ label, value, accent }: { label: string; value: string; accent: string }) {
+function Metric({
+  label,
+  value,
+  accent,
+  hint,
+}: {
+  label: string;
+  value: number;
+  accent: string;
+  hint: string;
+}) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/10 p-4">
-      <div className="mb-3 h-1 w-10 rounded-sm" style={{ backgroundColor: accent }} />
-      <p className="text-sm text-slate-400">{label}</p>
-      <p className="mt-1 text-3xl font-semibold text-white">{value}</p>
+    <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-white/20">
+      <div
+        className="absolute -right-6 -top-6 h-16 w-16 rounded-full opacity-40 blur-2xl transition group-hover:opacity-70"
+        style={{ backgroundColor: accent }}
+        aria-hidden="true"
+      />
+      <div className="relative">
+        <div className="mb-3 h-1 w-9 rounded-full" style={{ backgroundColor: accent }} />
+        <p className="text-xs font-medium text-slate-400">{label}</p>
+        <p className="mt-1 flex items-baseline gap-1.5">
+          <span className="text-3xl font-bold text-white tabular-nums">{value}</span>
+          <span className="text-xs text-slate-500">{hint}</span>
+        </p>
+      </div>
     </div>
   );
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function Panel({
+  title,
+  count,
+  children,
+}: {
+  title: string;
+  count?: number;
+  children: React.ReactNode;
+}) {
   return (
     <section>
-      <div className="mb-3 flex items-center justify-between gap-4">
-        <h2 className="text-base font-semibold text-slate-950">{title}</h2>
+      <div className="mb-4 flex items-center gap-3">
+        <span className="h-4 w-1 rounded-full bg-gradient-to-b from-emerald-400 to-sky-400" aria-hidden="true" />
+        <h2 className="text-base font-semibold text-white">{title}</h2>
+        {typeof count === "number" ? (
+          <span className="rounded-full bg-white/5 px-2 py-0.5 text-xs font-medium text-slate-400">{count}</span>
+        ) : null}
       </div>
       {children}
     </section>

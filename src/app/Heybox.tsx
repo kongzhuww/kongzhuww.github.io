@@ -4,7 +4,7 @@ const HEYBOX_FAV = "https://www.xiaoheihe.cn/app/user/favour/content";
 
 export default function Heybox() {
   return (
-    <section className="mx-auto max-w-7xl px-5 py-10">
+    <section id="heybox" className="mx-auto max-w-7xl px-5 py-10 scroll-mt-20">
       <div className="mb-5 flex items-center gap-3">
         <span className="h-4 w-1 rounded-full bg-gradient-to-b from-orange-400 to-amber-400" aria-hidden="true" />
         <h2 className="text-xl font-semibold text-[var(--heading)]">小黑盒收藏</h2>

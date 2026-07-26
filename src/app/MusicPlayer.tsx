@@ -121,7 +121,7 @@ export default function MusicPlayer() {
   const [tvPos, setTvPos] = useState<{ x: number; y: number } | null>(null);
   const [panelPos, setPanelPos] = useState<{ x: number; y: number } | null>(null);
   const [lyrics, setLyrics] = useState<LyricLine[]>([]);
-  const [mode, setMode] = useState<PlayMode>("list");
+  const [mode, setMode] = useState<PlayMode>("shuffle"); // default: 随机
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const sourceCache = useRef<Map<string, SongDetail>>(new Map());
@@ -173,13 +173,13 @@ export default function MusicPlayer() {
   }, [open, loadAlbums]);
 
   // The playback queue is the whole Monster Siren catalog, so prev/next can
-  // cross album boundaries. Fetch it once when the panel first opens.
+  // cross album boundaries. Fetch it once on mount (so the bar can pre-load a song).
   useEffect(() => {
-    if (!open || allSongs.length) return;
+    if (allSongs.length) return;
     api<{ list: Song[] }>("/songs")
       .then((d) => setAllSongs(d.list ?? []))
       .catch(() => {});
-  }, [open, allSongs.length]);
+  }, [allSongs.length]);
 
   const openAlbum = useCallback(async (a: Album) => {
     setAlbum(a);
@@ -202,6 +202,24 @@ export default function MusicPlayer() {
     sourceCache.current.set(cid, d);
     return d;
   }, []);
+
+  // Preload the first track (paused) so the header bar shows a song from the
+  // start — the user can then hit play / switch. Browsers block auto-play with
+  // sound, so we only load it, we don't start playback.
+  const preloadedRef = useRef(false);
+  useEffect(() => {
+    if (preloadedRef.current || current || allSongs.length === 0) return;
+    preloadedRef.current = true;
+    getSong(allSongs[0].cid)
+      .then((detail) => {
+        setIndex(0);
+        setCurrent(detail);
+        const audio = audioRef.current;
+        if (audio) audio.src = detail.sourceUrl; // load only, no play
+        setPlaying(false);
+      })
+      .catch(() => {});
+  }, [allSongs, current, getSong]);
 
   // Load synced lyrics (LRC) for the current song.
   useEffect(() => {

@@ -8,10 +8,14 @@ import { subscribeNowPlaying, getNowPlaying, getServerNowPlaying } from "./nowPl
 // row of today's aggregates (now playing / GitHub activity / RSS count).
 
 const WEATHER_URL =
-  "https://api.open-meteo.com/v1/forecast?latitude=30.59&longitude=114.31&current=temperature_2m,weather_code,apparent_temperature&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FShanghai";
+  "https://api.open-meteo.com/v1/forecast?latitude=30.59&longitude=114.31&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=3&timezone=Asia%2FShanghai";
 const GH_EVENTS_URL = "https://api.github.com/users/kongzhuww/events/public?per_page=10";
 
 const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
+type Hour = { hour: number; code: number; temp: number };
+type Day = { label: string; code: number; max: number; min: number };
+type Weather = { temp: number; code: number; max: number; min: number; hours: Hour[]; days: Day[]; rain: string };
 
 function weatherInfo(code: number): { emoji: string; label: string } {
   if (code === 0) return { emoji: "☀️", label: "晴" };
@@ -76,7 +80,7 @@ export default function DashboardHero({
   onOpenReport?: () => void;
 }) {
   const [now, setNow] = useState<Date | null>(null);
-  const [weather, setWeather] = useState<{ temp: number; code: number; max: number; min: number } | null>(null);
+  const [weather, setWeather] = useState<Weather | null>(null);
   const [playing, setPlaying] = useState<{ name: string; title: string } | null>(null);
   const [event, setEvent] = useState<EventDesc | null>(null);
 
@@ -90,11 +94,38 @@ export default function DashboardHero({
     fetch(WEATHER_URL)
       .then((r) => r.json())
       .then((d) => {
+        const nowMs = Date.now();
+        const times: string[] = d.hourly?.time ?? [];
+        let start = times.findIndex((t) => new Date(t).getTime() >= nowMs);
+        if (start < 0) start = 0;
+        const hours: Hour[] = [];
+        for (let i = start; i < Math.min(start + 6, times.length); i++) {
+          hours.push({ hour: new Date(times[i]).getHours(), code: d.hourly.weather_code[i], temp: Math.round(d.hourly.temperature_2m[i]) });
+        }
+        let rain = "未来 12 小时暂无降水 ☂️";
+        for (let i = start; i < Math.min(start + 12, times.length); i++) {
+          const code = d.hourly.weather_code[i];
+          const pop = d.hourly.precipitation_probability?.[i] ?? 0;
+          if (code >= 51 || pop >= 60) {
+            const hr = new Date(times[i]).getHours();
+            const snow = (code >= 71 && code <= 77) || code === 85 || code === 86;
+            rain = `预计 ${hr}:00 ${snow ? "有雪" : "有雨"}${pop ? `（${pop}%）` : ""} 🌧️`;
+            break;
+          }
+        }
+        const labels = ["今天", "明天", "后天"];
+        const days: Day[] = [];
+        for (let i = 1; i < Math.min(3, d.daily?.time?.length ?? 0); i++) {
+          days.push({ label: labels[i], code: d.daily.weather_code[i], max: Math.round(d.daily.temperature_2m_max[i]), min: Math.round(d.daily.temperature_2m_min[i]) });
+        }
         setWeather({
           temp: Math.round(d.current.temperature_2m),
           code: d.current.weather_code,
           max: Math.round(d.daily.temperature_2m_max[0]),
           min: Math.round(d.daily.temperature_2m_min[0]),
+          hours,
+          days,
+          rain,
         });
       })
       .catch(() => {});
@@ -173,19 +204,50 @@ export default function DashboardHero({
           ) : null}
         </div>
 
-        {/* Weather */}
+        {/* Weather + forecast */}
         <div className="glass rounded-3xl p-5 sm:p-6">
           <p className="text-sm font-medium text-[var(--muted)]">武汉 · 天气</p>
           {weather && w ? (
-            <>
-              <div className="mt-2 flex items-center gap-3">
-                <span className="text-4xl leading-none sm:text-5xl">{w.emoji}</span>
-                <span className="text-4xl font-bold tabular-nums text-[var(--heading)] sm:text-5xl">{weather.temp}°</span>
+            <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-center">
+              {/* current */}
+              <div className="shrink-0">
+                <div className="flex items-center gap-3">
+                  <span className="text-4xl leading-none sm:text-5xl">{w.emoji}</span>
+                  <span className="text-4xl font-bold tabular-nums text-[var(--heading)] sm:text-5xl">{weather.temp}°</span>
+                </div>
+                <p className="mt-2 text-sm text-[var(--muted)]">
+                  {w.label} · {weather.max}° / {weather.min}°
+                </p>
               </div>
-              <p className="mt-2 text-sm text-[var(--muted)]">
-                {w.label} · 最高 {weather.max}° / 最低 {weather.min}°
-              </p>
-            </>
+
+              {/* forecast */}
+              <div className="min-w-0 flex-1 md:border-l md:border-[var(--border)] md:pl-4">
+                <p className="text-xs font-medium text-[var(--muted)]">{weather.rain}</p>
+                {weather.hours.length ? (
+                  <div className="mt-2 flex gap-3 overflow-x-auto pb-1">
+                    {weather.hours.map((hr, i) => (
+                      <div key={i} className="flex shrink-0 flex-col items-center gap-0.5">
+                        <span className="text-[11px] text-[var(--dim)]">{i === 0 ? "现在" : `${hr.hour}时`}</span>
+                        <span className="text-base leading-none">{weatherInfo(hr.code).emoji}</span>
+                        <span className="text-xs font-medium tabular-nums text-[var(--text)]">{hr.temp}°</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                {weather.days.length ? (
+                  <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--muted)]">
+                    {weather.days.map((d, i) => (
+                      <span key={i} className="inline-flex items-center gap-1">
+                        <span className="text-[var(--dim)]">{d.label}</span>
+                        <span>{weatherInfo(d.code).emoji}</span>
+                        <span className="tabular-nums text-[var(--text)]">{d.max}°</span>
+                        <span className="tabular-nums text-[var(--dim)]">/{d.min}°</span>
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
           ) : (
             <div className="mt-3 h-16 animate-pulse rounded-xl bg-[var(--surface-hover)]" />
           )}

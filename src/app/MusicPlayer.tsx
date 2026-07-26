@@ -71,7 +71,7 @@ async function searchBiliBvid(keyword: string): Promise<BiliHit> {
 export default function MusicPlayer() {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
-  const [focus, setFocus] = useState(false);
+  const [tv, setTv] = useState(false); // the retro-TV MV window
 
   const [albums, setAlbums] = useState<Album[]>([]);
   const [albumsState, setAlbumsState] = useState<"idle" | "loading" | "ready" | "error">("idle");
@@ -86,17 +86,19 @@ export default function MusicPlayer() {
   const [duration, setDuration] = useState(0);
   const [buffering, setBuffering] = useState(false);
 
-  // Bilibili MV state for focus mode
+  // Bilibili MV state for the TV window
   const [bvid, setBvid] = useState<string | null>(null);
   const [bvidOfficial, setBvidOfficial] = useState(false);
   const [bvidAuthor, setBvidAuthor] = useState("");
   const [bvidState, setBvidState] = useState<"idle" | "loading" | "ready" | "empty">("idle");
+  const [tvPos, setTvPos] = useState<{ x: number; y: number } | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const sourceCache = useRef<Map<string, SongDetail>>(new Map());
   const bvidCache = useRef<Map<string, BiliHit>>(new Map());
   const currentRef = useRef<SongDetail | null>(null);
   const wasPlayingRef = useRef(false);
+  const drag = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
   currentRef.current = current;
 
   useEffect(() => setMounted(true), []);
@@ -148,18 +150,18 @@ export default function MusicPlayer() {
         const detail = await getSong(songs[i].cid);
         setCurrent(detail);
         const audio = audioRef.current;
-        if (audio && !focus) {
+        if (audio && !tv) {
           audio.src = detail.sourceUrl;
           await audio.play();
           setPlaying(true);
         } else {
-          setBuffering(false); // in focus, the Bilibili MV effect takes over
+          setBuffering(false); // TV on: the MV window provides sound + picture
         }
       } catch {
         setBuffering(false);
       }
     },
-    [songs, getSong, focus],
+    [songs, getSong, tv],
   );
 
   function togglePlay() {
@@ -192,11 +194,11 @@ export default function MusicPlayer() {
     setProgress(t);
   }
 
-  // Entering focus pauses our audio (the Bilibili player has its own sound);
-  // leaving focus resumes it where it was.
+  // TV on pauses our audio (the Bilibili player has its own sound); TV off
+  // resumes it where it was.
   useEffect(() => {
     const audio = audioRef.current;
-    if (focus) {
+    if (tv) {
       if (audio) {
         wasPlayingRef.current = !audio.paused;
         audio.pause();
@@ -214,11 +216,11 @@ export default function MusicPlayer() {
         }
       }
     }
-  }, [focus]);
+  }, [tv]);
 
-  // In focus mode, find the Bilibili MV for the current song.
+  // While the TV is on, find the Bilibili MV for the current song.
   useEffect(() => {
-    if (!focus || !current) return;
+    if (!tv || !current) return;
     let cancelled = false;
     const cid = current.cid;
     const apply = (hit: BiliHit) => {
@@ -241,17 +243,31 @@ export default function MusicPlayer() {
     return () => {
       cancelled = true;
     };
-  }, [focus, current]);
+  }, [tv, current]);
 
-  // Esc leaves focus mode
-  useEffect(() => {
-    if (!focus) return;
-    const h = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setFocus(false);
-    };
-    window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
-  }, [focus]);
+  // dragging the TV window by its title bar
+  function onDragDown(e: React.PointerEvent) {
+    const el = e.currentTarget.parentElement as HTMLElement | null;
+    const rect = el?.getBoundingClientRect();
+    drag.current = { sx: e.clientX, sy: e.clientY, ox: rect?.left ?? 0, oy: rect?.top ?? 0 };
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+  }
+  function onDragMove(e: React.PointerEvent) {
+    if (!drag.current) return;
+    const x = drag.current.ox + (e.clientX - drag.current.sx);
+    const y = drag.current.oy + (e.clientY - drag.current.sy);
+    setTvPos({
+      x: Math.max(0, Math.min(window.innerWidth - 120, x)),
+      y: Math.max(0, Math.min(window.innerHeight - 80, y)),
+    });
+  }
+  function onDragUp() {
+    drag.current = null;
+  }
+
+  const tvStyle: React.CSSProperties = tvPos
+    ? { left: tvPos.x, top: tvPos.y, right: "auto", bottom: "auto" }
+    : { right: 20, bottom: 20 };
 
   return (
     <>
@@ -323,16 +339,18 @@ export default function MusicPlayer() {
               </div>
             </div>
             <div className="flex items-center gap-1">
-              {current ? (
-                <button
-                  onClick={() => setFocus(true)}
-                  title="专注模式 · 播放 MV"
-                  className="inline-flex items-center gap-1 rounded-lg border border-violet-400/40 bg-violet-400/15 px-2.5 py-1 text-xs font-medium text-violet-300 transition hover:bg-violet-400/25"
-                >
-                  <FocusIcon />
-                  专注
-                </button>
-              ) : null}
+              <button
+                onClick={() => setTv((v) => !v)}
+                title="小电视 · 播放 MV"
+                className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
+                  tv
+                    ? "border-violet-400/50 bg-violet-400/20 text-violet-200"
+                    : "border-violet-400/40 bg-violet-400/15 text-violet-300 hover:bg-violet-400/25"
+                }`}
+              >
+                <TvIcon />
+                MV
+              </button>
               {album ? (
                 <button
                   onClick={() => setAlbum(null)}
@@ -452,31 +470,36 @@ export default function MusicPlayer() {
         </section>
       ) : null}
 
-      {/* Focus mode overlay: Bilibili MV for the current song */}
-      {focus ? (
-        <div className="fixed inset-0 z-[70] flex flex-col bg-black">
-          <div className="flex items-center justify-between gap-3 px-5 py-4">
-            <div className="min-w-0">
-              <p className="truncate text-base font-semibold text-white">{current?.name ?? "专注模式"}</p>
-              <p className="truncate text-xs text-white/50">
-                {bvidState === "ready"
-                  ? `UP · ${bvidAuthor || "Bilibili"}${bvidOfficial ? " · 官方" : ""}`
-                  : "明日方舟 · Bilibili"}
-              </p>
-            </div>
-            <button
-              onClick={() => setFocus(false)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+      {/* Retro-TV MV window */}
+      {tv ? (
+        <div className="fixed z-[60] select-none" style={tvStyle}>
+          <div className="rounded-[20px] border border-black/40 bg-gradient-to-b from-[#2a2620] to-[#171310] p-3 shadow-[0_24px_60px_-16px_rgba(0,0,0,0.8)]">
+            {/* title bar (drag handle) */}
+            <div
+              onPointerDown={onDragDown}
+              onPointerMove={onDragMove}
+              onPointerUp={onDragUp}
+              className="mb-2 flex cursor-grab touch-none items-center justify-between gap-2 px-1 active:cursor-grabbing"
             >
-              ✕ 退出专注
-            </button>
-          </div>
+              <span className="truncate text-[11px] font-semibold tracking-wide text-amber-200/90">
+                📺 {current?.name ?? "明日方舟 MV"}
+              </span>
+              <button
+                onClick={() => setTv(false)}
+                className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-black/40 text-[10px] text-white/70 transition hover:text-white"
+                title="关掉电视"
+              >
+                ✕
+              </button>
+            </div>
 
-          <div className="flex flex-1 items-center justify-center overflow-hidden px-4">
-            {bvidState === "loading" ? (
-              <p className="text-sm text-white/50">正在从 Bilibili 找这首歌的视频…</p>
-            ) : bvidState === "ready" && bvid ? (
-              <div className="aspect-video w-full max-w-5xl overflow-hidden rounded-xl bg-black">
+            {/* CRT screen */}
+            <div className="relative aspect-video w-[300px] overflow-hidden rounded-[10px] bg-black shadow-[inset_0_0_36px_rgba(0,0,0,0.9)] ring-2 ring-black/60 sm:w-[340px]">
+              {bvidState === "loading" ? (
+                <div className="grid h-full w-full place-items-center text-[11px] text-emerald-300/70">
+                  <span className="animate-pulse">📡 搜索 MV 信号…</span>
+                </div>
+              ) : bvidState === "ready" && bvid ? (
                 <iframe
                   key={bvid}
                   src={`https://player.bilibili.com/player.html?bvid=${bvid}&autoplay=1&high_quality=1&danmaku=0`}
@@ -487,28 +510,37 @@ export default function MusicPlayer() {
                   allow="autoplay; fullscreen"
                   allowFullScreen
                 />
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={https(current?.coverUrl || album?.coverUrl)}
-                  referrerPolicy="no-referrer"
-                  alt=""
-                  className="h-56 w-56 rounded-full object-cover shadow-2xl ring-4 ring-white/10"
-                />
-                <p className="text-sm text-white/50">没找到这首歌的视频 · 试试上/下一首</p>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div className="grid h-full w-full place-items-center px-3 text-center text-[11px] text-white/50">
+                  没有信号 · 这首暂无视频<br />试试上/下一首
+                </div>
+              )}
+              {/* scanlines + vignette overlay for the retro look */}
+              <div
+                className="pointer-events-none absolute inset-0 rounded-[10px]"
+                style={{
+                  background:
+                    "repeating-linear-gradient(0deg, rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 1px, transparent 1px, transparent 3px)",
+                  boxShadow: "inset 0 0 40px rgba(0,0,0,0.55)",
+                }}
+                aria-hidden="true"
+              />
+            </div>
 
-          <div className="flex items-center justify-center gap-4 px-5 py-5">
-            <button onClick={prev} className="grid h-11 w-11 place-items-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20" title="上一首">
-              <PrevIcon />
-            </button>
-            <button onClick={next} className="grid h-11 w-11 place-items-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20" title="下一首">
-              <NextIcon />
-            </button>
+            {/* controls / label row */}
+            <div className="mt-2 flex items-center justify-between gap-2 px-1">
+              <span className="truncate text-[10px] text-amber-200/60">
+                {bvidState === "ready" ? `${bvidAuthor || "Bilibili"}${bvidOfficial ? " · 官方" : ""}` : "Bilibili"}
+              </span>
+              <div className="flex items-center gap-1.5">
+                <button onClick={prev} title="上一首" className="grid h-6 w-6 place-items-center rounded-full bg-black/40 text-white/70 transition hover:text-white">
+                  <PrevIcon />
+                </button>
+                <button onClick={next} title="下一首" className="grid h-6 w-6 place-items-center rounded-full bg-black/40 text-white/70 transition hover:text-white">
+                  <NextIcon />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
@@ -538,11 +570,11 @@ function MusicIcon() {
     </svg>
   );
 }
-function FocusIcon() {
+function TvIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" />
-      <circle cx="12" cy="12" r="3" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="7" width="20" height="13" rx="2" />
+      <path d="m17 2-5 5-5-5" />
     </svg>
   );
 }
@@ -553,10 +585,10 @@ function PauseIcon() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>;
 }
 function PrevIcon() {
-  return <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14l-11-7z" /></svg>;
+  return <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14l-11-7z" /></svg>;
 }
 function NextIcon() {
-  return <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5l11 7-11 7z" /></svg>;
+  return <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5l11 7-11 7z" /></svg>;
 }
 function CloseIcon() {
   return (

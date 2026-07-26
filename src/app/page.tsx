@@ -10,6 +10,7 @@ import VpsProbe from "./VpsProbe";
 import Trending from "./Trending";
 import AiHot from "./AiHot";
 import MusicPlayer from "./MusicPlayer";
+import DesktopPet from "./DesktopPet";
 
 type SourceName = "HuggingFace Blog" | "OpenAI News" | "Hacker News" | "Google AI Blog";
 
@@ -504,6 +505,7 @@ export default function Home() {
       <KnowledgeBase />
       <TodoPanel />
       <MusicPlayer />
+      <DesktopPet />
     </main>
   );
 }

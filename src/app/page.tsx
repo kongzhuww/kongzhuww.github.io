@@ -10,6 +10,7 @@ import VpsProbe from "./VpsProbe";
 import Trending from "./Trending";
 import AiHot from "./AiHot";
 import MusicPlayer from "./MusicPlayer";
+import ListenTogether from "./ListenTogether";
 import DesktopPet from "./DesktopPet";
 
 type SourceName = "HuggingFace Blog" | "OpenAI News" | "Hacker News" | "Google AI Blog";
@@ -263,6 +264,7 @@ export default function Home() {
             <KnowledgeBase />
             <TodoPanel />
             <MusicPlayer />
+            <ListenTogether />
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">

@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { useCloudPref } from "./useCloudPref";
 
 // A left-edge slide-out drawer of personal bookmarks: create folders, add links,
-// click to jump. Persisted in localStorage (no sync, all local).
+// click to jump. Syncs to Supabase when signed in (else local only).
 
 type Link = { id: string; name: string; url: string };
 type Folder = { id: string; name: string; open: boolean; links: Link[] };
 
-const KEY = "lw-bookmarks";
 const PANEL_W = 300;
 
 function uid() {
@@ -35,36 +35,12 @@ function favicon(url: string) {
 }
 
 export default function Bookmarks() {
-  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
-  const [folders, setFolders] = useState<Folder[]>([]);
+  const { value: folders, setValue: setFolders, ready, signedIn, signIn } = useCloudPref<Folder[]>("bookmarks", []);
   const [newFolder, setNewFolder] = useState("");
   const [adding, setAdding] = useState<string | null>(null); // folder id currently adding a link to
   const [linkName, setLinkName] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
-  const firstLoad = useRef(true);
-
-  useEffect(() => {
-    setMounted(true);
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) setFolders(JSON.parse(raw));
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  useEffect(() => {
-    if (firstLoad.current) {
-      firstLoad.current = false;
-      return;
-    }
-    try {
-      localStorage.setItem(KEY, JSON.stringify(folders));
-    } catch {
-      /* ignore */
-    }
-  }, [folders]);
 
   function addFolder() {
     const name = newFolder.trim();
@@ -108,7 +84,13 @@ export default function Bookmarks() {
             <span className="text-base">📁</span>
             <p className="text-sm font-semibold text-[var(--heading)]">我的收藏夹</p>
           </div>
-          <span className="text-[11px] text-[var(--dim)]">本地保存</span>
+          {signedIn ? (
+            <span className="text-[11px] text-emerald-400" title="已云端同步">☁️ 已同步</span>
+          ) : (
+            <button onClick={signIn} className="text-[11px] text-[var(--muted)] underline-offset-2 hover:text-[var(--heading)] hover:underline" title="登录后云端同步、跨设备">
+              登录同步
+            </button>
+          )}
         </header>
 
         <div className="border-b border-[var(--border)] p-3">
@@ -130,7 +112,7 @@ export default function Bookmarks() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-2">
-          {!mounted ? null : folders.length === 0 ? (
+          {!ready ? null : folders.length === 0 ? (
             <div className="p-4 text-center text-sm text-[var(--muted)]">
               还没有收藏。<br />上面建个文件夹,再往里加网站吧。
             </div>

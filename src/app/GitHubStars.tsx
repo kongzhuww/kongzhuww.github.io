@@ -1,16 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCloudPref } from "./useCloudPref";
 
 // Sync the user's GitHub stars, let them file each repo into a category, and
-// click through to the repo. Stars are cached; categories live in localStorage.
+// click through to the repo. Stars are cached locally; the categories + repo
+// assignments sync to Supabase (survive cache-clears, follow you across devices).
 
 const USER = "kongzhuww";
 const STARS_KEY = "lw-gh-stars";
-const CATS_KEY = "lw-gh-cats";
-const MAP_KEY = "lw-gh-map";
 const CACHE_MS = 6 * 3600 * 1000;
 const UNCAT = "未分类";
+
+type Prefs = { cats: string[]; map: Record<string, string> };
 
 type Repo = {
   fullName: string;
@@ -76,23 +78,12 @@ async function fetchStars(): Promise<Repo[]> {
 export default function GitHubStars() {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
-  const [cats, setCats] = useState<string[]>([]);
-  const [map, setMap] = useState<Record<string, string>>({});
+  const { value: prefs, setValue: setPrefs, signedIn, signIn } = useCloudPref<Prefs>("gh-stars", { cats: [], map: {} });
+  const cats = prefs.cats;
+  const map = prefs.map;
   const [active, setActive] = useState<string>("全部");
   const [newCat, setNewCat] = useState("");
   const [adding, setAdding] = useState(false);
-
-  // load cached stars + categories
-  useEffect(() => {
-    try {
-      const c = localStorage.getItem(CATS_KEY);
-      if (c) setCats(JSON.parse(c));
-      const m = localStorage.getItem(MAP_KEY);
-      if (m) setMap(JSON.parse(m));
-    } catch {
-      /* ignore */
-    }
-  }, []);
 
   const load = useCallback(async (force = false) => {
     if (!force) {
@@ -143,22 +134,6 @@ export default function GitHubStars() {
     load();
   }, [load]);
 
-  function saveCats(next: string[]) {
-    setCats(next);
-    try {
-      localStorage.setItem(CATS_KEY, JSON.stringify(next));
-    } catch {
-      /* ignore */
-    }
-  }
-  function saveMap(next: Record<string, string>) {
-    setMap(next);
-    try {
-      localStorage.setItem(MAP_KEY, JSON.stringify(next));
-    } catch {
-      /* ignore */
-    }
-  }
   function addCat() {
     const n = newCat.trim();
     if (!n || cats.includes(n) || n === UNCAT) {
@@ -166,23 +141,26 @@ export default function GitHubStars() {
       setAdding(false);
       return;
     }
-    saveCats([...cats, n]);
+    setPrefs((p) => ({ ...p, cats: [...p.cats, n] }));
     setNewCat("");
     setAdding(false);
     setActive(n);
   }
   function delCat(name: string) {
-    saveCats(cats.filter((c) => c !== name));
-    const next = { ...map };
-    for (const k of Object.keys(next)) if (next[k] === name) delete next[k];
-    saveMap(next);
+    setPrefs((p) => {
+      const nextMap = { ...p.map };
+      for (const k of Object.keys(nextMap)) if (nextMap[k] === name) delete nextMap[k];
+      return { cats: p.cats.filter((c) => c !== name), map: nextMap };
+    });
     if (active === name) setActive("全部");
   }
   function assign(fullName: string, cat: string) {
-    const next = { ...map };
-    if (!cat) delete next[fullName];
-    else next[fullName] = cat;
-    saveMap(next);
+    setPrefs((p) => {
+      const nextMap = { ...p.map };
+      if (!cat) delete nextMap[fullName];
+      else nextMap[fullName] = cat;
+      return { ...p, map: nextMap };
+    });
   }
 
   const counts = useMemo(() => {
@@ -214,12 +192,27 @@ export default function GitHubStars() {
             ⭐ {repos.length}
           </span>
         </div>
-        <button
-          onClick={() => load(true)}
-          className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-1.5 text-xs font-medium text-[var(--muted)] transition hover:text-[var(--heading)]"
-        >
-          ↻ 同步
-        </button>
+        <div className="flex items-center gap-2">
+          {signedIn ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs font-medium text-emerald-400" title="分类已云端同步">
+              ☁️ 已同步
+            </span>
+          ) : (
+            <button
+              onClick={signIn}
+              title="用 GitHub 登录后，分类会云端保存、跨设备同步"
+              className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-medium text-[var(--muted)] transition hover:text-[var(--heading)]"
+            >
+              ☁️ 登录同步
+            </button>
+          )}
+          <button
+            onClick={() => load(true)}
+            className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-1.5 text-xs font-medium text-[var(--muted)] transition hover:text-[var(--heading)]"
+          >
+            ↻ 同步 star
+          </button>
+        </div>
       </div>
 
       {/* category tabs */}

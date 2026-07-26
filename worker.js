@@ -12,9 +12,10 @@ const PROXIES = {
 
 // The user's VPS runs a tiny proxy (bili-proxy.py) that forwards to Bilibili and
 // exposes /stats. Requests from a VPS IP are not risk-controlled like Cloudflare
-// IPs. NOTE: Cloudflare Workers may only fetch a fixed set of ports — 8080 is
-// allowed, 8787 is NOT.
-const BILI_VPS = "http://161.33.198.117:8080";
+// IPs. IMPORTANT: Cloudflare Workers cannot fetch a raw IP (error 1003) — this
+// MUST be a hostname. vps.logicweaver.me is a grey-cloud (DNS-only) A record
+// pointing at the VPS, which listens on 443 (plain HTTP on that port).
+const BILI_VPS = "http://vps.logicweaver.me:443";
 
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
@@ -85,7 +86,7 @@ export default {
 
     // Version probe so we can confirm which worker build is live.
     if (url.pathname === "/__version") {
-      return new Response("worker v3 · bili->vps:8080 · /vps route", {
+      return new Response("worker v6 · bili->vps.logicweaver.me:443 · /vps route · from-github", {
         headers: { "Content-Type": "text/plain", "Access-Control-Allow-Origin": "*" },
       });
     }

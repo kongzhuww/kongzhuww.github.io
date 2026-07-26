@@ -233,7 +233,8 @@ export default function KnowledgeBase() {
           .select()
           .single();
         if (error || !data) {
-          flash("云端添加失败");
+          if (error) console.error("知识库添加失败:", error);
+          flash(error ? `添加失败: ${error.message}` : "添加失败");
           return;
         }
         setEntries((prev) => [rowToEntry(data as KnowledgeRow), ...prev]);
@@ -323,7 +324,8 @@ export default function KnowledgeBase() {
         if (supabase && signedIn && incoming.length) {
           const { data, error } = await supabase.from("knowledge").insert(incoming).select();
           if (error) {
-            flash("云端导入失败");
+            console.error("知识库导入失败:", error);
+            flash(`导入失败: ${error.message}`);
             return;
           }
           setEntries((prev) => [...(data as KnowledgeRow[]).map(rowToEntry), ...prev]);

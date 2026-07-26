@@ -364,7 +364,7 @@ export default function KnowledgeBase() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="打开知识库"
-        className={`fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#0d1420]/90 px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_-18px_rgba(16,185,129,0.7)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-emerald-400/40 ${
+        className={`fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#0d1420] px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_-18px_rgba(16,185,129,0.7)] transition hover:-translate-y-0.5 hover:border-emerald-400/40 ${
           open ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
       >
@@ -378,7 +378,7 @@ export default function KnowledgeBase() {
       </button>
 
       {open ? (
-        <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] sm:hidden" onClick={() => setOpen(false)} aria-hidden="true" />
+        <div className="fixed inset-0 z-40 bg-black/50 sm:hidden" onClick={() => setOpen(false)} aria-hidden="true" />
       ) : null}
 
       {open ? (
@@ -387,8 +387,8 @@ export default function KnowledgeBase() {
           aria-label="知识库"
           className={
             fullscreen
-              ? "fixed inset-0 z-50 flex flex-col overflow-hidden border-0 bg-[#0a121c]/98 backdrop-blur-2xl"
-              : "fixed inset-x-3 bottom-3 top-16 z-50 flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0a121c]/95 shadow-2xl backdrop-blur-2xl sm:inset-auto sm:bottom-5 sm:right-5 sm:top-auto sm:h-[78vh] sm:max-h-[720px] sm:w-[420px]"
+              ? "fixed inset-0 z-50 flex flex-col overflow-hidden border-0 bg-[#0a121c]"
+              : "fixed inset-x-3 bottom-3 top-16 z-50 flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0a121c] shadow-2xl sm:inset-auto sm:bottom-5 sm:right-5 sm:top-auto sm:h-[78vh] sm:max-h-[720px] sm:w-[420px]"
           }
         >
           {/* Title bar */}

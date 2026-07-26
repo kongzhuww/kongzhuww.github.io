@@ -28,45 +28,19 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Aurora / mesh backdrop that lives behind the whole page */
+/* Aurora / mesh backdrop that lives behind the whole page.
+   Static painted gradients only — no animated/blurred layers, so the
+   background costs nothing to composite while scrolling. */
 .aurora-bg {
   position: fixed;
   inset: 0;
   z-index: -1;
   overflow: hidden;
   background:
-    radial-gradient(60rem 60rem at 12% -10%, rgba(16, 185, 129, 0.16), transparent 60%),
-    radial-gradient(50rem 50rem at 100% 0%, rgba(56, 189, 248, 0.14), transparent 55%),
-    radial-gradient(48rem 48rem at 50% 120%, rgba(139, 92, 246, 0.14), transparent 55%),
+    radial-gradient(60rem 60rem at 12% -10%, rgba(16, 185, 129, 0.18), transparent 60%),
+    radial-gradient(50rem 50rem at 100% 0%, rgba(56, 189, 248, 0.15), transparent 55%),
+    radial-gradient(48rem 48rem at 50% 120%, rgba(139, 92, 246, 0.15), transparent 55%),
     var(--background);
-}
-
-.aurora-bg::before,
-.aurora-bg::after {
-  content: "";
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(80px);
-  opacity: 0.5;
-  will-change: transform;
-}
-
-.aurora-bg::before {
-  width: 40rem;
-  height: 40rem;
-  top: -10rem;
-  left: -8rem;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.5), transparent 65%);
-  animation: drift 22s ease-in-out infinite;
-}
-
-.aurora-bg::after {
-  width: 34rem;
-  height: 34rem;
-  top: 20%;
-  right: -10rem;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.45), transparent 65%);
-  animation: drift 28s ease-in-out infinite reverse;
 }
 
 /* Faint grid overlay for a technical feel */
@@ -78,16 +52,11 @@ body {
   mask-image: radial-gradient(120% 120% at 50% 0%, #000 30%, transparent 75%);
 }
 
-@keyframes drift {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(3rem, 2rem, 0) scale(1.12); }
-}
-
-/* Glass surface */
+/* Glass surface — solid translucent fill over the dark page instead of a
+   backdrop-filter blur, which is far cheaper to repaint when many cards
+   scroll together. Visually near-identical on the dark background. */
 .glass {
-  background: color-mix(in srgb, #0d1420 78%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(13, 20, 32, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 

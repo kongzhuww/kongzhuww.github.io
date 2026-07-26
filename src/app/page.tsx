@@ -228,7 +228,7 @@ export default function Home() {
   return (
     <main className="relative min-h-screen text-slate-100 selection:bg-emerald-400/30">
       {/* ---------- Header ---------- */}
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#060911]/70 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#080c15]/95">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
             <div className="relative grid h-11 w-11 place-items-center rounded-2xl">

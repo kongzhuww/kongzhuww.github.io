@@ -452,7 +452,7 @@ export default function Home() {
                 return (
                   <article
                     key={`${item.source}-${item.title}`}
-                    className="glass glass-hover animate-rise group rounded-2xl p-5 md:p-6"
+                    className="glass glass-hover animate-rise card-cv group rounded-2xl p-5 md:p-6"
                     style={{ animationDelay: `${Math.min(i * 40, 320)}ms` }}
                   >
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

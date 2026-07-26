@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { setNowPlaying, setControls, type PlayMode } from "./nowPlayingStore";
 
 // Same-origin proxy served by the Cloudflare Worker (see worker.js), which
@@ -181,7 +181,7 @@ export default function MusicPlayer() {
       .catch(() => {});
   }, [open, allSongs.length]);
 
-  async function openAlbum(a: Album) {
+  const openAlbum = useCallback(async (a: Album) => {
     setAlbum(a);
     setSongs([]);
     setSongsLoading(true);
@@ -193,7 +193,7 @@ export default function MusicPlayer() {
     } finally {
       setSongsLoading(false);
     }
-  }
+  }, []);
 
   const getSong = useCallback(async (cid: string): Promise<SongDetail> => {
     const cached = sourceCache.current.get(cid);
@@ -430,11 +430,11 @@ export default function MusicPlayer() {
   const barLine = instrumental ? "纯音乐" : curLyric;
   const barSub = instrumental ? "" : nextLyric;
 
-  // publish now-playing state (line + controls state) to the header bar
+  // publish now-playing state (title + line + controls state) to the header bar
   useEffect(() => {
-    setNowPlaying({ line: barLine, sub: barSub, hasSong: !!current, playing, mode });
+    setNowPlaying({ title: current?.name ?? "", line: barLine, sub: barSub, hasSong: !!current, playing, mode });
   }, [barLine, barSub, current, playing, mode]);
-  useEffect(() => () => setNowPlaying({ line: "", sub: "", hasSong: false, playing: false }), []);
+  useEffect(() => () => setNowPlaying({ title: "", line: "", sub: "", hasSong: false, playing: false }), []);
 
   // register playback controls for the header bar (stable wrappers → latest fns)
   const prevRef = useRef(prev);
@@ -454,12 +454,88 @@ export default function MusicPlayer() {
     });
   }, []);
 
+  // The album/song browser only depends on library + selection state, so memoise
+  // it: playback progress ticks (1/s) no longer rebuild this heavy list.
+  const curCid = current?.cid;
+  const browser = useMemo(
+    () => (
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        {albumsState === "loading" ? (
+          <div className="grid grid-cols-2 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="aspect-square animate-pulse rounded-xl bg-[var(--surface)]" />
+            ))}
+          </div>
+        ) : albumsState === "error" ? (
+          <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-300">
+            无法加载塞壬唱片列表（可能是跨域限制）。稍后我可加一个中转修复。
+          </div>
+        ) : !album ? (
+          <div className="grid grid-cols-2 gap-3">
+            {albums.map((a) => (
+              <button key={a.cid} onClick={() => openAlbum(a)} className="group text-left">
+                <div className="aspect-square overflow-hidden rounded-xl border border-[var(--border)]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={https(a.coverUrl)}
+                    referrerPolicy="no-referrer"
+                    alt={a.name}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition group-hover:scale-105"
+                  />
+                </div>
+                <p className="mt-1.5 truncate text-xs font-medium text-[var(--text)]">{a.name}</p>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div>
+            <div className="mb-4 flex gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={https(album.coverUrl)} referrerPolicy="no-referrer" alt="" className="h-20 w-20 rounded-xl border border-[var(--border)] object-cover" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[var(--heading)]">{album.name}</p>
+                <p className="mt-1 text-xs text-[var(--muted)]">{songsLoading ? "加载中…" : `${songs.length} 首`}</p>
+              </div>
+            </div>
+            <div className="space-y-1">
+              {songs.map((s, i) => {
+                const active = curCid === s.cid;
+                return (
+                  <button
+                    key={s.cid}
+                    onClick={() => playByCid(s.cid)}
+                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition ${
+                      active ? "bg-violet-400/15" : "hover:bg-[var(--surface)]"
+                    }`}
+                  >
+                    <span className={`w-5 text-center text-xs ${active ? "text-violet-400" : "text-[var(--dim)]"}`}>
+                      {active && playing ? "♪" : i + 1}
+                    </span>
+                    <span className={`min-w-0 flex-1 truncate text-sm ${active ? "font-semibold text-violet-300" : "text-[var(--text)]"}`}>
+                      {s.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    ),
+    [albumsState, albums, album, songs, songsLoading, curCid, playing, openAlbum, playByCid],
+  );
+
   return (
     <>
       {/* hidden audio element persists playback across panel open/close */}
       <audio
         ref={audioRef}
-        onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
+        onTimeUpdate={(e) => {
+          // throttle to ~1/s: avoids re-rendering the panel several times a second
+          const t = e.currentTarget.currentTime;
+          setProgress((p) => (Math.floor(t) !== Math.floor(p) ? t : p));
+        }}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
         onPlaying={() => {
           setBuffering(false);
@@ -554,70 +630,8 @@ export default function MusicPlayer() {
             </div>
           </header>
 
-          {/* Browser */}
-          <div className="flex-1 overflow-y-auto px-4 py-3">
-            {albumsState === "loading" ? (
-              <div className="grid grid-cols-2 gap-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="aspect-square animate-pulse rounded-xl bg-[var(--surface)]" />
-                ))}
-              </div>
-            ) : albumsState === "error" ? (
-              <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-300">
-                无法加载塞壬唱片列表（可能是跨域限制）。稍后我可加一个中转修复。
-              </div>
-            ) : !album ? (
-              <div className="grid grid-cols-2 gap-3">
-                {albums.map((a) => (
-                  <button key={a.cid} onClick={() => openAlbum(a)} className="group text-left">
-                    <div className="aspect-square overflow-hidden rounded-xl border border-[var(--border)]">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={https(a.coverUrl)}
-                        referrerPolicy="no-referrer"
-                        alt={a.name}
-                        loading="lazy"
-                        className="h-full w-full object-cover transition group-hover:scale-105"
-                      />
-                    </div>
-                    <p className="mt-1.5 truncate text-xs font-medium text-[var(--text)]">{a.name}</p>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div>
-                <div className="mb-4 flex gap-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={https(album.coverUrl)} referrerPolicy="no-referrer" alt="" className="h-20 w-20 rounded-xl border border-[var(--border)] object-cover" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[var(--heading)]">{album.name}</p>
-                    <p className="mt-1 text-xs text-[var(--muted)]">{songsLoading ? "加载中…" : `${songs.length} 首`}</p>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  {songs.map((s, i) => {
-                    const active = current?.cid === s.cid;
-                    return (
-                      <button
-                        key={s.cid}
-                        onClick={() => playByCid(s.cid)}
-                        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition ${
-                          active ? "bg-violet-400/15" : "hover:bg-[var(--surface)]"
-                        }`}
-                      >
-                        <span className={`w-5 text-center text-xs ${active ? "text-violet-400" : "text-[var(--dim)]"}`}>
-                          {active && playing ? "♪" : i + 1}
-                        </span>
-                        <span className={`min-w-0 flex-1 truncate text-sm ${active ? "font-semibold text-violet-300" : "text-[var(--text)]"}`}>
-                          {s.name}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Browser (memoised) */}
+          {browser}
 
           {/* Now playing controls */}
           {current ? (

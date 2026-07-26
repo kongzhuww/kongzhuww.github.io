@@ -35,7 +35,10 @@ export default function LyricBar() {
 
         <div className="min-w-0 flex-1 text-center">
           <p className="truncate text-base font-semibold text-gradient sm:text-xl">{s.line || "♪"}</p>
-          {s.sub ? <p className="hidden truncate text-xs text-[var(--dim)] md:block">{s.sub}</p> : null}
+          <p className="truncate text-[11px] text-[var(--dim)]">
+            <span className="text-[var(--muted)]">♪ {s.title || "塞壬电台"}</span>
+            {s.sub ? <span className="hidden md:inline"> · {s.sub}</span> : null}
+          </p>
         </div>
 
         <BarBtn title="下一首" onClick={() => c.next()}>

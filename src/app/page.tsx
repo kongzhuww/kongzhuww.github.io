@@ -51,7 +51,7 @@ const SOURCE_PROFILES: Record<string, { domain: string; color: string }> = {
 const IMPORTANCE_STYLES: Record<string, { label: string; dot: string; text: string; ring: string }> = {
   high: { label: "重点", dot: "#f43f5e", text: "text-rose-300", ring: "ring-rose-500/30 bg-rose-500/10" },
   medium: { label: "关注", dot: "#f59e0b", text: "text-amber-300", ring: "ring-amber-500/30 bg-amber-500/10" },
-  low: { label: "参考", dot: "#64748b", text: "text-slate-300", ring: "ring-slate-500/30 bg-slate-500/10" },
+  low: { label: "参考", dot: "#64748b", text: "text-[var(--text)]", ring: "ring-slate-500/30 bg-slate-500/10" },
 };
 
 const FALLBACK_REPORT: DailyReport = {
@@ -226,9 +226,9 @@ export default function Home() {
   const status = statusMeta(loadState, report);
 
   return (
-    <main className="relative min-h-screen text-slate-100 selection:bg-emerald-400/30">
+    <main className="relative min-h-screen text-[var(--text)] selection:bg-emerald-400/30">
       {/* ---------- Header ---------- */}
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#080c15]/95">
+      <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--header)]">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
             <div className="relative grid h-11 w-11 place-items-center rounded-2xl">
@@ -241,21 +241,22 @@ export default function Home() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-300/80">
                 LogicWeaver
               </p>
-              <h1 className="text-lg font-semibold text-white">AI RSS Daily</h1>
+              <h1 className="text-lg font-semibold text-[var(--heading)]">AI RSS Daily</h1>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            <ThemeToggle />
             <span
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-medium text-slate-300"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-xs font-medium text-[var(--text)]"
               style={{ color: status.color }}
             >
               <span className="pulse-dot inline-block h-2 w-2 rounded-full" style={{ backgroundColor: status.color }} />
-              <span className="text-slate-300">{status.text} · 每天 08:00</span>
+              <span className="text-[var(--text)]">{status.text} · 每天 08:00</span>
             </span>
             <a
               href="/reports/latest.json"
-              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-white/25 hover:bg-white/10"
+              className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-xs font-semibold text-[var(--text)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
             >
               查看 JSON
             </a>
@@ -263,7 +264,7 @@ export default function Home() {
               href="https://github.com/kongzhuww/kongzhuww.github.io"
               target="_blank"
               rel="noreferrer"
-              className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-slate-900 transition hover:bg-emerald-300"
+              className="rounded-full bg-[var(--heading)] px-4 py-2 text-xs font-semibold text-[var(--panel)] transition hover:bg-emerald-300 hover:text-[#08121a]"
             >
               GitHub
             </a>
@@ -280,7 +281,7 @@ export default function Home() {
               {report.sources.map((source) => (
                 <span
                   key={source.name}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200"
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-medium text-[var(--text)]"
                 >
                   <span
                     aria-hidden="true"
@@ -300,7 +301,7 @@ export default function Home() {
             <h2 className="max-w-3xl text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl">
               <span className="text-gradient">{report.title}</span>
             </h2>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300 md:text-lg">
+            <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--text)] md:text-lg">
               {report.summary}
             </p>
 
@@ -316,8 +317,8 @@ export default function Home() {
         <aside className="glass animate-rise flex flex-col rounded-3xl p-6" style={{ animationDelay: "80ms" }}>
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">生成时间</p>
-              <p className="mt-1 text-lg font-semibold text-white" suppressHydrationWarning>
+              <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">生成时间</p>
+              <p className="mt-1 text-lg font-semibold text-[var(--heading)]" suppressHydrationWarning>
                 {formatDateTime(report.generatedAt)}
               </p>
             </div>
@@ -326,7 +327,7 @@ export default function Home() {
             </span>
           </div>
 
-          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">来源分布</p>
+          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-[var(--dim)]">来源分布</p>
           <div className="space-y-2.5">
             {report.sources.map((source) => {
               const profile = sourceProfile(source.name);
@@ -336,17 +337,17 @@ export default function Home() {
                   href={source.url || `https://${profile.domain}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="group flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 transition hover:border-white/20 hover:bg-white/[0.06]"
+                  className="group flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
                 >
                   <span className="flex min-w-0 items-center gap-3">
                     <span
-                      className="h-2.5 w-2.5 shrink-0 rounded-full ring-4 ring-white/5"
+                      className="h-2.5 w-2.5 shrink-0 rounded-full ring-4 ring-[var(--border-strong)]"
                       style={{ backgroundColor: profile.color }}
                       aria-hidden="true"
                     />
-                    <span className="truncate text-sm font-medium text-slate-200">{source.name}</span>
+                    <span className="truncate text-sm font-medium text-[var(--text)]">{source.name}</span>
                   </span>
-                  <span className="ml-3 shrink-0 rounded-full bg-white/5 px-2.5 py-0.5 text-xs font-semibold text-slate-300 transition group-hover:bg-white/10">
+                  <span className="ml-3 shrink-0 rounded-full bg-[var(--surface)] px-2.5 py-0.5 text-xs font-semibold text-[var(--text)] transition group-hover:bg-[var(--surface-hover)]">
                     {source.count}
                   </span>
                 </a>
@@ -369,7 +370,7 @@ export default function Home() {
                   <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-emerald-400/15 text-xs font-bold text-emerald-300">
                     {i + 1}
                   </span>
-                  <p className="text-sm leading-6 text-slate-300">{highlight}</p>
+                  <p className="text-sm leading-6 text-[var(--text)]">{highlight}</p>
                 </div>
               ))}
             </div>
@@ -380,7 +381,7 @@ export default function Home() {
               {report.trends.map((trend) => (
                 <span
                   key={trend}
-                  className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-sm font-medium text-slate-300 transition hover:border-emerald-400/30 hover:text-emerald-200"
+                  className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-1.5 text-sm font-medium text-[var(--text)] transition hover:border-emerald-400/30 hover:text-emerald-200"
                 >
                   #{trend}
                 </span>
@@ -400,20 +401,20 @@ export default function Home() {
                     className={`group flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition ${
                       active
                         ? "border-emerald-400/40 bg-emerald-400/10"
-                        : "border-white/8 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
+                        : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
                     }`}
                   >
                     <span className="min-w-0">
-                      <span className={`block truncate text-sm font-semibold ${active ? "text-emerald-200" : "text-slate-200"}`}>
+                      <span className={`block truncate text-sm font-semibold ${active ? "text-emerald-200" : "text-[var(--text)]"}`}>
                         {item.title}
                       </span>
-                      <span className={`mt-0.5 block text-xs ${active ? "text-emerald-300/70" : "text-slate-500"}`}>
+                      <span className={`mt-0.5 block text-xs ${active ? "text-emerald-300/70" : "text-[var(--dim)]"}`}>
                         {item.date} · {item.itemCount ?? "-"} 条
                       </span>
                     </span>
                     <span
                       className={`shrink-0 text-lg transition ${
-                        active ? "text-emerald-300" : "text-slate-600 group-hover:translate-x-0.5 group-hover:text-slate-300"
+                        active ? "text-emerald-300" : "text-[var(--dim)] group-hover:translate-x-0.5 group-hover:text-[var(--text)]"
                       }`}
                       aria-hidden="true"
                     >
@@ -432,12 +433,12 @@ export default function Home() {
               {[0, 1, 2].map((i) => (
                 <div key={i} className="glass rounded-2xl p-5">
                   <div className="mb-4 flex items-center justify-between">
-                    <div className="h-4 w-28 animate-pulse rounded bg-white/10" />
-                    <div className="h-5 w-14 animate-pulse rounded-full bg-white/10" />
+                    <div className="h-4 w-28 animate-pulse rounded bg-[var(--surface-hover)]" />
+                    <div className="h-5 w-14 animate-pulse rounded-full bg-[var(--surface-hover)]" />
                   </div>
-                  <div className="h-5 w-3/4 animate-pulse rounded bg-white/10" />
-                  <div className="mt-3 h-3 w-full animate-pulse rounded bg-white/5" />
-                  <div className="mt-2 h-3 w-5/6 animate-pulse rounded bg-white/5" />
+                  <div className="h-5 w-3/4 animate-pulse rounded bg-[var(--surface-hover)]" />
+                  <div className="mt-3 h-3 w-full animate-pulse rounded bg-[var(--surface)]" />
+                  <div className="mt-2 h-3 w-5/6 animate-pulse rounded bg-[var(--surface)]" />
                 </div>
               ))}
             </div>
@@ -456,10 +457,10 @@ export default function Home() {
                     style={{ animationDelay: `${Math.min(i * 40, 320)}ms` }}
                   >
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                      <span className="inline-flex items-center gap-2 text-sm font-medium text-slate-300">
+                      <span className="inline-flex items-center gap-2 text-sm font-medium text-[var(--text)]">
                         <span
                           aria-hidden="true"
-                          className="h-5 w-5 rounded-md bg-white/90 bg-center bg-contain bg-no-repeat ring-1 ring-white/10"
+                          className="h-5 w-5 rounded-md bg-white/90 bg-center bg-contain bg-no-repeat ring-1 ring-[var(--border-strong)]"
                           style={{ backgroundImage: `url(${sourceIconUrl(item.source)})` }}
                         />
                         {item.source}
@@ -472,14 +473,14 @@ export default function Home() {
                       </span>
                     </div>
 
-                    <h3 className="text-lg font-semibold leading-snug text-white transition group-hover:text-emerald-100 md:text-xl">
+                    <h3 className="text-lg font-semibold leading-snug text-[var(--heading)] transition group-hover:text-emerald-100 md:text-xl">
                       {item.title}
                     </h3>
                     {item.summary ? (
-                      <p className="mt-2.5 line-clamp-3 text-sm leading-6 text-slate-400">{item.summary}</p>
+                      <p className="mt-2.5 line-clamp-3 text-sm leading-6 text-[var(--muted)]">{item.summary}</p>
                     ) : null}
 
-                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4">
+                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
                       <div className="flex flex-wrap gap-2">
                         {(item.tags || []).map((tag) => (
                           <span
@@ -494,7 +495,7 @@ export default function Home() {
                         href={item.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-xs font-semibold text-slate-200 transition hover:border-emerald-400/40 hover:bg-emerald-400/10 hover:text-emerald-200"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-xs font-semibold text-[var(--text)] transition hover:border-emerald-400/40 hover:bg-emerald-400/10 hover:text-emerald-200"
                       >
                         阅读原文
                         <span className="transition group-hover:translate-x-0.5" aria-hidden="true">↗</span>
@@ -509,10 +510,10 @@ export default function Home() {
       </section>
 
       {/* ---------- Footer ---------- */}
-      <footer className="border-t border-white/5">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 py-8 text-sm text-slate-500 sm:flex-row">
+      <footer className="border-t border-[var(--border)]">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 py-8 text-sm text-[var(--dim)] sm:flex-row">
           <p>
-            <span className="font-semibold text-slate-300">LogicWeaver</span> · AI RSS Daily —
+            <span className="font-semibold text-[var(--text)]">LogicWeaver</span> · AI RSS Daily —
             由 n8n 自动聚合，静态展示
           </p>
           <p className="font-mono text-xs" suppressHydrationWarning>
@@ -524,6 +525,46 @@ export default function Home() {
       {/* Floating personal knowledge base */}
       <KnowledgeBase />
     </main>
+  );
+}
+
+function ThemeToggle() {
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
+
+  useEffect(() => {
+    const current = document.documentElement.getAttribute("data-theme");
+    setTheme(current === "light" ? "light" : "dark");
+  }, []);
+
+  function toggle() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.setAttribute("data-theme", next);
+    try {
+      localStorage.setItem("lw-theme", next);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return (
+    <button
+      onClick={toggle}
+      aria-label={theme === "dark" ? "切换到白天模式" : "切换到黑夜模式"}
+      title={theme === "dark" ? "白天模式" : "黑夜模式"}
+      className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] transition hover:border-[var(--border-strong)] hover:text-[var(--heading)]"
+    >
+      {theme === "dark" ? (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+        </svg>
+      ) : (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      )}
+    </button>
   );
 }
 
@@ -539,7 +580,7 @@ function Metric({
   hint: string;
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-white/20">
+    <div className="group relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--border-strong)]">
       <div
         className="absolute -right-6 -top-6 h-16 w-16 rounded-full opacity-40 blur-2xl transition group-hover:opacity-70"
         style={{ backgroundColor: accent }}
@@ -547,10 +588,10 @@ function Metric({
       />
       <div className="relative">
         <div className="mb-3 h-1 w-9 rounded-full" style={{ backgroundColor: accent }} />
-        <p className="text-xs font-medium text-slate-400">{label}</p>
+        <p className="text-xs font-medium text-[var(--muted)]">{label}</p>
         <p className="mt-1 flex items-baseline gap-1.5">
-          <span className="text-3xl font-bold text-white tabular-nums">{value}</span>
-          <span className="text-xs text-slate-500">{hint}</span>
+          <span className="text-3xl font-bold text-[var(--heading)] tabular-nums">{value}</span>
+          <span className="text-xs text-[var(--dim)]">{hint}</span>
         </p>
       </div>
     </div>
@@ -570,9 +611,9 @@ function Panel({
     <section>
       <div className="mb-4 flex items-center gap-3">
         <span className="h-4 w-1 rounded-full bg-gradient-to-b from-emerald-400 to-sky-400" aria-hidden="true" />
-        <h2 className="text-base font-semibold text-white">{title}</h2>
+        <h2 className="text-base font-semibold text-[var(--heading)]">{title}</h2>
         {typeof count === "number" ? (
-          <span className="rounded-full bg-white/5 px-2 py-0.5 text-xs font-medium text-slate-400">{count}</span>
+          <span className="rounded-full bg-[var(--surface)] px-2 py-0.5 text-xs font-medium text-[var(--muted)]">{count}</span>
         ) : null}
       </div>
       {children}

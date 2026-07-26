@@ -1,8 +1,48 @@
 @import "tailwindcss";
 
-:root {
+/* ---- Theme tokens: dark is the default (:root), light overrides via
+   [data-theme="light"]. All component colors reference these vars. ---- */
+:root,
+:root[data-theme="dark"] {
   --background: #060911;
   --foreground: #e6edf6;
+  --heading: #ffffff;
+  --text: #dbe4ee;
+  --muted: #94a3b8;
+  --dim: #64748b;
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --glass: rgba(13, 20, 32, 0.92);
+  --panel: #0a121c;
+  --header: rgba(8, 12, 21, 0.95);
+  --launcher: #0d1420;
+  --grid-line: rgba(255, 255, 255, 0.035);
+  --grad-a: #ffffff;
+  --grad-b: #a7f3d0;
+  --grad-c: #7dd3fc;
+}
+
+:root[data-theme="light"] {
+  --background: #eef2f8;
+  --foreground: #1e293b;
+  --heading: #0f172a;
+  --text: #334155;
+  --muted: #64748b;
+  --dim: #94a3b8;
+  --border: rgba(15, 23, 42, 0.10);
+  --border-strong: rgba(15, 23, 42, 0.22);
+  --surface: rgba(15, 23, 42, 0.035);
+  --surface-hover: rgba(15, 23, 42, 0.07);
+  --glass: rgba(255, 255, 255, 0.88);
+  --panel: #ffffff;
+  --header: rgba(255, 255, 255, 0.9);
+  --launcher: #ffffff;
+  --grid-line: rgba(15, 23, 42, 0.05);
+  --grad-a: #0f172a;
+  --grad-b: #059669;
+  --grad-c: #0284c7;
 }
 
 @theme inline {
@@ -10,10 +50,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-* {
-  border-color: color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 
 body {
@@ -52,8 +88,8 @@ body {
 /* Faint grid overlay for a technical feel */
 .grid-overlay {
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 44px 44px;
   mask-image: radial-gradient(120% 120% at 50% 0%, #000 30%, transparent 75%);
 }
@@ -62,8 +98,8 @@ body {
    backdrop-filter blur, which is far cheaper to repaint when many cards
    scroll together. Visually near-identical on the dark background. */
 .glass {
-  background: rgba(13, 20, 32, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--glass);
+  border: 1px solid var(--border);
 }
 
 .glass-hover {
@@ -79,7 +115,7 @@ body {
 
 /* Gradient text */
 .text-gradient {
-  background: linear-gradient(120deg, #ffffff 0%, #a7f3d0 45%, #7dd3fc 100%);
+  background: linear-gradient(120deg, var(--grad-a) 0%, var(--grad-b) 45%, var(--grad-c) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

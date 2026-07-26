@@ -377,7 +377,7 @@ export default function KnowledgeBase() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="打开知识库"
-        className={`fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#0d1420] px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_-18px_rgba(16,185,129,0.7)] transition hover:-translate-y-0.5 hover:border-emerald-400/40 ${
+        className={`fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--launcher)] px-4 py-3 text-sm font-semibold text-[var(--heading)] shadow-[0_18px_40px_-18px_rgba(16,185,129,0.7)] transition hover:-translate-y-0.5 hover:border-emerald-400/40 ${
           open ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
       >
@@ -386,7 +386,7 @@ export default function KnowledgeBase() {
         </span>
         知识库
         {mounted && entries.length > 0 ? (
-          <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-slate-300">{entries.length}</span>
+          <span className="rounded-full bg-[var(--surface-hover)] px-2 py-0.5 text-xs text-[var(--text)]">{entries.length}</span>
         ) : null}
       </button>
 
@@ -400,19 +400,19 @@ export default function KnowledgeBase() {
           aria-label="知识库"
           className={
             fullscreen
-              ? "fixed inset-0 z-50 flex flex-col overflow-hidden border-0 bg-[#0a121c]"
-              : "fixed inset-x-3 bottom-3 top-16 z-50 flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0a121c] shadow-2xl sm:inset-auto sm:bottom-5 sm:right-5 sm:top-auto sm:h-[78vh] sm:max-h-[720px] sm:w-[420px]"
+              ? "fixed inset-0 z-50 flex flex-col overflow-hidden border-0 bg-[var(--panel)]"
+              : "fixed inset-x-3 bottom-3 top-16 z-50 flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--panel)] shadow-2xl sm:inset-auto sm:bottom-5 sm:right-5 sm:top-auto sm:h-[78vh] sm:max-h-[720px] sm:w-[420px]"
           }
         >
           {/* Title bar */}
-          <header className="flex items-center justify-between gap-3 border-b border-white/8 bg-white/[0.03] px-4 py-3">
+          <header className="flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3">
             <div className="flex items-center gap-2.5">
               <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-emerald-400 to-sky-400 text-[#08121a]">
                 <BookIcon />
               </span>
               <div className="leading-tight">
-                <p className="text-sm font-semibold text-white">我的知识库</p>
-                <p className="text-[11px] text-slate-400">{mounted ? statusLine : "加载中…"}</p>
+                <p className="text-sm font-semibold text-[var(--heading)]">我的知识库</p>
+                <p className="text-[11px] text-[var(--muted)]">{mounted ? statusLine : "加载中…"}</p>
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -463,47 +463,47 @@ export default function KnowledgeBase() {
           {/* Auth gate */}
           {cloud && authReady && !signedIn ? (
             <div className="flex flex-1 flex-col justify-center px-6 py-8">
-              <div className="mx-auto mb-5 grid h-12 w-12 place-items-center rounded-2xl border border-white/10 bg-white/[0.04] text-emerald-300">
+              <div className="mx-auto mb-5 grid h-12 w-12 place-items-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] text-emerald-300">
                 <LockIcon />
               </div>
-              <p className="text-center text-sm font-semibold text-white">登录后使用云端知识库</p>
-              <p className="mt-1 text-center text-xs text-slate-500">数据私密保存，仅你可见，多设备同步</p>
+              <p className="text-center text-sm font-semibold text-[var(--heading)]">登录后使用云端知识库</p>
+              <p className="mt-1 text-center text-xs text-[var(--dim)]">数据私密保存，仅你可见，多设备同步</p>
               <button
                 onClick={handleGithubLogin}
                 disabled={authBusy}
-                className="mt-5 flex w-full items-center justify-center gap-2.5 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-[#0d1117] transition hover:bg-slate-100 disabled:opacity-60"
+                className="mt-5 flex w-full items-center justify-center gap-2.5 rounded-lg border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-semibold text-[#0d1117] transition hover:bg-slate-100 disabled:opacity-60"
               >
                 <GithubIcon />
                 {authBusy ? "跳转 GitHub 中…" : "用 GitHub 登录"}
               </button>
               {authError ? <p className="mt-3 text-center text-xs text-rose-400">{authError}</p> : null}
-              <p className="mt-4 text-center text-[11px] leading-5 text-slate-600">
+              <p className="mt-4 text-center text-[11px] leading-5 text-[var(--dim)]">
                 点击后会跳转到 GitHub 授权，授权后自动返回并登录。
               </p>
             </div>
           ) : cloud && !authReady ? (
-            <div className="grid flex-1 place-items-center text-sm text-slate-500">连接中…</div>
+            <div className="grid flex-1 place-items-center text-sm text-[var(--dim)]">连接中…</div>
           ) : (
             <>
               {/* Search + add */}
-              <div className="border-b border-white/8 px-4 py-3">
+              <div className="border-b border-[var(--border)] px-4 py-3">
                 <div className={`flex items-center gap-2 ${fullscreen ? "mx-auto w-full max-w-5xl" : ""}`}>
                   <div className="relative flex-1">
-                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--dim)]">
                       <SearchIcon />
                     </span>
                     <input
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       placeholder="搜索知识…"
-                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2 pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus:border-emerald-400/40 focus:bg-white/[0.06]"
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm text-[var(--text)] placeholder:text-[var(--dim)] outline-none transition focus:border-emerald-400/40 focus:bg-[var(--surface-hover)]"
                     />
                   </div>
                   {allTags.length > 0 ? (
                     <button
                       onClick={() => setShowTags((v) => !v)}
                       title={showTags ? "收起标签" : "展开标签"}
-                      className="shrink-0 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-slate-300 transition hover:border-white/25"
+                      className="shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--text)] transition hover:border-[var(--border-strong)]"
                     >
                       标签 {showTags ? "▴" : "▾"}
                     </button>
@@ -537,26 +537,26 @@ export default function KnowledgeBase() {
 
               {/* Composer */}
               {composerOpen ? (
-                <div className="space-y-2.5 border-b border-white/8 bg-white/[0.02] px-4 py-3">
+                <div className="space-y-2.5 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                   <input
                     ref={titleRef}
                     value={draftTitle}
                     onChange={(e) => setDraftTitle(e.target.value)}
                     placeholder="标题"
-                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white placeholder:text-slate-500 outline-none focus:border-emerald-400/40"
+                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--heading)] placeholder:text-[var(--dim)] outline-none focus:border-emerald-400/40"
                   />
                   <textarea
                     value={draftContent}
                     onChange={(e) => setDraftContent(e.target.value)}
                     placeholder="内容 / 笔记…"
                     rows={4}
-                    className="w-full resize-y rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm leading-6 text-slate-200 placeholder:text-slate-500 outline-none focus:border-emerald-400/40"
+                    className="w-full resize-y rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm leading-6 text-[var(--text)] placeholder:text-[var(--dim)] outline-none focus:border-emerald-400/40"
                   />
                   <input
                     value={draftTags}
                     onChange={(e) => setDraftTags(e.target.value)}
                     placeholder="标签（用空格或逗号分隔）"
-                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 outline-none focus:border-emerald-400/40"
+                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--dim)] outline-none focus:border-emerald-400/40"
                   />
                   <div className="flex items-center justify-end gap-2 pt-0.5">
                     <button
@@ -564,7 +564,7 @@ export default function KnowledgeBase() {
                         resetDraft();
                         setComposerOpen(false);
                       }}
-                      className="rounded-lg px-3 py-1.5 text-sm text-slate-400 transition hover:text-slate-200"
+                      className="rounded-lg px-3 py-1.5 text-sm text-[var(--muted)] transition hover:text-[var(--text)]"
                     >
                       取消
                     </button>
@@ -597,13 +597,13 @@ export default function KnowledgeBase() {
                     {filtered.map((entry) => (
                       <article
                         key={entry.id}
-                        className={`group rounded-xl border border-white/8 bg-white/[0.03] transition hover:border-white/20 hover:bg-white/[0.05] ${
+                        className={`group rounded-xl border border-[var(--border)] bg-[var(--surface)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)] ${
                           fullscreen ? "p-5" : "p-3.5 card-cv"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <h3
-                            className={`font-semibold leading-snug text-white ${fullscreen ? "text-base" : "text-sm"}`}
+                            className={`font-semibold leading-snug text-[var(--heading)] ${fullscreen ? "text-base" : "text-sm"}`}
                           >
                             {entry.title}
                           </h3>
@@ -622,7 +622,7 @@ export default function KnowledgeBase() {
                         </div>
                         {entry.content ? (
                           <p
-                            className={`mt-2 whitespace-pre-wrap text-slate-300 ${
+                            className={`mt-2 whitespace-pre-wrap text-[var(--text)] ${
                               fullscreen ? "text-sm leading-7" : "text-[13px] leading-6"
                             }`}
                           >
@@ -639,7 +639,7 @@ export default function KnowledgeBase() {
                               #{t}
                             </button>
                           ))}
-                          <span className="ml-auto text-[11px] text-slate-500">{formatWhen(entry.updatedAt)}</span>
+                          <span className="ml-auto text-[11px] text-[var(--dim)]">{formatWhen(entry.updatedAt)}</span>
                         </div>
                       </article>
                     ))}
@@ -664,11 +664,11 @@ function EmptyState({ hasEntries, onAdd }: { hasEntries: boolean; onAdd: () => v
   return (
     <div className="grid h-full place-items-center px-6 text-center">
       <div>
-        <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl border border-white/10 bg-white/[0.04] text-emerald-300">
+        <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] text-emerald-300">
           <BookIcon />
         </div>
-        <p className="text-sm font-medium text-slate-300">{hasEntries ? "没有匹配的知识" : "还没有知识条目"}</p>
-        <p className="mt-1 text-xs text-slate-500">{hasEntries ? "换个关键词或标签试试" : "点下面按钮，添加你的第一条知识"}</p>
+        <p className="text-sm font-medium text-[var(--text)]">{hasEntries ? "没有匹配的知识" : "还没有知识条目"}</p>
+        <p className="mt-1 text-xs text-[var(--dim)]">{hasEntries ? "换个关键词或标签试试" : "点下面按钮，添加你的第一条知识"}</p>
         {!hasEntries ? (
           <button
             onClick={onAdd}
@@ -687,7 +687,7 @@ function TagChip({ active, onClick, children }: { active: boolean; onClick: () =
     <button
       onClick={onClick}
       className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
-        active ? "bg-emerald-400 text-[#08121a]" : "border border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/25"
+        active ? "bg-emerald-400 text-[#08121a]" : "border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:border-[var(--border-strong)]"
       }`}
     >
       {children}
@@ -711,7 +711,7 @@ function IconButton({
       title={title}
       aria-label={title}
       onClick={onClick}
-      className={`grid place-items-center rounded-lg border border-white/8 bg-white/[0.03] text-slate-300 transition hover:border-white/25 hover:text-white ${
+      className={`grid place-items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] transition hover:border-[var(--border-strong)] hover:text-[var(--heading)] ${
         small ? "h-7 w-7" : "h-8 w-8"
       }`}
     >

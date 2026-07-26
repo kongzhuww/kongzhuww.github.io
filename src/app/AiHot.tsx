@@ -18,6 +18,8 @@ type Item = {
   category?: string;
 };
 
+const AIHOT_BASE = "https://aihot.virxact.com";
+
 function pick(o: RawItem, keys: string[]): string | undefined {
   for (const k of keys) {
     const v = o[k];
@@ -27,15 +29,41 @@ function pick(o: RawItem, keys: string[]): string | undefined {
   return undefined;
 }
 
+// Scan an object (recursively) for the first plausible article URL.
+function firstUrl(o: RawItem, depth = 0): string | undefined {
+  if (depth > 3) return undefined;
+  for (const v of Object.values(o)) {
+    if (typeof v === "string" && /^https?:\/\//i.test(v) && !/\.(png|jpe?g|gif|webp|svg|ico)(\?|$)/i.test(v)) {
+      return v;
+    }
+    if (v && typeof v === "object") {
+      const n = firstUrl(v as RawItem, depth + 1);
+      if (n) return n;
+    }
+  }
+  return undefined;
+}
+
+// Turn a possibly-relative link into an absolute one (relative => aihot page).
+function absolutize(u?: string): string {
+  if (!u || u === "#") return "";
+  if (/^https?:\/\//i.test(u)) return u;
+  return AIHOT_BASE + (u.startsWith("/") ? u : `/${u}`);
+}
+
 function normalize(raw: RawItem, i: number): Item {
   const nested = (raw.source && typeof raw.source === "object" ? (raw.source as RawItem) : {}) as RawItem;
+  // Prefer the original source link; fall back to any read link, then to the
+  // first URL anywhere in the record (handles unknown field names).
+  const source = absolutize(pick(raw, ["sourceUrl", "source_url", "originalUrl", "original_url", "origin", "originUrl"]));
+  const read = absolutize(pick(raw, ["url", "link", "readUrl", "read_url", "href", "permalink", "canonical", "canonicalUrl", "web_url", "articleUrl", "mobileUrl", "pcUrl", "newsUrl"]));
+  const readUrl = source || read || firstUrl(raw) || "#";
   return {
     id: pick(raw, ["id", "guid", "uuid"]) || String(i),
     title: pick(raw, ["title", "headline", "name"]) || "无标题",
     summary: pick(raw, ["summary", "description", "excerpt", "abstract", "digest"]) || "",
-    readUrl:
-      pick(raw, ["url", "link", "readUrl", "read_url", "permalink", "canonical", "canonicalUrl"]) || "#",
-    sourceUrl: pick(raw, ["sourceUrl", "source_url", "originalUrl", "original_url", "origin"]),
+    readUrl,
+    sourceUrl: source || undefined,
     source: pick(raw, ["sourceName", "source_name", "site", "author", "from"]) || pick(nested, ["name", "title"]),
     time: pick(raw, ["publishedAt", "published_at", "time", "date", "createdAt", "created_at", "publishTime"]),
     category: pick(raw, ["category", "tag", "type", "channel"]),

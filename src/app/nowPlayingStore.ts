@@ -1,29 +1,57 @@
-// Tiny external store so the header lyric bar can read the current synced lyric
-// line that the MusicPlayer computes. Avoids threading props across siblings.
+// Shared now-playing state + controls so the header lyric/control bar can show
+// the current line and drive playback without prop-drilling across siblings.
 
-type LyricState = { line: string; next: string };
+export type PlayMode = "list" | "one" | "shuffle";
 
-const EMPTY: LyricState = { line: "", next: "" };
-let state: LyricState = EMPTY;
+type State = {
+  line: string;
+  sub: string;
+  hasSong: boolean;
+  playing: boolean;
+  mode: PlayMode;
+};
+
+const EMPTY: State = { line: "", sub: "", hasSong: false, playing: false, mode: "list" };
+let state: State = EMPTY;
 const listeners = new Set<() => void>();
 
-export function setLyricLine(line: string, next: string) {
-  if (state.line === line && state.next === next) return;
-  state = line || next ? { line, next } : EMPTY;
+export function setNowPlaying(patch: Partial<State>) {
+  const nx = { ...state, ...patch };
+  if (
+    nx.line === state.line &&
+    nx.sub === state.sub &&
+    nx.hasSong === state.hasSong &&
+    nx.playing === state.playing &&
+    nx.mode === state.mode
+  ) {
+    return;
+  }
+  state = nx;
   listeners.forEach((l) => l());
 }
 
-export function subscribeLyric(cb: () => void) {
+export function subscribeNowPlaying(cb: () => void) {
   listeners.add(cb);
   return () => {
     listeners.delete(cb);
   };
 }
 
-export function getLyricSnapshot(): LyricState {
+export function getNowPlaying(): State {
   return state;
 }
 
-export function getServerLyricSnapshot(): LyricState {
+export function getServerNowPlaying(): State {
   return EMPTY;
+}
+
+// Playback controls, registered by the MusicPlayer, called by the bar.
+type Controls = { prev: () => void; next: () => void; toggle: () => void; cycleMode: () => void };
+let controls: Controls = { prev: () => {}, next: () => {}, toggle: () => {}, cycleMode: () => {} };
+
+export function setControls(c: Controls) {
+  controls = c;
+}
+export function getControls(): Controls {
+  return controls;
 }

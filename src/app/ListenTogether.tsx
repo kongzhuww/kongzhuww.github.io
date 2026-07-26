@@ -102,12 +102,12 @@ export default function ListenTogether() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="一起听"
-        className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-xs font-semibold text-[var(--heading)] transition hover:-translate-y-0.5 hover:border-rose-400/40"
+        className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2 text-xs font-semibold text-[var(--heading)] transition hover:-translate-y-0.5 hover:border-rose-400/40 sm:px-3.5"
       >
         <span className="grid h-5 w-5 place-items-center rounded-md bg-gradient-to-br from-rose-400 to-orange-400 text-[#08121a]">
           <HeadphoneIcon />
         </span>
-        一起听
+        <span className="hidden sm:inline">一起听</span>
         {activeCount > 0 ? (
           <span className="rounded-full bg-rose-400/15 px-2 py-0.5 text-xs text-rose-300">{activeCount}</span>
         ) : null}

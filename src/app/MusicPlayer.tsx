@@ -450,7 +450,7 @@ export default function MusicPlayer() {
 
   // publish now-playing state (title + line + controls state) to the header bar
   useEffect(() => {
-    setNowPlaying({ title: current?.name ?? "", line: barLine, sub: barSub, hasSong: !!current, playing, mode });
+    setNowPlaying({ title: current?.name ?? "", cover: https(current?.coverUrl) || "", line: barLine, sub: barSub, hasSong: !!current, playing, mode });
   }, [barLine, barSub, current, playing, mode]);
   useEffect(() => () => setNowPlaying({ title: "", line: "", sub: "", hasSong: false, playing: false }), []);
 

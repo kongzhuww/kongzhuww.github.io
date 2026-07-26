@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import KnowledgeBase from "./KnowledgeBase";
 import TodoPanel from "./TodoPanel";
+import Projects from "./Projects";
 
 type SourceName = "HuggingFace Blog" | "OpenAI News" | "Hacker News" | "Google AI Blog";
 
@@ -509,6 +510,9 @@ export default function Home() {
           )}
         </Panel>
       </section>
+
+      {/* ---------- GitHub projects ---------- */}
+      <Projects />
 
       {/* ---------- Footer ---------- */}
       <footer className="border-t border-[var(--border)]">

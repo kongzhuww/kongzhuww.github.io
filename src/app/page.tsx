@@ -250,6 +250,12 @@ export default function Home() {
               </p>
               <h1 className="text-lg font-semibold text-[var(--heading)]">AI RSS Daily</h1>
             </div>
+            <a
+              href="#rss"
+              className="ml-1 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-500 transition hover:bg-emerald-400/20"
+            >
+              📰 我的日报
+            </a>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
@@ -285,99 +291,38 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ---------- Hero ---------- */}
-      <section className="mx-auto grid max-w-7xl gap-6 px-5 pt-10 lg:grid-cols-[1.5fr_0.9fr]">
-        <div className="glass animate-rise relative overflow-hidden rounded-3xl p-7 md:p-10">
-          <div className="grid-overlay pointer-events-none absolute inset-0" aria-hidden="true" />
-          <div className="relative">
-            <div className="mb-7 flex flex-wrap items-center gap-2">
-              {report.sources.map((source) => (
-                <span
-                  key={source.name}
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-medium text-[var(--text)]"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="h-4 w-4 rounded-sm bg-white/90 bg-center bg-contain bg-no-repeat"
-                    style={{ backgroundImage: `url(${sourceIconUrl(source.name)})` }}
-                  />
-                  {source.name}
-                </span>
-              ))}
-            </div>
-
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              <span suppressHydrationWarning>{formatDate(report.date)}</span>
-            </div>
-
-            <h2 className="max-w-3xl text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl">
-              <span className="text-gradient">{report.title}</span>
-            </h2>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--text)] md:text-lg">
-              {report.summary}
-            </p>
-
-            <div className="mt-9 grid gap-3 sm:grid-cols-3">
-              <Metric label="信息来源" value={totalSources} accent="#34d399" hint="RSS 源" />
-              <Metric label="今日条目" value={totalItems} accent="#38bdf8" hint="篇文章" />
-              <Metric label="重点关注" value={highPriority} accent="#f59e0b" hint="高优先级" />
-            </div>
-          </div>
-        </div>
-
-        {/* Sources aside */}
-        <aside className="glass animate-rise flex flex-col rounded-3xl p-6" style={{ animationDelay: "80ms" }}>
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">生成时间</p>
-              <p className="mt-1 text-lg font-semibold text-[var(--heading)]" suppressHydrationWarning>
-                {formatDateTime(report.generatedAt)}
-              </p>
-            </div>
-            <span className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 font-mono text-xs font-semibold text-emerald-300">
-              JSON
-            </span>
-          </div>
-
-          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-[var(--dim)]">来源分布</p>
-          <div className="space-y-2.5">
-            {report.sources.map((source) => {
-              const profile = sourceProfile(source.name);
-              return (
-                <a
-                  key={source.name}
-                  href={source.url || `https://${profile.domain}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
-                >
-                  <span className="flex min-w-0 items-center gap-3">
-                    <span
-                      className="h-2.5 w-2.5 shrink-0 rounded-full ring-4 ring-[var(--border-strong)]"
-                      style={{ backgroundColor: profile.color }}
-                      aria-hidden="true"
-                    />
-                    <span className="truncate text-sm font-medium text-[var(--text)]">{source.name}</span>
-                  </span>
-                  <span className="ml-3 shrink-0 rounded-full bg-[var(--surface)] px-2.5 py-0.5 text-xs font-semibold text-[var(--text)] transition group-hover:bg-[var(--surface-hover)]">
-                    {source.count}
-                  </span>
-                </a>
-              );
-            })}
-          </div>
-        </aside>
-      </section>
-
-      {/* ---------- AI HOT ---------- */}
+      {/* ---------- AI HOT (primary) ---------- */}
+      <div className="pt-6" />
       <AiHot />
 
       {/* ---------- GitHub Trending ---------- */}
       <Trending />
 
       {/* ---------- Body ---------- */}
-      <section className="mx-auto grid max-w-7xl gap-6 px-5 py-10 lg:grid-cols-[0.82fr_1.18fr]">
+      <section id="rss" className="mx-auto max-w-7xl scroll-mt-20 px-5 py-10">
+        {/* Report header */}
+        <div className="glass mb-6 flex flex-wrap items-center justify-between gap-5 rounded-3xl p-6 md:p-7">
+          <div className="min-w-0">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <span suppressHydrationWarning>{formatDate(report.date)}</span>
+            </div>
+            <h2 className="text-2xl font-bold text-[var(--heading)] md:text-3xl">
+              <span className="text-gradient">{report.title}</span>
+            </h2>
+            <p className="mt-1.5 max-w-2xl text-sm text-[var(--muted)]">{report.summary}</p>
+            <p className="mt-2 text-xs text-[var(--dim)]" suppressHydrationWarning>
+              生成于 {formatDateTime(report.generatedAt)}
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-2.5">
+            <Metric label="来源" value={totalSources} accent="#34d399" hint="源" />
+            <Metric label="条目" value={totalItems} accent="#38bdf8" hint="篇" />
+            <Metric label="重点" value={highPriority} accent="#f59e0b" hint="高优" />
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr]">
         <div className="space-y-6">
           <Panel title="今日信号" count={report.highlights.length}>
             <div className="space-y-2.5">
@@ -526,6 +471,7 @@ export default function Home() {
             </div>
           )}
         </Panel>
+        </div>
       </section>
 
       {/* ---------- GitHub projects ---------- */}

@@ -294,7 +294,7 @@ export default function Home() {
 
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-300">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              {formatDate(report.date)}
+              <span suppressHydrationWarning>{formatDate(report.date)}</span>
             </div>
 
             <h2 className="max-w-3xl text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl">
@@ -317,7 +317,9 @@ export default function Home() {
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">生成时间</p>
-              <p className="mt-1 text-lg font-semibold text-white">{formatDateTime(report.generatedAt)}</p>
+              <p className="mt-1 text-lg font-semibold text-white" suppressHydrationWarning>
+                {formatDateTime(report.generatedAt)}
+              </p>
             </div>
             <span className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 font-mono text-xs font-semibold text-emerald-300">
               JSON
@@ -513,7 +515,9 @@ export default function Home() {
             <span className="font-semibold text-slate-300">LogicWeaver</span> · AI RSS Daily —
             由 n8n 自动聚合，静态展示
           </p>
-          <p className="font-mono text-xs">每天 08:00 · {formatDate(report.date)}</p>
+          <p className="font-mono text-xs" suppressHydrationWarning>
+            每天 08:00 · {formatDate(report.date)}
+          </p>
         </div>
       </footer>
 

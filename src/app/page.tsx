@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import KnowledgeBase from "./KnowledgeBase";
 
 type SourceName = "HuggingFace Blog" | "OpenAI News" | "Hacker News" | "Google AI Blog";
 
@@ -515,6 +516,9 @@ export default function Home() {
           <p className="font-mono text-xs">每天 08:00 · {formatDate(report.date)}</p>
         </div>
       </footer>
+
+      {/* Floating personal knowledge base */}
+      <KnowledgeBase />
     </main>
   );
 }

@@ -4,6 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const API = "https://monster-siren.hypergryph.com/api";
 
+// The Monster Siren API blocks cross-origin requests, so metadata is fetched
+// through public CORS proxies (with fallback). Audio/cover URLs play directly.
+const PROXIES: ((u: string) => string)[] = [
+  (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+];
+
 type Album = { cid: string; name: string; coverUrl: string; artistes?: string[] };
 type Song = { cid: string; name: string; artistes?: string[]; artists?: string[] };
 type SongDetail = {
@@ -17,10 +24,20 @@ type SongDetail = {
 };
 
 async function api<T>(path: string): Promise<T> {
-  const res = await fetch(`${API}${path}`, { headers: { Accept: "application/json" } });
-  if (!res.ok) throw new Error(`monster-siren ${res.status}`);
-  const json = await res.json();
-  return json.data as T;
+  const target = `${API}${path}`;
+  let lastErr: unknown;
+  for (const proxy of PROXIES) {
+    try {
+      const res = await fetch(proxy(target), { headers: { Accept: "application/json" } });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const json = await res.json();
+      if (json && json.data !== undefined) return json.data as T;
+      return json as T;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr ?? new Error("all proxies failed");
 }
 
 function fmtTime(s: number) {

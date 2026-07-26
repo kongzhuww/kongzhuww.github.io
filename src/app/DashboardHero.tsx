@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { getSupabase, SUPABASE_ENABLED } from "./supabaseClient";
 import { subscribeNowPlaying, getNowPlaying, getServerNowPlaying } from "./nowPlayingStore";
+import DashboardTodos from "./DashboardTodos";
 
 // Full-width "cockpit" hero: live clock, weather (Wuhan), a random 一言, and a
 // row of today's aggregates (now playing / GitHub activity / RSS count).
@@ -287,6 +288,11 @@ export default function DashboardHero({
               </p>
             </div>
           </button>
+        </div>
+
+        {/* Today's todos */}
+        <div className="lg:col-span-3">
+          <DashboardTodos />
         </div>
       </div>
     </section>

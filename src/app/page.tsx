@@ -5,6 +5,7 @@ import KnowledgeBase from "./KnowledgeBase";
 import TodoPanel from "./TodoPanel";
 import Projects from "./Projects";
 import Trending from "./Trending";
+import MusicPlayer from "./MusicPlayer";
 
 type SourceName = "HuggingFace Blog" | "OpenAI News" | "Hacker News" | "Google AI Blog";
 
@@ -534,6 +535,7 @@ export default function Home() {
       {/* Floating personal knowledge base + Todoist sync */}
       <KnowledgeBase />
       <TodoPanel />
+      <MusicPlayer />
     </main>
   );
 }

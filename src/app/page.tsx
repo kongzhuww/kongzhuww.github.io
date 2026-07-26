@@ -12,6 +12,7 @@ import AiHot from "./AiHot";
 import MusicPlayer from "./MusicPlayer";
 import ListenTogether from "./ListenTogether";
 import LyricBar from "./LyricBar";
+import BackToTop from "./BackToTop";
 import DashboardHero from "./DashboardHero";
 import DesktopPet from "./DesktopPet";
 
@@ -540,6 +541,7 @@ export default function Home() {
 
       {/* Floating Arknights desktop pet */}
       <DesktopPet />
+      <BackToTop />
     </main>
   );
 }

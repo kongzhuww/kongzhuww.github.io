@@ -240,7 +240,7 @@ export default function Home() {
       {/* ---------- Header ---------- */}
       <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--header)]">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <div className="relative grid h-11 w-11 place-items-center rounded-2xl">
               <span className="ring-spin absolute inset-0 rounded-2xl" aria-hidden="true" />
               <span className="absolute inset-[2px] grid place-items-center rounded-[14px] bg-[#080c15] text-sm font-black tracking-tight text-white">
@@ -255,10 +255,13 @@ export default function Home() {
             </div>
             <a
               href="#rss"
-              className="ml-1 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-500 transition hover:bg-emerald-400/20"
+              className="ml-1 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3.5 py-2 text-xs font-semibold text-emerald-500 transition hover:bg-emerald-400/20"
             >
               📰 我的日报
             </a>
+            <KnowledgeBase />
+            <TodoPanel />
+            <MusicPlayer />
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
@@ -510,10 +513,7 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Floating personal knowledge base + Todoist sync */}
-      <KnowledgeBase />
-      <TodoPanel />
-      <MusicPlayer />
+      {/* Floating Arknights desktop pet */}
       <DesktopPet />
     </main>
   );

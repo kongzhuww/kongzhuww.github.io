@@ -169,9 +169,9 @@ export default function MusicPlayer() {
       {!open ? (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--launcher)] py-2 pl-2 pr-4 text-sm font-semibold text-[var(--heading)] shadow-[0_18px_40px_-18px_rgba(139,92,246,0.6)] transition hover:-translate-x-1/2 hover:-translate-y-0.5 hover:border-violet-400/40"
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] py-1 pl-1 pr-3.5 text-xs font-semibold text-[var(--heading)] transition hover:-translate-y-0.5 hover:border-violet-400/40"
         >
-          <span className="grid h-8 w-8 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-400 text-[#08121a]">
+          <span className="grid h-6 w-6 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-400 text-[#08121a]">
             {current?.coverUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={https(current.coverUrl)} referrerPolicy="no-referrer" alt="" className={`h-full w-full object-cover ${playing ? "animate-spin-slow" : ""}`} />
@@ -180,7 +180,7 @@ export default function MusicPlayer() {
             )}
           </span>
           {mounted && current ? (
-            <span className="max-w-[9rem] truncate">{current.name}</span>
+            <span className="max-w-[7rem] truncate">{current.name}</span>
           ) : (
             <span>塞壬电台</span>
           )}
@@ -190,7 +190,7 @@ export default function MusicPlayer() {
                 e.stopPropagation();
                 togglePlay();
               }}
-              className="grid h-7 w-7 place-items-center rounded-full bg-[var(--surface-hover)] text-[var(--heading)]"
+              className="grid h-6 w-6 place-items-center rounded-full bg-[var(--surface-hover)] text-[var(--heading)]"
             >
               {playing ? <PauseIcon /> : <PlayIcon />}
             </span>

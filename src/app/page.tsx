@@ -6,6 +6,7 @@ import TodoPanel from "./TodoPanel";
 import Projects from "./Projects";
 import Bili from "./Bili";
 import Trending from "./Trending";
+import AiHot from "./AiHot";
 import MusicPlayer from "./MusicPlayer";
 
 type SourceName = "HuggingFace Blog" | "OpenAI News" | "Hacker News" | "Google AI Blog";
@@ -361,6 +362,9 @@ export default function Home() {
           </div>
         </aside>
       </section>
+
+      {/* ---------- AI HOT ---------- */}
+      <AiHot />
 
       {/* ---------- GitHub Trending ---------- */}
       <Trending />

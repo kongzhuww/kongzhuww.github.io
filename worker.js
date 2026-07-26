@@ -9,6 +9,7 @@
 const PROXIES = {
   "/siren/": { base: "https://monster-siren.hypergryph.com/api" },
   "/bili/": { base: "https://api.bilibili.com", bili: true },
+  "/aihot/": { base: "https://aihot.virxact.com/api" },
 };
 
 const UA =

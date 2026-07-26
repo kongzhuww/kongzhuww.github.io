@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { getSupabase, SUPABASE_ENABLED } from "./supabaseClient";
+import { subscribeNowPlaying, getNowPlaying, getServerNowPlaying } from "./nowPlayingStore";
 
 // Full-width "cockpit" hero: live clock, weather (Wuhan), a random 一言, and a
 // row of today's aggregates (now playing / GitHub activity / RSS count).
@@ -140,21 +141,36 @@ export default function DashboardHero({
   const mm = String(now?.getMinutes() ?? 0).padStart(2, "0");
   const ss = String(now?.getSeconds() ?? 0).padStart(2, "0");
   const w = weather ? weatherInfo(weather.code) : null;
+  const np = useSyncExternalStore(subscribeNowPlaying, getNowPlaying, getServerNowPlaying);
 
   return (
     <section className="relative w-full overflow-hidden border-b border-[var(--border)]">
       <div className="aurora-bg pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
       <div className="relative mx-auto grid max-w-[1600px] gap-3 px-4 py-6 sm:gap-4 sm:px-5 sm:py-8 lg:grid-cols-[1.5fr_1fr]">
-        {/* Clock */}
-        <div className="glass rounded-3xl p-5 sm:p-6">
-          <p className="text-sm font-medium text-[var(--muted)]">{greeting(h)}</p>
-          <p className="mt-2 font-mono text-4xl font-bold tabular-nums text-[var(--heading)] sm:text-5xl md:text-6xl" suppressHydrationWarning>
-            {hh}:{mm}
-            <span className="text-2xl text-[var(--muted)] md:text-3xl">:{ss}</span>
-          </p>
-          <p className="mt-2 text-sm text-[var(--muted)]" suppressHydrationWarning>
-            {now ? `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 · ${WEEKDAYS[now.getDay()]}` : "—"}
-          </p>
+        {/* Clock + spinning record */}
+        <div className="glass flex items-center justify-between gap-4 rounded-3xl p-5 sm:p-6">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-[var(--muted)]">{greeting(h)}</p>
+            <p className="mt-2 font-mono text-4xl font-bold tabular-nums text-[var(--heading)] sm:text-5xl md:text-6xl" suppressHydrationWarning>
+              {hh}:{mm}
+              <span className="text-2xl text-[var(--muted)] md:text-3xl">:{ss}</span>
+            </p>
+            <p className="mt-2 text-sm text-[var(--muted)]" suppressHydrationWarning>
+              {now ? `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 · ${WEEKDAYS[now.getDay()]}` : "—"}
+            </p>
+          </div>
+          {np.cover ? (
+            <div className="relative hidden aspect-square w-24 shrink-0 sm:block md:w-28" title={np.title}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={np.cover}
+                referrerPolicy="no-referrer"
+                alt=""
+                className={`h-full w-full rounded-full object-cover shadow-[0_12px_34px_-10px_rgba(0,0,0,0.55)] ring-[6px] ring-black/70 ${np.playing ? "animate-spin-slow" : ""}`}
+              />
+              <span className="pointer-events-none absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--panel)] ring-2 ring-black/50" />
+            </div>
+          ) : null}
         </div>
 
         {/* Weather */}

@@ -83,9 +83,7 @@ export default function KnowledgeBase() {
   const [draftTags, setDraftTags] = useState("");
   const [toast, setToast] = useState("");
 
-  // login form
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // login
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState("");
 
@@ -269,20 +267,20 @@ export default function KnowledgeBase() {
     flash("已删除");
   }
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleGithubLogin() {
     const supabase = getSupabase();
     if (!supabase) return;
     setAuthBusy(true);
     setAuthError("");
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    setAuthBusy(false);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: { redirectTo: window.location.href.split("#")[0] },
+    });
+    // on success the browser redirects to GitHub, so code below only runs on error
     if (error) {
-      setAuthError(error.message || "登录失败");
-      return;
+      setAuthBusy(false);
+      setAuthError(error.message || "跳转 GitHub 登录失败");
     }
-    setPassword("");
-    flash("已登录");
   }
 
   async function handleLogout() {
@@ -431,34 +429,17 @@ export default function KnowledgeBase() {
               </div>
               <p className="text-center text-sm font-semibold text-white">登录后使用云端知识库</p>
               <p className="mt-1 text-center text-xs text-slate-500">数据私密保存，仅你可见，多设备同步</p>
-              <form onSubmit={handleLogin} className="mt-5 space-y-2.5">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="邮箱"
-                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none focus:border-emerald-400/40"
-                />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="密码"
-                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none focus:border-emerald-400/40"
-                />
-                {authError ? <p className="text-xs text-rose-400">{authError}</p> : null}
-                <button
-                  type="submit"
-                  disabled={authBusy}
-                  className="w-full rounded-lg bg-gradient-to-br from-emerald-400 to-sky-400 px-4 py-2.5 text-sm font-semibold text-[#08121a] transition hover:opacity-90 disabled:opacity-60"
-                >
-                  {authBusy ? "登录中…" : "登录"}
-                </button>
-              </form>
+              <button
+                onClick={handleGithubLogin}
+                disabled={authBusy}
+                className="mt-5 flex w-full items-center justify-center gap-2.5 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-[#0d1117] transition hover:bg-slate-100 disabled:opacity-60"
+              >
+                <GithubIcon />
+                {authBusy ? "跳转 GitHub 中…" : "用 GitHub 登录"}
+              </button>
+              {authError ? <p className="mt-3 text-center text-xs text-rose-400">{authError}</p> : null}
               <p className="mt-4 text-center text-[11px] leading-5 text-slate-600">
-                账号在 Supabase 后台创建。忘记密码可在后台重置。
+                点击后会跳转到 GitHub 授权，授权后自动返回并登录。
               </p>
             </div>
           ) : cloud && !authReady ? (
@@ -720,6 +701,13 @@ function LogoutIcon() {
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <path d="M16 17l5-5-5-5M21 12H9" />
+    </svg>
+  );
+}
+function GithubIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.68-.22.68-.48 0-.24-.01-.87-.01-1.7-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.03A9.6 9.6 0 0 1 12 6.8c.85 0 1.71.11 2.51.33 1.91-1.3 2.75-1.03 2.75-1.03.55 1.38.2 2.4.1 2.65.64.7 1.03 1.6 1.03 2.69 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85 0 1.34-.01 2.42-.01 2.75 0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z" />
     </svg>
   );
 }

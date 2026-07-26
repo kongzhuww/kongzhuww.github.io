@@ -86,9 +86,32 @@ export default {
 
     // Version probe so we can confirm which worker build is live.
     if (url.pathname === "/__version") {
-      return new Response("worker v9 · bili->vps.logicweaver.me:8080 · /vps/* route · from-github", {
+      return new Response("worker v10 · bili->vps.logicweaver.me:8080 · /vps/* · /lyric · from-github", {
         headers: { "Content-Type": "text/plain", "Access-Control-Allow-Origin": "*" },
       });
+    }
+
+    // Lyric proxy: /lyric?url=<encoded hycdn/hypergryph url> -> text with CORS.
+    // Monster Siren serves LRC lyrics on its CDN without CORS headers; forward
+    // them same-origin. Restricted to the official hosts so it is not an open proxy.
+    if (url.pathname === "/lyric") {
+      const target = url.searchParams.get("url") || "";
+      if (!/^https:\/\/[^/]+\.(hycdn\.cn|hypergryph\.com)\//.test(target)) {
+        return new Response("bad url", { status: 400, headers: { "Access-Control-Allow-Origin": "*" } });
+      }
+      try {
+        const upstream = await fetch(target, { cf: { cacheTtl: 3600, cacheEverything: true } });
+        const out = new Headers();
+        out.set("Content-Type", "text/plain; charset=utf-8");
+        out.set("Access-Control-Allow-Origin", "*");
+        out.set("Cache-Control", "public, max-age=3600");
+        return new Response(upstream.body, { status: upstream.status, headers: out });
+      } catch (e) {
+        return new Response(JSON.stringify({ error: String(e) }), {
+          status: 502,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        });
+      }
     }
 
     if (request.method === "OPTIONS" && (url.pathname.startsWith("/bili/") || url.pathname.startsWith("/siren/") || url.pathname.startsWith("/aihot/"))) {

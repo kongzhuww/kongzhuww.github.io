@@ -271,7 +271,7 @@ export default function Home() {
           <div className="flex flex-wrap items-center gap-2 md:gap-2.5">
             <ThemeToggle />
             <span
-              className="hidden items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-xs font-medium text-[var(--text)] lg:inline-flex"
+              className="hidden items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-xs font-medium text-[var(--text)] xl:inline-flex"
               style={{ color: status.color }}
             >
               <span className="pulse-dot inline-block h-2 w-2 rounded-full" style={{ backgroundColor: status.color }} />

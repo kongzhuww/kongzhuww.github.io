@@ -10,8 +10,16 @@ const SPINE_CSS = "https://cdn.jsdelivr.net/gh/EsotericSoftware/spine-runtimes@3
 
 const CUR_KEY = "lw-pet-current";
 const DL_KEY = "lw-pet-downloaded";
+const SCALE_KEY = "lw-pet-scale";
+const FACE_KEY = "lw-pet-face";
+
 const IDLE_ANIMS = ["Relax", "Idle", "Sit", "Interact_1", "Interact"];
-const INTERACT_ANIMS = ["Interact", "Interact_1", "Special", "Move"];
+const MOVE_ANIMS = ["Move", "Walk", "Run", "move"];
+const INTERACT_ANIMS = ["Interact", "Interact_1", "Special", "Attack", "Sleep"];
+
+const BASE_W = 160;
+const BASE_H = 200;
+const WALK_SPEED = 0.8; // px per frame
 
 type Model = { key: string; name: string; skelUrl: string; atlasUrl: string };
 
@@ -46,20 +54,57 @@ export default function DesktopPet() {
   const [downloaded, setDownloaded] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const [scale, setScale] = useState(1);
+  const [facing, setFacing] = useState<1 | -1>(1);
+  const [walking, setWalking] = useState(false);
 
   const hostRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const playerRef = useRef<any>(null);
-  const idleRef = useRef<string>("Relax");
+  const baseRef = useRef<string>("Relax"); // current looping animation to return to
+  const facingRef = useRef<1 | -1>(1);
+  const scaleRef = useRef(1);
+  const posRef = useRef<{ x: number; y: number } | null>(null);
   const drag = useRef<{ startX: number; startY: number; ox: number; oy: number; moved: boolean } | null>(null);
 
-  // restore last-used pet (assets are browser-cached, so this is fast) + downloaded set
+  useEffect(() => {
+    facingRef.current = facing;
+  }, [facing]);
+  useEffect(() => {
+    scaleRef.current = scale;
+  }, [scale]);
+
+  const setPosBoth = useCallback((p: { x: number; y: number } | null) => {
+    posRef.current = p;
+    setPos(p);
+  }, []);
+
+  // restore last-used pet + prefs (assets are browser-cached, so this is fast)
   useEffect(() => {
     try {
       const raw = localStorage.getItem(CUR_KEY);
       if (raw) setCurrent(JSON.parse(raw));
       const dl = localStorage.getItem(DL_KEY);
       if (dl) setDownloaded(JSON.parse(dl));
+      const s = parseFloat(localStorage.getItem(SCALE_KEY) || "");
+      if (s > 0) setScale(s);
+      const f = localStorage.getItem(FACE_KEY);
+      if (f === "-1") setFacing(-1);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // helper: switch the looping "base" animation (idle / move) and remember it
+  const setBase = useCallback((kind: "idle" | "move") => {
+    const player = playerRef.current;
+    if (!player?.animationState) return;
+    try {
+      const anims: string[] = player.skeleton.data.animations.map((a: { name: string }) => a.name);
+      const pool = kind === "move" ? MOVE_ANIMS : IDLE_ANIMS;
+      const name = pool.find((n) => anims.includes(n)) ?? anims[0];
+      baseRef.current = name;
+      player.animationState.setAnimation(0, name, true);
     } catch {
       /* ignore */
     }
@@ -95,7 +140,7 @@ export default function DesktopPet() {
             try {
               const anims: string[] = player.skeleton.data.animations.map((a: { name: string }) => a.name);
               const idle = IDLE_ANIMS.find((n) => anims.includes(n)) ?? anims[0];
-              idleRef.current = idle;
+              baseRef.current = idle;
               player.animationState.setAnimation(0, idle, true);
               setStatus("idle");
             } catch {
@@ -110,6 +155,38 @@ export default function DesktopPet() {
       disposed = true;
     };
   }, [current]);
+
+  // walking: wander along the bottom, flip at the edges, play the Move animation
+  useEffect(() => {
+    if (!walking || !current || status === "loading") return;
+    setBase("move");
+    const floorY = Math.max(0, window.innerHeight - Math.round(BASE_H * scaleRef.current) - 8);
+    let x = posRef.current?.x ?? window.innerWidth - 220;
+    let dir: 1 | -1 = facingRef.current;
+    let raf = 0;
+    const step = () => {
+      const w = Math.round(BASE_W * scaleRef.current);
+      const maxX = window.innerWidth - w;
+      x += dir * WALK_SPEED;
+      if (x <= 0) {
+        x = 0;
+        dir = 1;
+        setFacing(1);
+      } else if (x >= maxX) {
+        x = maxX;
+        dir = -1;
+        setFacing(-1);
+      }
+      setPosBoth({ x, y: floorY });
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => {
+      cancelAnimationFrame(raf);
+      setBase("idle");
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walking, current, status]);
 
   const ensureModels = useCallback(async () => {
     if (modelsState === "ready" || modelsState === "loading") return;
@@ -142,9 +219,10 @@ export default function DesktopPet() {
   }
 
   function pick(m: Model) {
+    setWalking(false);
     setCurrent(m);
     setPickerOpen(false);
-    setPos(null);
+    setPosBoth(null);
     try {
       localStorage.setItem(CUR_KEY, JSON.stringify(m));
       const next = Array.from(new Set([...downloaded, m.key]));
@@ -156,6 +234,7 @@ export default function DesktopPet() {
   }
 
   function dismiss() {
+    setWalking(false);
     setCurrent(null);
     try {
       playerRef.current?.dispose?.();
@@ -169,15 +248,33 @@ export default function DesktopPet() {
     }
   }
 
+  function changeScale(s: number) {
+    setScale(s);
+    try {
+      localStorage.setItem(SCALE_KEY, String(s));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function changeFacing(f: 1 | -1) {
+    setFacing(f);
+    try {
+      localStorage.setItem(FACE_KEY, String(f));
+    } catch {
+      /* ignore */
+    }
+  }
+
   const interact = useCallback(() => {
     const player = playerRef.current;
     if (!player?.animationState) return;
     try {
       const anims: string[] = player.skeleton.data.animations.map((a: { name: string }) => a.name);
-      const act = INTERACT_ANIMS.find((n) => anims.includes(n) && n !== idleRef.current);
+      const act = INTERACT_ANIMS.find((n) => anims.includes(n) && n !== baseRef.current);
       if (!act) return;
       player.animationState.setAnimation(0, act, false);
-      player.animationState.addAnimation(0, idleRef.current, true, 0);
+      player.animationState.addAnimation(0, baseRef.current, true, 0);
     } catch {
       /* ignore */
     }
@@ -194,7 +291,8 @@ export default function DesktopPet() {
     const dy = e.clientY - drag.current.startY;
     if (Math.abs(dx) > 4 || Math.abs(dy) > 4) drag.current.moved = true;
     if (drag.current.moved) {
-      setPos({
+      if (walking) setWalking(false); // dragging takes over from walking
+      setPosBoth({
         x: Math.max(0, Math.min(window.innerWidth - 120, drag.current.ox + dx)),
         y: Math.max(0, Math.min(window.innerHeight - 120, drag.current.oy + dy)),
       });
@@ -210,6 +308,9 @@ export default function DesktopPet() {
     : models.slice(0, 80);
 
   const style: React.CSSProperties = pos ? { left: pos.x, top: pos.y, right: "auto", bottom: "auto" } : { right: 16, bottom: 88 };
+
+  const ctrlBtn = "rounded-full border border-[var(--border)] bg-[var(--panel)] px-2 py-0.5 text-[10px] text-[var(--muted)] shadow transition hover:text-[var(--heading)]";
+  const ctrlOn = "rounded-full border border-violet-400/50 bg-violet-400/15 px-2 py-0.5 text-[10px] text-violet-300 shadow";
 
   return (
     <>
@@ -227,21 +328,31 @@ export default function DesktopPet() {
       {/* Active pet */}
       {current ? (
         <div className="group fixed z-40 select-none" style={style}>
-          <div className="mb-1 flex items-center justify-center gap-1 opacity-0 transition group-hover:opacity-100">
-            <button onClick={openPicker} title="换干员" className="rounded-full border border-[var(--border)] bg-[var(--panel)] px-2 py-0.5 text-[10px] text-[var(--muted)] shadow">
-              🔀
-            </button>
-            <button onClick={dismiss} title="收起" className="rounded-full border border-[var(--border)] bg-[var(--panel)] px-2 py-0.5 text-[10px] text-[var(--muted)] shadow">
-              ✕
-            </button>
+          {/* control toolbar */}
+          <div className="mb-1 flex flex-wrap items-center justify-center gap-1 opacity-0 transition group-hover:opacity-100">
+            <button onClick={() => changeScale(0.7)} title="小" className={scale === 0.7 ? ctrlOn : ctrlBtn}>小</button>
+            <button onClick={() => changeScale(1)} title="中" className={scale === 1 ? ctrlOn : ctrlBtn}>中</button>
+            <button onClick={() => changeScale(1.4)} title="大" className={scale === 1.4 ? ctrlOn : ctrlBtn}>大</button>
+            <span className="mx-0.5 text-[var(--dim)]">·</span>
+            <button onClick={() => changeFacing(-1)} title="朝左" className={facing === -1 ? ctrlOn : ctrlBtn}>⬅</button>
+            <button onClick={() => changeFacing(1)} title="朝右" className={facing === 1 ? ctrlOn : ctrlBtn}>➡</button>
+            <span className="mx-0.5 text-[var(--dim)]">·</span>
+            <button onClick={() => setWalking((w) => !w)} title="走路" className={walking ? ctrlOn : ctrlBtn}>🚶</button>
+            <button onClick={openPicker} title="换干员" className={ctrlBtn}>🔀</button>
+            <button onClick={dismiss} title="收起" className={ctrlBtn}>✕</button>
           </div>
           <div
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
-            className="relative h-[220px] w-[180px] cursor-grab touch-none active:cursor-grabbing"
+            className="relative cursor-grab touch-none active:cursor-grabbing"
+            style={{ width: BASE_W, height: BASE_H }}
           >
-            <div ref={hostRef} className="h-full w-full" />
+            <div
+              ref={hostRef}
+              className="h-full w-full"
+              style={{ transform: `scale(${scale}) scaleX(${facing})`, transformOrigin: "center bottom" }}
+            />
             {status === "loading" ? (
               <div className="pointer-events-none absolute inset-0 grid place-items-center text-xs text-[var(--dim)]">加载中…</div>
             ) : status === "error" ? (
@@ -275,7 +386,7 @@ export default function DesktopPet() {
                 placeholder="搜索干员名…"
                 className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--dim)] outline-none focus:border-violet-400/40"
               />
-              <p className="mt-2 text-[11px] text-[var(--dim)]">选一个即下载并显示，下载过的会缓存、下次秒开。</p>
+              <p className="mt-2 text-[11px] text-[var(--dim)]">选一个即下载并显示，下载过的会缓存、下次秒开。悬停桌宠可调大小 / 朝向 / 走路。</p>
             </div>
             <div className="flex-1 overflow-y-auto p-2">
               {modelsState === "loading" ? (

@@ -205,3 +205,34 @@ body {
   }
   html { scroll-behavior: auto; }
 }
+
+/* ── PID serial tuner (/pid) ── */
+.pid-input {
+  width: 100%;
+  border-radius: 0.6rem;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  padding: 0.5rem 0.65rem;
+  font-size: 0.8rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.pid-input:focus { border-color: var(--border-strong); }
+.pid-btn {
+  border-radius: 0.6rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.5rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pid-btn:hover:not(:disabled) { border-color: var(--border-strong); background: var(--surface-hover); }
+.pid-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.pid-btn-primary { background: #059669; border-color: #059669; color: #fff; }
+.pid-btn-primary:hover:not(:disabled) { background: #047857; border-color: #047857; }
+.pid-btn-danger { background: #e11d48; border-color: #e11d48; color: #fff; }
+.pid-btn-danger:hover:not(:disabled) { background: #be123c; border-color: #be123c; }

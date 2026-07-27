@@ -93,7 +93,7 @@ export default function DashboardHero({
         let start = times.findIndex((t) => new Date(t).getTime() >= nowMs);
         if (start < 0) start = 0;
         const hours: Hour[] = [];
-        for (let i = start; i < Math.min(start + 6, times.length); i++) {
+        for (let i = start; i < Math.min(start + 5, times.length); i++) {
           hours.push({ hour: new Date(times[i]).getHours(), code: d.hourly.weather_code[i], temp: Math.round(d.hourly.temperature_2m[i]) });
         }
         let rain = "未来 12 小时暂无降水 ☂️";
@@ -173,12 +173,12 @@ export default function DashboardHero({
           <Clock />
 
           {/* today's todos (scrollable) */}
-          <div className="min-w-0 flex-1 md:border-x md:border-[var(--border)] md:px-5">
+          <div className="min-w-0 flex-1 md:border-x md:border-[var(--border)] md:px-4">
             <DashboardTodos />
           </div>
 
           {np.cover ? (
-            <div className="relative hidden aspect-square w-24 shrink-0 sm:block md:w-28" title={np.title}>
+            <div className="relative hidden aspect-square w-20 shrink-0 sm:block md:w-24" title={np.title}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={np.cover}
@@ -211,7 +211,7 @@ export default function DashboardHero({
               <div className="min-w-0 flex-1 md:border-l md:border-[var(--border)] md:pl-4">
                 <p className="text-xs font-medium text-[var(--muted)]">{weather.rain}</p>
                 {weather.hours.length ? (
-                  <div className="mt-2 flex gap-3 overflow-x-auto pb-1">
+                  <div className="mt-2 flex gap-2.5 overflow-x-auto pb-1">
                     {weather.hours.map((hr, i) => (
                       <div key={i} className="flex shrink-0 flex-col items-center gap-0.5">
                         <span className="text-[11px] text-[var(--dim)]">{i === 0 ? "现在" : `${hr.hour}时`}</span>
@@ -296,9 +296,9 @@ function Clock() {
   return (
     <div className="min-w-0 shrink-0">
       <p className="text-sm font-medium text-[var(--muted)]">{greeting(h)}</p>
-      <p className="mt-2 font-mono text-4xl font-bold tabular-nums text-[var(--heading)] sm:text-5xl md:text-6xl" suppressHydrationWarning>
+      <p className="mt-2 font-mono text-4xl font-bold tabular-nums text-[var(--heading)] sm:text-5xl" suppressHydrationWarning>
         {hh}:{mm}
-        <span className="text-2xl text-[var(--muted)] md:text-3xl">:{ss}</span>
+        <span className="text-2xl text-[var(--muted)]">:{ss}</span>
       </p>
       <p className="mt-2 text-sm text-[var(--muted)]" suppressHydrationWarning>
         {now ? `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 · ${WEEKDAYS[now.getDay()]}` : "—"}

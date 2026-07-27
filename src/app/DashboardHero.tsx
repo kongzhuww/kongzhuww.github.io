@@ -93,7 +93,7 @@ export default function DashboardHero({
         let start = times.findIndex((t) => new Date(t).getTime() >= nowMs);
         if (start < 0) start = 0;
         const hours: Hour[] = [];
-        for (let i = start; i < Math.min(start + 6, times.length); i++) {
+        for (let i = start; i < Math.min(start + 5, times.length); i++) {
           hours.push({ hour: new Date(times[i]).getHours(), code: d.hourly.weather_code[i], temp: Math.round(d.hourly.temperature_2m[i]) });
         }
         let rain = "未来 12 小时暂无降水 ☂️";
@@ -167,18 +167,18 @@ export default function DashboardHero({
   return (
     <section className="relative w-full overflow-hidden border-b border-[var(--border)]">
       <div className="aurora-bg pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
-      <div className="relative mx-auto grid max-w-[1600px] gap-3 px-4 py-6 sm:gap-4 sm:px-5 sm:py-8 lg:grid-cols-[1.5fr_1fr]">
+      <div className="relative mx-auto grid max-w-[1600px] gap-3 px-4 py-6 sm:gap-4 sm:px-5 sm:py-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         {/* Clock + today's todos + spinning record */}
         <div className="glass flex flex-col gap-4 rounded-3xl p-5 sm:p-6 md:flex-row md:items-center md:gap-6">
           <Clock />
 
           {/* today's todos (scrollable) */}
-          <div className="min-w-0 flex-1 md:border-x md:border-[var(--border)] md:px-5">
+          <div className="min-w-0 flex-1 md:border-x md:border-[var(--border)] md:px-4">
             <DashboardTodos />
           </div>
 
           {np.cover ? (
-            <div className="relative hidden aspect-square w-24 shrink-0 sm:block md:w-28" title={np.title}>
+            <div className="relative hidden aspect-square w-20 shrink-0 sm:block md:w-24" title={np.title}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={np.cover}
@@ -211,7 +211,7 @@ export default function DashboardHero({
               <div className="min-w-0 flex-1 md:border-l md:border-[var(--border)] md:pl-4">
                 <p className="text-xs font-medium text-[var(--muted)]">{weather.rain}</p>
                 {weather.hours.length ? (
-                  <div className="mt-2 flex gap-3 overflow-x-auto pb-1">
+                  <div className="mt-2 flex gap-2.5 overflow-x-auto pb-1">
                     {weather.hours.map((hr, i) => (
                       <div key={i} className="flex shrink-0 flex-col items-center gap-0.5">
                         <span className="text-[11px] text-[var(--dim)]">{i === 0 ? "现在" : `${hr.hour}时`}</span>

@@ -124,19 +124,19 @@ export default function DashboardTodos() {
               <li key={t.id}>
                 <button
                   onClick={() => !done && complete(t.id)}
-                  className="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-[var(--surface)]"
+                  className="group flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition hover:bg-[var(--surface)]"
                 >
                   <span
-                    className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition ${
+                    className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 transition ${
                       done ? "border-emerald-400 bg-emerald-400 text-[#08121a]" : "border-[var(--border-strong)] text-transparent group-hover:border-sky-400"
                     }`}
                   >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 6 9 17l-5-5" />
                     </svg>
                   </span>
-                  <span className={`min-w-0 flex-1 truncate text-sm ${done ? "text-[var(--dim)] line-through" : "text-[var(--text)]"}`}>{t.content}</span>
-                  {t.due?.string ? <span className="shrink-0 text-[11px] text-[var(--dim)]">{t.due.string}</span> : null}
+                  <span className={`min-w-0 flex-1 truncate text-[13px] ${done ? "text-[var(--dim)] line-through" : "text-[var(--text)]"}`}>{t.content}</span>
+                  {t.due?.string ? <span className="shrink-0 text-[10px] text-[var(--dim)]">{t.due.string}</span> : null}
                 </button>
               </li>
             );

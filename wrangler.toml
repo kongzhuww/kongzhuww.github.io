@@ -10,4 +10,6 @@ routes = [
 [assets]
 directory = "./out"
 binding = "ASSETS"
+# Keep proxy validation ahead of static asset/navigation routing.
+run_worker_first = ["/vps", "/vps/*", "/bili", "/bili/*", "/siren", "/siren/*", "/aihot", "/aihot/*", "/lyric", "/__version"]
 not_found_handling = "404-page"

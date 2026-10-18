@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.dev.vars*
+
+# Cloudflare local state and generated bundles (never publish or commit)
+/.wrangler/
 
 # vercel
 .vercel

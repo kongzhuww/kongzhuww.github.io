@@ -1,0 +1,7 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Content-Security-Policy: object-src 'none'; base-uri 'self'; frame-ancestors 'none'
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; font-src 'self' data:; connect-src 'self' https://api.github.com https://api.open-meteo.com https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net; media-src 'self' https://*.hycdn.cn blob:; frame-src https://player.bilibili.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="16" fill="#3b82f6"/>
+  <!-- 现代拟物聚合工作台桌面图标：屏幕 + 汇聚卡片 -->
+  <g fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 外框大屏幕/工作台 -->
+    <rect x="10" y="12" width="44" height="34" rx="4" fill="rgba(255,255,255,0.12)"/>
+    <!-- 支架底座 -->
+    <path d="M26 46v6m12-6v6m-18 6h24"/>
+    <!-- 内部四象限网格 -->
+    <path d="M10 26h44M30 12v34" stroke-opacity="0.6" stroke-width="2.5"/>
+    <!-- 核心焦点指示点 -->
+    <circle cx="20" cy="19" r="2.5" fill="#ffffff" stroke="none"/>
+    <circle cx="42" cy="36" r="2.5" fill="#ffffff" stroke="none"/>
+  </g>
+</svg>

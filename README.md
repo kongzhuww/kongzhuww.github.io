@@ -1,79 +1,55 @@
-# LogicWeaver AI RSS Daily
+# tab-project-next 介绍网站
 
-这是一个 Next.js 前端，首页展示由 n8n 每天生成的 AI RSS 日报。旧的 GitHub 登录、IoT dashboard 和 Supabase 数据接口已移除，当前站点按静态日报展示部署。
+基于 Next.js 16、React 19 与 TypeScript 的静态介绍站，介绍 [kongzhuww/tab-project-next](https://github.com/kongzhuww/tab-project-next)。
 
-## n8n 对接方式
+- 网站仓库：`kongzhuww/kongzhuww.github.io`
+- 本地目录：`D:\default save place\GitHub\my-plugins-sites\kongzhuww.github.io`
+- 正式域名配置：`https://logicweaver.me/`
+- 首页：功能介绍、Light / Lonetrail / Dark 演示、安装和 FAQ。
 
-推荐让 n8n 在每天 08:00 生成两个静态 JSON 文件，然后同步到网站的 `public/reports/` 目录。
+旧版 AI RSS 日报页面、报告 JSON 和旧 IoT 模拟脚本已移除，不再维护 `/daily/` 或 `/reports/`。历史代码仍保留在 Git 提交中；本次不改外部 n8n 自动化、DNS 或远端服务。
 
-- `public/reports/latest.json`: 最新日报正文
-- `public/reports/index.json`: 历史日报列表和最新日报路径
+## 内容边界
 
-前端只读取静态 JSON，不需要访问 DeepSeek、OneAPI 或任何服务端密钥。
+首页基于本地 tab-project-next README 和源码制作；不在构建时请求 GitHub，也不宣称某个发行附件已存在。发行入口使用 `/releases` 列表，无附件时按项目 README 从源码构建。
 
-## `latest.json` 格式
+预览使用虚构数据，不是真实扩展截图。主题切换、内容切换和任务勾选只改变此网页内的演示状态，不操作扩展或真实账号，不播放音频。
 
-```json
-{
-  "title": "AI RSS 日报",
-  "date": "2026-07-18",
-  "generatedAt": "2026-07-18T08:00:00+08:00",
-  "summary": "一句话总览",
-  "highlights": ["重点 1", "重点 2"],
-  "trends": ["模型更新", "开发者工具"],
-  "sources": [
-    { "name": "OpenAI News", "count": 3, "url": "https://openai.com/news" }
-  ],
-  "items": [
-    {
-      "title": "文章标题",
-      "source": "OpenAI News",
-      "url": "https://example.com/article",
-      "summary": "AI 摘要",
-      "tags": ["模型", "产品"],
-      "importance": "high"
-    }
-  ]
-}
-```
+默认明亮主题，主题色使用 CSS 变量。没有增加登录、数据库、API 或统计 SDK。不要将私密配置、Token、Cookie、个人截图放入 public。
 
-## `index.json` 格式
-
-```json
-{
-  "latest": "/reports/latest.json",
-  "reports": [
-    {
-      "date": "2026-07-18",
-      "title": "AI RSS 日报",
-      "path": "/reports/latest.json",
-      "itemCount": 12
-    }
-  ]
-}
-```
-
-如果要保留历史日报，可以让 n8n 同时写入类似 `public/reports/2026-07-18.json` 的文件，然后把 `index.json` 里的 `reports` 数组追加对应记录，并把 `latest` 指向最新文件。
-
-## 本地运行
+## 本地开发与验证
 
 ```bash
 npm run dev
-```
-
-打开 `http://localhost:3000`。
-
-## 构建
-
-```bash
+npm run lint
+npx --no-install tsc --noEmit
 npm run build
 ```
-## Cloudflare Worker 部署
 
-这个仓库现在按静态导出部署：
+打开终端显示的地址，通常为 `http://localhost:3000`。`output: "export"` 保持不变，静态构建输出在 `out/`，不使用 `next start` 预览静态导出。
 
-- Build command: `npm run build`
-- Deploy command: `npx wrangler deploy`
-- Static output: `out/`
+主要文件：
 
-`wrangler.toml` 指向 `out/` 静态资源目录，不配置 Worker service binding，也不需要 `WORKER_SELF_REFERENCE`。
+```text
+src/app/page.tsx          项目介绍与交互演示
+src/app/globals.css       响应式样式与主题变量
+src/app/layout.tsx        中文语言与默认元数据
+next.config.mjs          Next.js 静态导出配置
+wrangler.toml            Cloudflare 静态资源和域名路由
+```
+
+## 部署
+
+保持 Cloudflare Workers Static Assets 配置：
+
+- Build command：`npm run build`
+- Deploy command：`npx wrangler deploy`
+- 静态资源：`out/`
+- Worker：`project911`
+- 域名路由：`logicweaver.me/*` 与 `www.logicweaver.me/*`
+
+本地 Git 提交不会自动改变线上网站；只有明确授权后才推送或部署。不读取 `.env` / `.env.local` 来制作介绍页。
+
+## 维护说明
+
+`CLAUDE.md` 含改版前的 RSS 首页操作记录；其中“保持 RSS 产品名和首页定位”、日报验收等描述已由本次用户要求取代。该文件原有未提交修改予以保留，不混入本次网站改版提交。后续以用户当前要求、本 README、AGENTS.md 及当前源码为准，不恢复已退役的日报、IoT、数据库或登录系统。

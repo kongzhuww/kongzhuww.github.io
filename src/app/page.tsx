@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 const REPO = "https://github.com/kongzhuww/tab-project-next";
 const RELEASE_URL = "https://github.com/kongzhuww/tab-project-next/releases/latest";
@@ -135,7 +136,7 @@ export default function Home() {
             <h1>把属于你的日常，<br />安放在<span className="accent-word">顺手的新标签页。</span></h1>
             <p className="hero-description">
               常用的网站与深层文件夹，清晰归类的待办任务与 GitHub 仓库，<br className="desktop-break" />
-              随心畅听的背景旋律。零后台常驻，0 毫秒离线直出，私有安全。
+              随心畅听的背景旋律。本地保存个人设置，按需连接你选择的服务。
             </p>
             <div className="actions">
               <a className="button primary" href={RELEASE_URL} target="_blank" rel="noopener noreferrer">
@@ -154,13 +155,13 @@ export default function Home() {
 
           <div className="hero-stat-card">
             <div className="stat-item">
-              <span className="stat-number">0ms</span>
-              <span className="stat-label">本地 Storage 离线秒级呈现</span>
+              <span className="stat-number">本地</span>
+              <span className="stat-label">保存设置与工作空间</span>
             </div>
             <div className="stat-divider" />
             <div className="stat-item">
-              <span className="stat-number">100%</span>
-              <span className="stat-label">纯净隐私 · 敏感凭据零外发</span>
+              <span className="stat-number">按需</span>
+              <span className="stat-label">连接第三方账号与服务</span>
             </div>
             <div className="stat-divider" />
             <div className="stat-item">
@@ -548,7 +549,7 @@ export default function Home() {
             <article className="bento-card">
               <div className="bento-badge">06 · 隐私与安全</div>
               <h3>100% 浏览器原生</h3>
-              <p>无桌面 EXE，无残留硬件探针，依赖安全审计清零。数据留存在浏览器本地 Storage，敏感 Token 绝不上报。</p>
+              <p>设置与内容主要保存在浏览器本地。联网组件会向相应服务发送必要数据，同步备份可能包含凭据；使用前请查看隐私政策。</p>
             </article>
           </div>
         </section>
@@ -639,6 +640,7 @@ export default function Home() {
           <span className="footer-copyright">© {new Date().getFullYear()} kongzhuww · 保持专注，探索日常。</span>
         </div>
         <div className="footer-links">
+          <Link href="/privacy">隐私政策</Link>
           <a href={REPO} target="_blank" rel="noopener noreferrer">GitHub 仓库</a>
           <a href={RELEASE_URL} target="_blank" rel="noopener noreferrer">发行版本</a>
           <a href={REPO + "/issues"} target="_blank" rel="noopener noreferrer">问题反馈</a>

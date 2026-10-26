@@ -2,10 +2,12 @@
 
 基于 Next.js 16、React 19 与 TypeScript 的静态介绍站，介绍 [kongzhuww/tab-project-next](https://github.com/kongzhuww/tab-project-next)。
 
-- 网站仓库：`kongzhuww/kongzhuww.github.io`
-- 本地目录：`D:\default save place\GitHub\my-plugins-sites\kongzhuww.github.io`
+- 网站仓库：`kongzhuww/tab-project-website`
+- 本地目录：`D:\default save place\GitHub\my-plugins-sites\kongzhuww.github.io`（暂保留原目录名；origin 和项目包名已更新为 tab-project-website）
 - 正式域名配置：`https://logicweaver.me/`
 - 首页：功能介绍、Light / Lonetrail / Dark 演示、安装和 FAQ。
+- 隐私政策：`/privacy`（静态导出为 `out/privacy.html`），首页页脚提供入口；部署及公开访问验证前不能作为已上线链接提交商店。
+- 政策依据和发布前核对清单：`docs/PRIVACY_REVIEW.md`。
 
 旧版 AI RSS 日报页面、报告 JSON 和旧 IoT 模拟脚本已移除，不再维护 `/daily/` 或 `/reports/`。历史代码仍保留在 Git 提交中；本次不改外部 n8n 自动化、DNS 或远端服务。
 
@@ -34,6 +36,8 @@ npm run build
 src/app/page.tsx          项目介绍与交互演示
 src/app/globals.css       响应式样式与主题变量
 src/app/layout.tsx        中文语言与默认元数据
+src/app/privacy/page.tsx  扩展及网站隐私政策
+src/app/privacy/privacy.module.css  政策页主题自适应样式
 next.config.mjs          Next.js 静态导出配置
 wrangler.toml            Cloudflare 静态资源和域名路由
 ```
@@ -48,7 +52,9 @@ wrangler.toml            Cloudflare 静态资源和域名路由
 - Worker：`project911`
 - 域名路由：`logicweaver.me/*` 与 `www.logicweaver.me/*`
 
-本地 Git 提交不会自动改变线上网站；只有明确授权后才推送或部署。不读取 `.env` / `.env.local` 来制作介绍页。
+本地 Git 提交不会自动改变线上网站；只有明确授权后才推送或部署。
+
+GitHub 仓库已由 `kongzhuww.github.io` 更名为 `tab-project-website`，旧 GitHub Pages 用户站地址可能失效；正式域名仍按 Cloudflare 配置管理。若 Cloudflare 自动构建连接了旧仓库，请在控制台核对并按需重新连接，不因改名擅自改动 Worker 名称、路由或 DNS。不读取 `.env` / `.env.local` 来制作介绍页。
 
 ## 维护说明
 

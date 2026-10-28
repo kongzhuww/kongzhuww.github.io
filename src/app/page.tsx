@@ -26,7 +26,7 @@ interface WorkTask {
 const initialTasks: WorkTask[] = [
   { id: "t1", repo: "OpenShell", title: "研究 Windows 终端无缝嵌入逻辑", done: false, due: "今天" },
   { id: "t2", repo: "OpenShell", title: "更新自动化构建流水线与脚本", done: true },
-  { id: "t3", repo: "tab-project-next", title: "升级 1.0.1：持久通知中心与仓库分层", done: true },
+  { id: "t3", repo: "tab-project-next", title: "升级 1.0.5：我的仓库 Topic 看板与双向拖拽", done: true },
   { id: "t4", repo: "tab-project-next", title: "优化落地展示站交互式桌面模拟器", done: false, due: "待办" },
 ];
 
@@ -64,7 +64,7 @@ export default function Home() {
   const [tasks, setTasks] = useState<WorkTask[]>(initialTasks);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState([
-    { id: "n1", app: "Todoist", title: "任务提醒", desc: "升级 1.0.1：持久通知中心与仓库分层已发布", time: "刚刚" },
+    { id: "n1", app: "Todoist", title: "任务提醒", desc: "升级 1.0.5：我的仓库 Topic 看板与拖拽同步已发布", time: "刚刚" },
     { id: "n2", app: "GitHub", title: "新仓库关联", desc: "已在 tab-project-next 中关联至 GitHub 任务区", time: "10分钟前" },
   ]);
   const [clockTime, setClockTime] = useState("09:41");
@@ -106,7 +106,7 @@ export default function Home() {
           </div>
           <div className="brand-text-wrap">
             <span className="brand-name">tab-project<span className="brand-next"> / next</span></span>
-            <span className="brand-badge">v1.0.1 开源正式版</span>
+            <span className="brand-badge">v1.0.5 开源正式版</span>
           </div>
         </a>
 
@@ -131,7 +131,7 @@ export default function Home() {
           <div className="hero-copy">
             <div className="hero-tags">
               <span className="eyebrow"><span className="status-dot" /> 纯净 Manifest V3 桌面浏览器扩展</span>
-              <span className="hero-ver-chip">新版本 1.0.1 现已发布</span>
+              <span className="hero-ver-chip">新版本 1.0.5 现已发布</span>
             </div>
             <h1>把属于你的日常，<br />安放在<span className="accent-word">顺手的新标签页。</span></h1>
             <p className="hero-description">
@@ -140,7 +140,7 @@ export default function Home() {
             </p>
             <div className="actions">
               <a className="button primary" href={RELEASE_URL} target="_blank" rel="noopener noreferrer">
-                <span>立即下载 v1.0.1 扩展包</span>
+                <span>立即下载 v1.0.5 扩展包</span>
                 <span className="btn-arrow" aria-hidden="true">↓</span>
               </a>
               <a className="button secondary" href={REPO} target="_blank" rel="noopener noreferrer">
@@ -534,8 +534,8 @@ export default function Home() {
             {/* 卡片 4: GitHub 资源专区 */}
             <article className="bento-card">
               <div className="bento-badge">04 · 开源探索</div>
-              <h3>GitHub 资源专区</h3>
-              <p>整理 Star 仓库、探索精选开源资源；全新修复的 README Markdown 排版引擎，横排导航开阔舒展，舒心阅读。</p>
+              <h3>GitHub 资源专区与 Topic 看板</h3>
+              <p>整理 Star 仓库与个人项目；全新上线「我的仓库 · Topic 看板」，支持卡片双向拖拽与 GitHub Topics 远端秒级同步，README 舒心畅读。</p>
             </article>
 
             {/* 卡片 5: 音乐陪伴 */}
@@ -598,7 +598,7 @@ export default function Home() {
             <div className="install-step-card">
               <span className="step-idx">01</span>
               <h4>下载解压</h4>
-              <p>在 GitHub 发行页面下载最新的 <code>tab-project-v1.0.1-extension.zip</code>，解压到电脑的固定目录。</p>
+              <p>在 GitHub 发行页面下载最新的 <code>tab-project-v1.0.5-extension.zip</code>，解压到电脑的固定目录。</p>
             </div>
             <div className="install-step-card">
               <span className="step-idx">02</span>
@@ -621,7 +621,7 @@ export default function Home() {
             <p>tab-project-next · 基于纯净 Manifest V3 构建的现代化开源新标签页</p>
             <div className="actions justify-center">
               <a className="button primary" href={RELEASE_URL} target="_blank" rel="noopener noreferrer">
-                <span>下载 1.0.1 正式版</span>
+                <span>下载 1.0.5 正式版</span>
                 <span className="btn-arrow" aria-hidden="true">↓</span>
               </a>
               <a className="button secondary" href={REPO} target="_blank" rel="noopener noreferrer">

@@ -1,5 +1,7 @@
 # tab-project-next 介绍网站
 
+[English](README_en.md) | **简体中文**
+
 基于 Next.js 16、React 19 与 TypeScript 的静态介绍站，介绍 [kongzhuww/tab-project-next](https://github.com/kongzhuww/tab-project-next)。
 
 - 网站仓库：`kongzhuww/tab-project-website`

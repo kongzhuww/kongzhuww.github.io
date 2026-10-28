@@ -24,19 +24,19 @@ interface WorkTask {
 }
 
 const initialTasks: WorkTask[] = [
-  { id: "t1", repo: "OpenShell", title: "研究 Windows 终端无缝嵌入逻辑", done: false, due: "今天" },
-  { id: "t2", repo: "OpenShell", title: "更新自动化构建流水线与脚本", done: true },
-  { id: "t3", repo: "tab-project-next", title: "升级 1.0.5：我的仓库 Topic 看板与双向拖拽", done: true },
-  { id: "t4", repo: "tab-project-next", title: "优化落地展示站交互式桌面模拟器", done: false, due: "待办" },
+  { id: "t1", repo: "WebWorkspace", title: "研究前端虚拟网格与平滑拖拽交互", done: false, due: "今天" },
+  { id: "t2", repo: "WebWorkspace", title: "更新自动化构建流水线与持续集成配置", done: true },
+  { id: "t3", repo: "tab-project-next", title: "体验 1.0.5：我的仓库 Topic 看板与分类", done: true },
+  { id: "t4", repo: "tab-project-next", title: "自定义常用网站九宫格与深层文件夹", done: false, due: "待办" },
 ];
 
-// 顶栏书签条文件夹 (BookmarkFolderStrip.vue)
-const topBookmarkFolders = ["电设", "通用性AI", "工具", "就业", "工程区"];
+// 顶栏书签条文件夹占位 (BookmarkFolderStrip.vue)
+const topBookmarkFolders = ["开发资源", "效率工具", "设计灵感", "参考文档", "学习笔记"];
 
-// 常用网站分区 (FavoriteSites.vue)
-const sitePageTabs = ["默认", "游戏区", "学校事务", "我的", "就业区", "工具箱", "办公桌", "机械臂"];
+// 常用网站分区占位 (FavoriteSites.vue)
+const sitePageTabs = ["默认", "工作台", "开发", "设计", "日常", "阅读", "归档"];
 
-// 2x2 大文件夹与单格磁贴模拟数据 (对齐 04-screenshot-home-1280x800.png)
+// 2x2 大文件夹与单格磁贴通用占位数据 (保持 2x2 大九宫格、小四宫格与磁贴布局，严格去个人化)
 interface SimTileItem {
   id: string;
   type: "folder-large" | "folder-small" | "link";
@@ -54,16 +54,16 @@ const pageTilesMap: Record<string, SimTileItem[]> = {
     {
       id: "f-plat",
       type: "folder-large",
-      title: "常用平台",
+      title: "常用社区",
       subIcons: [
-        { text: "bili", bg: "#fb7299", color: "#fff" },
-        { text: "𝕏", bg: "#0f172a", color: "#fff" },
-        { text: "GH", bg: "#24292f", color: "#fff" },
-        { text: "📄", bg: "#f8fafc", color: "#334155" },
-        { text: "困困", bg: "#facc15", color: "#0f172a" },
-        { text: "1+", bg: "#38bdf8", color: "#fff" },
-        { text: "🐋", bg: "#e0f2fe", color: "#0284c7" },
-        { text: "📁", bg: "#f1f5f9", color: "#475569" },
+        { text: "Web", bg: "#fb7299", color: "#fff" },
+        { text: "Hub", bg: "#24292f", color: "#fff" },
+        { text: "Dev", bg: "#0f172a", color: "#fff" },
+        { text: "Doc", bg: "#f8fafc", color: "#334155" },
+        { text: "Chat", bg: "#0284c7", color: "#fff" },
+        { text: "App", bg: "#10b981", color: "#fff" },
+        { text: "Feed", bg: "#f59e0b", color: "#fff" },
+        { text: "Git", bg: "#6366f1", color: "#fff" },
         { text: "+3", bg: "#475569", color: "#fff" },
       ]
     },
@@ -73,9 +73,9 @@ const pageTilesMap: Record<string, SimTileItem[]> = {
       title: "常用AI",
       subIcons: [
         { text: "✦", bg: "#eff6ff", color: "#2563eb" },
-        { text: "🐋", bg: "#0f172a", color: "#fff" },
+        { text: "🤖", bg: "#0f172a", color: "#fff" },
         { text: "💬", bg: "#1e293b", color: "#fff" },
-        { text: "🐳", bg: "#e0e7ff", color: "#4f46e5" },
+        { text: "🧠", bg: "#e0e7ff", color: "#4f46e5" },
         { text: "✴", bg: "#fef3c7", color: "#d97706" },
         { text: "◎", bg: "#f1f5f9", color: "#0f172a" },
         { text: "K", bg: "#18181b", color: "#fff" },
@@ -85,164 +85,164 @@ const pageTilesMap: Record<string, SimTileItem[]> = {
     {
       id: "f-git",
       type: "folder-small",
-      title: "git工具箱",
+      title: "代码协作",
       subIcons: [
-        { text: "GH", bg: "#f8fafc", color: "#0f172a" },
-        { text: "GH", bg: "#f8fafc", color: "#0f172a" },
-        { text: "📦", bg: "#f8fafc", color: "#475569" },
+        { text: "Git", bg: "#f8fafc", color: "#0f172a" },
+        { text: "Hub", bg: "#f8fafc", color: "#0f172a" },
+        { text: "Lab", bg: "#f8fafc", color: "#475569" },
       ]
     },
     {
       id: "f-mail",
       type: "folder-small",
-      title: "邮箱",
+      title: "协同办公",
       subIcons: [
-        { text: "📨", bg: "#eff6ff", color: "#0284c7" },
-        { text: "M", bg: "#fef2f2", color: "#dc2626" },
-        { text: "🌐", bg: "#f0fdf4", color: "#16a34a" },
+        { text: "Mail", bg: "#eff6ff", color: "#0284c7" },
+        { text: "Doc", bg: "#fef2f2", color: "#dc2626" },
+        { text: "Cal", bg: "#f0fdf4", color: "#16a34a" },
       ]
     },
     {
       id: "f-api",
       type: "folder-small",
-      title: "API管理",
+      title: "API服务",
       subIcons: [
-        { text: "S", bg: "#f0f9ff", color: "#0284c7" },
-        { text: "⚡", bg: "#0f172a", color: "#fff" },
-        { text: "K", bg: "#18181b", color: "#fff" },
+        { text: "API", bg: "#f0f9ff", color: "#0284c7" },
+        { text: "Post", bg: "#0f172a", color: "#fff" },
+        { text: "Test", bg: "#18181b", color: "#fff" },
         { text: "+2", bg: "#475569", color: "#fff" },
       ]
     },
     {
-      id: "l-lmspeed",
+      id: "l-demo-ws",
       type: "link",
-      title: "LMSpeed...",
-      iconText: "━",
+      title: "工作台...",
+      iconText: "💻",
       iconBg: "#09090b",
-      iconColor: "#ef4444"
+      iconColor: "#38bdf8"
     },
     {
       id: "f-forum",
       type: "folder-small",
-      title: "论坛",
+      title: "技术论坛",
       subIcons: [
-        { text: "🔥", bg: "#fff7ed", color: "#ea580c" },
-        { text: "📄", bg: "#f8fafc", color: "#334155" },
-        { text: "🦋", bg: "#eff6ff", color: "#2563eb" },
+        { text: "UI", bg: "#fff7ed", color: "#ea580c" },
+        { text: "Doc", bg: "#f8fafc", color: "#334155" },
+        { text: "Tech", bg: "#eff6ff", color: "#2563eb" },
       ]
     },
     {
-      id: "l-space",
+      id: "l-preview",
       type: "link",
-      title: "个人空间",
-      iconText: "🚀",
-      iconBg: "#dc2626",
+      title: "组件预览",
+      iconText: "🧩",
+      iconBg: "#3b82f6",
       iconColor: "#fff"
     },
     {
       id: "f-aitools",
       type: "folder-small",
-      title: "AI工具箱",
+      title: "开发工具",
       subIcons: [
-        { text: "🟣", bg: "#f3e8ff", color: "#9333ea" },
-        { text: "🟣", bg: "#f3e8ff", color: "#9333ea" },
-        { text: "📄", bg: "#f8fafc", color: "#334155" },
+        { text: "CLI", bg: "#f3e8ff", color: "#9333ea" },
+        { text: "Pkg", bg: "#f3e8ff", color: "#9333ea" },
+        { text: "Env", bg: "#f8fafc", color: "#334155" },
         { text: "+4", bg: "#475569", color: "#fff" },
       ]
     },
     {
-      id: "l-arena",
+      id: "l-doc",
       type: "link",
-      title: "AI竞技场",
-      iconText: "🏛️",
+      title: "在线文档",
+      iconText: "📖",
       iconBg: "#ffffff",
       iconColor: "#0f172a"
     },
     {
       id: "l-pkg",
       type: "link",
-      title: "Package ...",
-      iconText: "P",
+      title: "包管理器",
+      iconText: "📦",
       iconBg: "#ffffff",
       iconColor: "#0f172a"
     },
     {
-      id: "l-price",
+      id: "l-board",
       type: "link",
-      title: "PriceAI | ...",
-      iconText: "🔍",
+      title: "数据看板",
+      iconText: "📊",
       iconBg: "#ffffff",
       iconColor: "#0f172a"
     },
     {
-      id: "l-cyber",
+      id: "l-spec",
       type: "link",
-      title: "CyberMa...",
-      iconText: "🛡️",
+      title: "设计规范",
+      iconText: "📐",
       iconBg: "#eff6ff",
       iconColor: "#1d4ed8"
     },
     {
-      id: "l-vault",
+      id: "l-mind",
       type: "link",
-      title: "密码库 | V...",
-      iconText: "V",
+      title: "思维导图",
+      iconText: "🧠",
       iconBg: "#ffffff",
       iconColor: "#0f172a"
     },
     {
-      id: "l-sci",
+      id: "l-speed",
       type: "link",
-      title: "科学边界 ...",
-      iconText: "S",
+      title: "网络测速",
+      iconText: "⚡",
       iconBg: "#ffffff",
       iconColor: "#0f172a"
     },
     {
-      id: "l-reset",
+      id: "l-convert",
       type: "link",
-      title: "ResetNo...",
-      iconText: "❄️",
+      title: "格式转换",
+      iconText: "🔄",
       iconBg: "#eff6ff",
       iconColor: "#2563eb"
     },
     {
-      id: "l-card",
+      id: "l-color",
       type: "link",
-      title: "卡网订阅...",
-      iconText: "🔍",
+      title: "配色参考",
+      iconText: "🎨",
       iconBg: "#f0fdf4",
       iconColor: "#15803d"
     },
     {
-      id: "l-oken",
+      id: "l-icon",
       type: "link",
-      title: "Oken | A...",
+      title: "图标资产",
       iconText: "💠",
       iconBg: "#eef2ff",
       iconColor: "#4f46e5"
     },
     {
-      id: "l-disc",
+      id: "l-sandbox",
       type: "link",
-      title: "Discover ...",
-      iconText: "M",
+      title: "代码沙盒",
+      iconText: "⌨️",
       iconBg: "#ffffff",
       iconColor: "#0f172a"
     },
     {
-      id: "l-smith",
+      id: "l-weekly",
       type: "link",
-      title: "Smithery...",
-      iconText: "🟧",
+      title: "技术周报",
+      iconText: "📰",
       iconBg: "#fff7ed",
       iconColor: "#ea580c"
     },
     {
-      id: "l-tech",
+      id: "l-note",
       type: "link",
-      title: "(1) Tech...",
-      iconText: "T",
+      title: "快速便签",
+      iconText: "📝",
       iconBg: "#0f172a",
       iconColor: "#38bdf8"
     }
@@ -302,11 +302,11 @@ export default function Home() {
 
   // GitHub Topic 看板可交互模拟状态
   const [kanbanRepos, setKanbanRepos] = useState([
-    { id: "r1", name: "OpenShell", desc: "Windows terminal seamless integration", lang: "C++", stars: 320, topic: "default" },
-    { id: "r2", name: "tab-project-website", desc: "Official showcase site for tab-project-next", lang: "TypeScript", stars: 18, topic: "default" },
+    { id: "r1", name: "workspace-template", desc: "Clean modern dashboard starter kit", lang: "TypeScript", stars: 128, topic: "default" },
+    { id: "r2", name: "tab-project-website", desc: "Official showcase site for tab-project-next", lang: "TypeScript", stars: 45, topic: "default" },
     { id: "r3", name: "tab-project-next", desc: "Modern Chromium MV3 newtab workspace with Vue 3", lang: "Vue", stars: 482, topic: "tools" },
-    { id: "r4", name: "CLI-Manager", desc: "Multi-project AI CLI manager with terminals & SSH", lang: "Go", stars: 86, topic: "tools" },
-    { id: "r5", name: "obsidian-clipper", desc: "Web clipper & markdown knowledge organizer", lang: "TypeScript", stars: 64, topic: "vue3" },
+    { id: "r4", name: "cli-workflow-tool", desc: "CLI multi-project manager and terminal automation", lang: "Go", stars: 96, topic: "tools" },
+    { id: "r5", name: "markdown-notes-organizer", desc: "Web clipper & markdown knowledge organizer", lang: "TypeScript", stars: 72, topic: "vue3" },
   ]);
 
   useEffect(() => {
@@ -861,7 +861,7 @@ export default function Home() {
                         >
                           <div>
                             <strong>🎬 订阅视频</strong>
-                            <small>刹那观察室 · AI字幕</small>
+                            <small>技术周刊 · AI字幕</small>
                           </div>
                           <span className="ch-badge pink">NEW</span>
                         </button>
@@ -918,7 +918,7 @@ export default function Home() {
                           <span className="sim-item-pill">36</span>
                         </button>
                         <button type="button" className="sim-sidebar-item">
-                          <span>机器人与ROS2</span>
+                          <span>前端与架构</span>
                           <span className="sim-item-pill">18</span>
                         </button>
                       </div>
@@ -938,9 +938,9 @@ export default function Home() {
                           <div className="sim-video-thumb v1">
                             <span className="sim-video-duration">18:42</span>
                           </div>
-                          <h5 className="sim-video-title">【硬件实操】从零搭建具身智能机械臂与视觉抓取控制</h5>
+                          <h5 className="sim-video-title">【前端实操】从零搭建高性能 MV3 浏览器扩展</h5>
                           <div className="sim-video-meta">
-                            <span>刹那观察室</span>
+                            <span>开发者周刊</span>
                             <span>24.6万 · AI字幕</span>
                           </div>
                         </div>
@@ -949,7 +949,7 @@ export default function Home() {
                           <div className="sim-video-thumb v2">
                             <span className="sim-video-duration">32:10</span>
                           </div>
-                          <h5 className="sim-video-title">Chromium 扩展 MV3 纯血架构与高性能虚拟列表演进</h5>
+                          <h5 className="sim-video-title">【架构演进】Chromium 扩展组件化与本地存储实践</h5>
                           <div className="sim-video-meta">
                             <span>前端架构师</span>
                             <span>8.9万 · 收藏夹</span>
@@ -1146,16 +1146,16 @@ export default function Home() {
                       <div className="sim-repo-layer">
                         <div
                           className="sim-repo-header"
-                          onClick={() => setActiveRepoGroup(activeRepoGroup === "OpenShell" ? null : "OpenShell")}
+                          onClick={() => setActiveRepoGroup(activeRepoGroup === "WebWorkspace" ? null : "WebWorkspace")}
                         >
                           <span className="repo-mark">🐙</span>
-                          <strong className="repo-name">OpenShell</strong>
+                          <strong className="repo-name">WebWorkspace</strong>
                           <span className="repo-counter">2 条任务</span>
-                          <span className="repo-arrow">{activeRepoGroup === "OpenShell" ? "▸" : "▾"}</span>
+                          <span className="repo-arrow">{activeRepoGroup === "WebWorkspace" ? "▸" : "▾"}</span>
                         </div>
-                        {activeRepoGroup !== "OpenShell" && (
+                        {activeRepoGroup !== "WebWorkspace" && (
                           <div className="sim-task-cards-list">
-                            {tasks.filter(t => t.repo === "OpenShell").map(t => (
+                            {tasks.filter(t => t.repo === "WebWorkspace").map(t => (
                               <div
                                 key={t.id}
                                 className={"sim-task-item " + (t.done ? "is-done" : "")}
@@ -1356,7 +1356,7 @@ export default function Home() {
             <article className="bento-card bento-wide">
               <div className="bento-badge">01 · 常用网站与书签</div>
               <h3>多工作区与 2x2 大文件夹背包网格</h3>
-              <p>支持创建多个专属工作区（默认、游戏区、学校事务、机械臂等），2x2 大文件夹支持 9 宫格直达与深层嵌套，拖拽换位丝滑跟手。</p>
+              <p>支持创建多个专属工作区（默认、工作台、开发、设计、阅读等），2x2 大文件夹支持 9 宫格直达与深层嵌套，拖拽换位丝滑跟手。</p>
               <div className="bento-visual sites-preview">
                 <span className="chip sage">常用平台 2x2</span>
                 <span className="chip rose">常用AI 2x2</span>

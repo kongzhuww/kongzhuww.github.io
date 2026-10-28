@@ -3,7 +3,7 @@
 基于 Next.js 16、React 19 与 TypeScript 的静态介绍站，介绍 [kongzhuww/tab-project-next](https://github.com/kongzhuww/tab-project-next)。
 
 - 网站仓库：`kongzhuww/tab-project-website`
-- 本地目录：`D:\default save place\GitHub\my-plugins-sites\kongzhuww.github.io`（暂保留原目录名；origin 和项目包名已更新为 tab-project-website）
+- 本地目录：`D:\default save place\GitHub\tab-project-website`
 - 正式域名配置：`https://logicweaver.me/`
 - 首页：功能介绍、Light / Lonetrail / Dark 演示、安装和 FAQ。
 - 隐私政策：`/privacy`（静态导出为 `out/privacy.html`），首页页脚提供入口；部署及公开访问验证前不能作为已上线链接提交商店。

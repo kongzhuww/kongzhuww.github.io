@@ -30,57 +30,301 @@ const initialTasks: WorkTask[] = [
   { id: "t4", repo: "tab-project-next", title: "优化落地展示站交互式桌面模拟器", done: false, due: "待办" },
 ];
 
-const workspaceSites: Record<string, Array<{ name: string; icon: string; url: string; tone: string }>> = {
-  "个人日常": [
-    { name: "Bilibili", icon: "assets/bilibili.svg", url: "https://bilibili.com", tone: "rose" },
-    { name: "网易云音乐", icon: "assets/netease.svg", url: "https://music.163.com", tone: "rose" },
-    { name: "GitHub", icon: "assets/github-star.svg", url: "https://github.com", tone: "neutral" },
-    { name: "YouTube", icon: "assets/nav-youtube.svg", url: "https://youtube.com", tone: "rose" },
-    { name: "AI 资讯", icon: "assets/nav-aihot.svg", url: "#", tone: "sand" },
-    { name: "添加网址", icon: "", url: "#", tone: "dashed" },
-  ],
-  "开发工作": [
-    { name: "GitHub", icon: "assets/github-star.svg", url: "https://github.com", tone: "neutral" },
-    { name: "Todoist", icon: "assets/nav-todoist.svg", url: "https://todoist.com", tone: "rose" },
-    { name: "Vercel", icon: "assets/default-favicon.svg", url: "#", tone: "sand" },
-    { name: "模型价格", icon: "assets/nav-pricing.svg", url: "#", tone: "lavender" },
-    { name: "Cloudflare", icon: "assets/default-favicon.svg", url: "#", tone: "sand" },
-    { name: "新建分组", icon: "", url: "#", tone: "dashed" },
-  ],
-  "灵感素材": [
-    { name: "资源专区", icon: "assets/nav-folder.svg", url: "#", tone: "lavender" },
-    { name: "Figma", icon: "assets/default-favicon.svg", url: "#", tone: "rose" },
-    { name: "Dribbble", icon: "assets/default-favicon.svg", url: "#", tone: "rose" },
-    { name: "Notion", icon: "assets/default-favicon.svg", url: "#", tone: "sand" },
-    { name: "塞壬唱片", icon: "assets/nav-home.svg", url: "#", tone: "sand" },
-    { name: "添加收藏", icon: "", url: "#", tone: "dashed" },
+// 顶栏书签条文件夹 (BookmarkFolderStrip.vue)
+const topBookmarkFolders = ["电设", "通用性AI", "工具", "就业", "工程区"];
+
+// 常用网站分区 (FavoriteSites.vue)
+const sitePageTabs = ["默认", "游戏区", "学校事务", "我的", "就业区", "工具箱", "办公桌", "机械臂"];
+
+// 2x2 大文件夹与单格磁贴模拟数据 (对齐 04-screenshot-home-1280x800.png)
+interface SimTileItem {
+  id: string;
+  type: "folder-large" | "folder-small" | "link";
+  title: string;
+  badge?: string;
+  subIcons?: Array<{ text: string; bg: string; color?: string }>;
+  iconText?: string;
+  iconBg?: string;
+  iconColor?: string;
+  iconSrc?: string;
+}
+
+const pageTilesMap: Record<string, SimTileItem[]> = {
+  "默认": [
+    {
+      id: "f-plat",
+      type: "folder-large",
+      title: "常用平台",
+      subIcons: [
+        { text: "bili", bg: "#fb7299", color: "#fff" },
+        { text: "𝕏", bg: "#0f172a", color: "#fff" },
+        { text: "GH", bg: "#24292f", color: "#fff" },
+        { text: "📄", bg: "#f8fafc", color: "#334155" },
+        { text: "困困", bg: "#facc15", color: "#0f172a" },
+        { text: "1+", bg: "#38bdf8", color: "#fff" },
+        { text: "🐋", bg: "#e0f2fe", color: "#0284c7" },
+        { text: "📁", bg: "#f1f5f9", color: "#475569" },
+        { text: "+3", bg: "#475569", color: "#fff" },
+      ]
+    },
+    {
+      id: "f-ai",
+      type: "folder-large",
+      title: "常用AI",
+      subIcons: [
+        { text: "✦", bg: "#eff6ff", color: "#2563eb" },
+        { text: "🐋", bg: "#0f172a", color: "#fff" },
+        { text: "💬", bg: "#1e293b", color: "#fff" },
+        { text: "🐳", bg: "#e0e7ff", color: "#4f46e5" },
+        { text: "✴", bg: "#fef3c7", color: "#d97706" },
+        { text: "◎", bg: "#f1f5f9", color: "#0f172a" },
+        { text: "K", bg: "#18181b", color: "#fff" },
+        { text: "🌅", bg: "#fff7ed", color: "#ea580c" },
+      ]
+    },
+    {
+      id: "f-git",
+      type: "folder-small",
+      title: "git工具箱",
+      subIcons: [
+        { text: "GH", bg: "#f8fafc", color: "#0f172a" },
+        { text: "GH", bg: "#f8fafc", color: "#0f172a" },
+        { text: "📦", bg: "#f8fafc", color: "#475569" },
+      ]
+    },
+    {
+      id: "f-mail",
+      type: "folder-small",
+      title: "邮箱",
+      subIcons: [
+        { text: "📨", bg: "#eff6ff", color: "#0284c7" },
+        { text: "M", bg: "#fef2f2", color: "#dc2626" },
+        { text: "🌐", bg: "#f0fdf4", color: "#16a34a" },
+      ]
+    },
+    {
+      id: "f-api",
+      type: "folder-small",
+      title: "API管理",
+      subIcons: [
+        { text: "S", bg: "#f0f9ff", color: "#0284c7" },
+        { text: "⚡", bg: "#0f172a", color: "#fff" },
+        { text: "K", bg: "#18181b", color: "#fff" },
+        { text: "+2", bg: "#475569", color: "#fff" },
+      ]
+    },
+    {
+      id: "l-lmspeed",
+      type: "link",
+      title: "LMSpeed...",
+      iconText: "━",
+      iconBg: "#09090b",
+      iconColor: "#ef4444"
+    },
+    {
+      id: "f-forum",
+      type: "folder-small",
+      title: "论坛",
+      subIcons: [
+        { text: "🔥", bg: "#fff7ed", color: "#ea580c" },
+        { text: "📄", bg: "#f8fafc", color: "#334155" },
+        { text: "🦋", bg: "#eff6ff", color: "#2563eb" },
+      ]
+    },
+    {
+      id: "l-space",
+      type: "link",
+      title: "个人空间",
+      iconText: "🚀",
+      iconBg: "#dc2626",
+      iconColor: "#fff"
+    },
+    {
+      id: "f-aitools",
+      type: "folder-small",
+      title: "AI工具箱",
+      subIcons: [
+        { text: "🟣", bg: "#f3e8ff", color: "#9333ea" },
+        { text: "🟣", bg: "#f3e8ff", color: "#9333ea" },
+        { text: "📄", bg: "#f8fafc", color: "#334155" },
+        { text: "+4", bg: "#475569", color: "#fff" },
+      ]
+    },
+    {
+      id: "l-arena",
+      type: "link",
+      title: "AI竞技场",
+      iconText: "🏛️",
+      iconBg: "#ffffff",
+      iconColor: "#0f172a"
+    },
+    {
+      id: "l-pkg",
+      type: "link",
+      title: "Package ...",
+      iconText: "P",
+      iconBg: "#ffffff",
+      iconColor: "#0f172a"
+    },
+    {
+      id: "l-price",
+      type: "link",
+      title: "PriceAI | ...",
+      iconText: "🔍",
+      iconBg: "#ffffff",
+      iconColor: "#0f172a"
+    },
+    {
+      id: "l-cyber",
+      type: "link",
+      title: "CyberMa...",
+      iconText: "🛡️",
+      iconBg: "#eff6ff",
+      iconColor: "#1d4ed8"
+    },
+    {
+      id: "l-vault",
+      type: "link",
+      title: "密码库 | V...",
+      iconText: "V",
+      iconBg: "#ffffff",
+      iconColor: "#0f172a"
+    },
+    {
+      id: "l-sci",
+      type: "link",
+      title: "科学边界 ...",
+      iconText: "S",
+      iconBg: "#ffffff",
+      iconColor: "#0f172a"
+    },
+    {
+      id: "l-reset",
+      type: "link",
+      title: "ResetNo...",
+      iconText: "❄️",
+      iconBg: "#eff6ff",
+      iconColor: "#2563eb"
+    },
+    {
+      id: "l-card",
+      type: "link",
+      title: "卡网订阅...",
+      iconText: "🔍",
+      iconBg: "#f0fdf4",
+      iconColor: "#15803d"
+    },
+    {
+      id: "l-oken",
+      type: "link",
+      title: "Oken | A...",
+      iconText: "💠",
+      iconBg: "#eef2ff",
+      iconColor: "#4f46e5"
+    },
+    {
+      id: "l-disc",
+      type: "link",
+      title: "Discover ...",
+      iconText: "M",
+      iconBg: "#ffffff",
+      iconColor: "#0f172a"
+    },
+    {
+      id: "l-smith",
+      type: "link",
+      title: "Smithery...",
+      iconText: "🟧",
+      iconBg: "#fff7ed",
+      iconColor: "#ea580c"
+    },
+    {
+      id: "l-tech",
+      type: "link",
+      title: "(1) Tech...",
+      iconText: "T",
+      iconBg: "#0f172a",
+      iconColor: "#38bdf8"
+    }
   ]
 };
 
+// AI HOT 资讯池 (LauncherAiHotCard.vue)
+const aihotPool = [
+  {
+    rank: 1,
+    title: "让编程智能体使用已登录 Chrome 的六种方案实操指南",
+    summary: "Browser Use 作者整理了让 Claude Code、Codex、Gemini CLI、Cursor 等编程智能体使用已登录 Chrome 的方法：Claude 订阅用户可用 claude --chrome 的 Claude in Chrome 扩展。",
+    tag: "💡 观点",
+    source: "Browser Use",
+    time: "2026-10-25 08:00"
+  },
+  {
+    rank: 2,
+    title: "DeepSeek 发布新一代推理与开源模型架构，算力能效与推理表现获全球瞩目",
+    summary: "新一代模型在长文本理解、复杂数学推导与代码生成领域实现大幅跃升，全面革新开源生态格局与部署成本。",
+    tag: "🤖 模型",
+    source: "AI 科技评论",
+    time: "2026-10-28 09:30"
+  },
+  {
+    rank: 3,
+    title: "具身智能开源机器人框架发布，多模态大模型进入物理现实交互新阶段",
+    summary: "从视觉语言感知到肢体灵巧操作的端到端神经驱动方案，大幅降低机器人动作泛化与仿真学习门槛。",
+    tag: "🦾 具身",
+    source: "新智元",
+    time: "2026-10-28 11:15"
+  }
+];
+
 export default function Home() {
   const [theme, setTheme] = useState<ThemeId>("light");
-  const [activeWorkspace, setActiveWorkspace] = useState("开发工作");
-  const [activeWindow, setActiveWindow] = useState<string | null>("todoist");
+  const [sitesView, setSitesView] = useState<"sites" | "bookmarks">("sites");
+  const [activeSitePage, setActiveSitePage] = useState("默认");
+  const [activeWindow, setActiveWindow] = useState<string | null>(null);
   const [tasks, setTasks] = useState<WorkTask[]>(initialTasks);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState([
     { id: "n1", app: "Todoist", title: "任务提醒", desc: "升级 1.0.5：我的仓库 Topic 看板与拖拽同步已发布", time: "刚刚" },
     { id: "n2", app: "GitHub", title: "新仓库关联", desc: "已在 tab-project-next 中关联至 GitHub 任务区", time: "10分钟前" },
   ]);
-  const [clockTime, setClockTime] = useState("09:41");
-  const [clockDate, setClockDate] = useState("10月28日 星期三 · 农历九月十八");
+
+  const [clockTime, setClockTime] = useState("10:17");
+  const [clockSecs, setClockSecs] = useState(":46");
+  const [clockGreeting, setClockGreeting] = useState("上午好");
+  const [clockDate, setClockDate] = useState("2026年10月26日 · 周一");
+
   const [activeRepoGroup, setActiveRepoGroup] = useState<string | null>(null);
-  const [biliTab, setBiliTab] = useState("all");
-  const [ghTab, setGhTab] = useState("myrepos");
+  const [biliTab, setBiliTab] = useState("sub");
+  const [ghTab, setGhTab] = useState("repos");
+  const [aihotIdx, setAihotIdx] = useState(0);
+  const [isVinylPlaying, setIsVinylPlaying] = useState(false);
+
+  // GitHub Topic 看板可交互模拟状态
+  const [kanbanRepos, setKanbanRepos] = useState([
+    { id: "r1", name: "OpenShell", desc: "Windows terminal seamless integration", lang: "C++", stars: 320, topic: "default" },
+    { id: "r2", name: "tab-project-website", desc: "Official showcase site for tab-project-next", lang: "TypeScript", stars: 18, topic: "default" },
+    { id: "r3", name: "tab-project-next", desc: "Modern Chromium MV3 newtab workspace with Vue 3", lang: "Vue", stars: 482, topic: "tools" },
+    { id: "r4", name: "CLI-Manager", desc: "Multi-project AI CLI manager with terminals & SSH", lang: "Go", stars: 86, topic: "tools" },
+    { id: "r5", name: "obsidian-clipper", desc: "Web clipper & markdown knowledge organizer", lang: "TypeScript", stars: 64, topic: "vue3" },
+  ]);
 
   useEffect(() => {
+    const wk = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
     const updateTime = () => {
       const now = new Date();
-      setClockTime(
-        String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0")
-      );
-      const weekDays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
-      setClockDate(`${now.getMonth() + 1}月${now.getDate()}日 ${weekDays[now.getDay()]} · 农历九月十八`);
+      const h = now.getHours();
+      const m = now.getMinutes();
+      const s = now.getSeconds();
+      setClockTime(String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0"));
+      setClockSecs(":" + String(s).padStart(2, "0"));
+      if (h < 5) setClockGreeting("夜深了");
+      else if (h < 9) setClockGreeting("早上好");
+      else if (h < 12) setClockGreeting("上午好");
+      else if (h < 14) setClockGreeting("中午好");
+      else if (h < 18) setClockGreeting("下午好");
+      else setClockGreeting("晚上好");
+      setClockDate(`${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 · ${wk[now.getDay()]}`);
     };
     updateTime();
     const timer = setInterval(updateTime, 1000);
@@ -92,12 +336,23 @@ export default function Home() {
   };
 
   const handleDockClick = (toolId: string) => {
+    if (toolId === "home") {
+      setActiveWindow(null);
+      return;
+    }
     if (activeWindow === toolId) {
       setActiveWindow(null); // 点击当前已打开窗口则收起（绿点同步熄灭）
     } else {
       setActiveWindow(toolId);
     }
   };
+
+  const moveRepoTopic = (repoId: string, nextTopic: string) => {
+    setKanbanRepos(prev => prev.map(r => r.id === repoId ? { ...r, topic: nextTopic } : r));
+  };
+
+  const currentTiles = pageTilesMap[activeSitePage] || pageTilesMap["默认"];
+  const currentAihot = aihotPool[aihotIdx % aihotPool.length];
 
   return (
     <div className="landing" data-theme={theme}>
@@ -170,18 +425,20 @@ export default function Home() {
             </div>
             <div className="stat-divider" />
             <div className="stat-item">
-              <span className="stat-number">3 大</span>
-              <span className="stat-label">无缝适配主题 · 告别暗黑割裂</span>
+              <span className="stat-number">4 套</span>
+              <span className="stat-label">正式界面主题 · 告别暗黑割裂</span>
             </div>
           </div>
         </section>
 
-        {/* 交互式拟真桌面模拟器 (Simulator) */}
+        {/* 1:1 像素级复刻真实扩展桌面模拟器 (Simulator) */}
         <section className="simulator-section container" id="simulator" aria-label="交互式插件体验">
           <div className="section-title-wrap text-center">
             <span className="eyebrow justify-center">INTERACTIVE PLAYGROUND</span>
-            <h2>亲手试一试，像在真实浏览器里一样。</h2>
-            <p className="section-sub">点击顶栏头像查看通知中心、切换工作区，或点击下方 Dock 呼出 Todoist 看板与音乐。</p>
+            <h2>1:1 真实还原，亲手试一试你的新标签页。</h2>
+            <p className="section-sub">
+              直接点击下方 Dock 栏的 <strong>B站插件、GitHub 插件（体验 v1.0.5 仓库 Topic 看板）、AI Hot、Todoist、网易云</strong>，或点击黑胶唱片与资讯换一批。
+            </p>
           </div>
 
           <div className="browser-window-frame">
@@ -194,48 +451,40 @@ export default function Home() {
               </div>
               <div className="browser-omnibox">
                 <span className="browser-scheme">edge://newtab</span>
-                <span className="browser-page-title"> — tab-project 新标签页</span>
+                <span className="browser-page-title"> — tab-project 新标签页 (v1.0.5 实机复刻)</span>
               </div>
               <div className="browser-action-pills">
-                <span className="pill-tag">实时交互模拟</span>
+                <span className="pill-tag">点击 Dock 图标打开对应工作台</span>
               </div>
             </div>
 
-            {/* 插件新标签页主桌面 */}
-            <div className="tab-desktop-canvas">
-              {/* 顶栏 TopBar */}
-              <div className="tab-topbar">
-                {/* 左侧头像与通知中心入口 */}
-                <div className="topbar-left relative">
+            {/* ================= 扩展真实顶栏 (AppTopBar.vue) ================= */}
+            <div className="real-ext-topbar">
+              <div className="real-tb-brand">
+                {/* 左上角头像与持久通知中心 */}
+                <div className="real-avatar-anchor">
                   <button
                     type="button"
-                    className="topbar-profile-btn"
-                    title="点击打开通知中心"
+                    className="real-profile-btn"
+                    title="点击打开持久通知中心"
                     onClick={() => setShowNotificationCenter(!showNotificationCenter)}
                   >
-                    <Image src="/assets/icon-48.png" alt="Avatar" width={26} height={26} className="profile-avatar" />
+                    <Image src="/assets/icon-48.png" alt="Avatar" width={30} height={30} className="real-profile-img" />
                     {unreadNotifications.length > 0 && (
-                      <span className="notification-badge-dot">{unreadNotifications.length}</span>
+                      <span className="real-profile-badge">{unreadNotifications.length}</span>
                     )}
                   </button>
 
-                  {/* 弹出持久通知中心 */}
                   {showNotificationCenter && (
                     <div className="sim-notification-popover">
                       <div className="sim-notif-header">
-                        <div>
-                          <h4>通知中心</h4>
-                          <small>重要通知保留 30 天 · 仅本地</small>
-                        </div>
-                        <button
-                          type="button"
-                          className="sim-notif-close"
-                          onClick={() => setShowNotificationCenter(false)}
-                        >×</button>
+                        <h4>通知中心</h4>
+                        <small>保留 30 天内重要提醒</small>
+                        <button type="button" className="sim-notif-close" onClick={() => setShowNotificationCenter(false)}>×</button>
                       </div>
                       <div className="sim-notif-list">
                         {unreadNotifications.length === 0 ? (
-                          <div className="sim-notif-empty">暂无未读通知</div>
+                          <p className="sim-notif-empty">暂无未读通知</p>
                         ) : (
                           unreadNotifications.map(n => (
                             <div key={n.id} className="sim-notif-item">
@@ -243,8 +492,8 @@ export default function Home() {
                                 <strong>{n.app}</strong>
                                 <span>{n.time}</span>
                               </div>
-                              <p className="sim-notif-title">{n.title}</p>
-                              <p className="sim-notif-desc">{n.desc}</p>
+                              <div className="sim-notif-title">{n.title}</div>
+                              <div className="sim-notif-desc">{n.desc}</div>
                             </div>
                           ))
                         )}
@@ -258,128 +507,626 @@ export default function Home() {
                       </div>
                     </div>
                   )}
-
-                  {/* 多工作区选择 */}
-                  <div className="workspace-selector">
-                    {Object.keys(workspaceSites).map(ws => (
-                      <button
-                        key={ws}
-                        type="button"
-                        className={"ws-chip " + (activeWorkspace === ws ? "active" : "")}
-                        onClick={() => setActiveWorkspace(ws)}
-                      >
-                        {ws}
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
-                {/* 右侧设置与主题切换 */}
-                <div className="topbar-right">
-                  <div className="theme-quick-switch">
-                    {themes.map(t => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        className={"theme-dot-btn " + (theme === t.id ? "active" : "")}
-                        title={"切换主题: " + t.label}
-                        onClick={() => setTheme(t.id)}
-                      >
-                        <span className={"theme-dot " + t.id} />
-                      </button>
-                    ))}
-                  </div>
+                {/* 顶栏书签文件夹条 (BookmarkFolderStrip.vue) */}
+                <div className="real-bookmark-strip">
+                  {topBookmarkFolders.map(folder => (
+                    <button key={folder} type="button" className="real-bm-chip" onClick={() => setSitesView("bookmarks")}>
+                      <span className="real-bm-icon">📁</span>
+                      <span>{folder}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* 首屏三栏布局 (对齐插件 AppLauncher.vue 真实布局) */}
-              <div className="sim-launcher-overview">
-                {/* 1. 左侧天气卡片 (WeatherWidget) */}
-                <div className="sim-widget-card">
-                  <div className="sim-widget-head">
-                    <span className="sim-widget-bar cyan" />
-                    <h4>天气</h4>
-                    <span className="sim-widget-btn">深圳 ▾</span>
+              {/* 中间滚动立方体 (TopInfoCube.vue) */}
+              <div className="real-top-cube">
+                <div className="real-cube-side">
+                  <button type="button" className="real-cube-btn" title="上一首">⏮</button>
+                  <button
+                    type="button"
+                    className="real-cube-btn"
+                    title="播放/暂停"
+                    onClick={() => setIsVinylPlaying(!isVinylPlaying)}
+                  >
+                    {isVinylPlaying ? "⏸" : "▶"}
+                  </button>
+                </div>
+                <div className="real-cube-main" onClick={() => handleDockClick("music")}>
+                  <span className="real-cube-title">塞壬唱片 · 点击播放</span>
+                  <span className="real-cube-artist">明日方舟音乐库</span>
+                  <span className="real-cube-badge">{isVinylPlaying ? "播放中" : "待机"}</span>
+                  <span className="real-cube-divider" />
+                  <span className="real-cube-lyric">选择塞壬歌曲、网易云或B站电台…</span>
+                </div>
+                <div className="real-cube-side">
+                  <button type="button" className="real-cube-btn" title="下一首">⏭</button>
+                  <button type="button" className="real-cube-btn" title="打开音乐库" onClick={() => handleDockClick("music")}>🎵</button>
+                </div>
+                <span className="real-cube-dot" />
+              </div>
+
+              {/* 右侧设置与主题按钮 */}
+              <div className="real-tb-actions">
+                <button type="button" className="real-tb-circle-btn" title="打开设置">⚙</button>
+                <button
+                  type="button"
+                  className="real-tb-circle-btn"
+                  title="切换页面主题"
+                  onClick={() => {
+                    const order: ThemeId[] = ["light", "lonetrail", "dark"];
+                    setTheme(order[(order.indexOf(theme) + 1) % order.length]);
+                  }}
+                >
+                  {theme === "dark" ? "🌙" : theme === "lonetrail" ? "🌌" : "☀️"}
+                </button>
+              </div>
+            </div>
+
+            {/* ================= 扩展主桌面画布（真实雪山壁纸 + 双层网格 + MacDock） ================= */}
+            <div className="real-launcher-canvas">
+              {/* 第一排：三栏概览 (天气 + 时钟搜索 + 黑胶播放器) */}
+              <div className="real-launcher-overview">
+                {/* 1. 左栏：天气卡片 (WeatherWidget.vue) */}
+                <section className="real-glass-card real-weather-card">
+                  <header className="real-card-head">
+                    <span className="real-bar cyan" />
+                    <h3>天气</h3>
+                  </header>
+                  <div className="real-wx-body">
+                    <div className="real-wx-cur">
+                      <span className="real-wx-emoji">🌤️</span>
+                      <span className="real-wx-temp">21°</span>
+                    </div>
+                    <p className="real-wx-sub">少云 · 最高 25° / 最低 18°</p>
+                    <p className="real-wx-rain">未来 12 小时暂无降水 ☂️</p>
+                    <div className="real-wx-hours">
+                      <div className="real-wx-h"><span>现在</span><span>☀️</span><strong>22°</strong></div>
+                      <div className="real-wx-h"><span>11时</span><span>🌤️</span><strong>24°</strong></div>
+                      <div className="real-wx-h"><span>12时</span><span>🌤️</span><strong>25°</strong></div>
+                      <div className="real-wx-h"><span>13时</span><span>☁️</span><strong>25°</strong></div>
+                      <div className="real-wx-h"><span>14时</span><span>☁️</span><strong>25°</strong></div>
+                    </div>
+                    <div className="real-wx-days">
+                      <span>明天 🌦️ 22°/17°</span>
+                      <span>后天 🌧️ 20°/16°</span>
+                    </div>
                   </div>
-                  <div className="sim-weather-body">
-                    <div className="sim-wx-temp-row">
-                      <span className="sim-wx-emoji">🌤️</span>
-                      <span className="sim-wx-temp">24°</span>
-                    </div>
-                    <p className="sim-wx-sub">晴天 · 空气优 26</p>
-                    <p className="sim-wx-detail">今日无雨 · 东北风 2级</p>
-                    <div className="sim-wx-hours">
-                      <div className="sim-wx-hour-item"><span>14:00</span><span>🌤️</span><span>25°</span></div>
-                      <div className="sim-wx-hour-item"><span>16:00</span><span>⛅</span><span>24°</span></div>
-                      <div className="sim-wx-hour-item"><span>18:00</span><span>🌤️</span><span>22°</span></div>
-                      <div className="sim-wx-hour-item"><span>20:00</span><span>🌙</span><span>20°</span></div>
-                    </div>
+                </section>
+
+                {/* 2. 中栏：问候语 + 粗体等宽时钟带秒数 + 日期 + 纯白胶囊搜索框 */}
+                <div className="real-launcher-center">
+                  <div className="real-hero-clock">
+                    <p className="real-greeting">{clockGreeting}</p>
+                    <p className="real-clock-digits">
+                      {clockTime}<span className="real-clock-secs">{clockSecs}</span>
+                    </p>
+                    <p className="real-clock-date">{clockDate}</p>
+                  </div>
+
+                  <div className="real-search-pill">
+                    <span className="real-search-icon">⌕</span>
+                    <span className="real-search-placeholder">搜索，或输入网址直接打开</span>
+                    <button type="button" className="real-search-history-chip">
+                      <span>🕒 历史记录</span>
+                    </button>
                   </div>
                 </div>
 
-                {/* 2. 中间时钟、名言、搜索框 (HeroClock + SearchBox) */}
-                <div className="tab-hero-center">
-                  <span className="tab-clock-display">{clockTime}</span>
-                  <span className="tab-date-lunar">{clockDate}</span>
-                  <p className="tab-motto-quote">把常去的地方放在手边，给专注留一片净土。</p>
-
-                  <div className="tab-search-box">
-                    <span className="search-icon">🔍</span>
-                    <span className="search-placeholder">在网页、B站、GitHub 搜索，或优先检索本地书签…</span>
-                    <kbd className="search-shortcut">Ctrl+K</kbd>
-                  </div>
-                </div>
-
-                {/* 3. 右侧播放器卡片 (HomeMusicCard) */}
-                <div className="sim-widget-card">
-                  <div className="sim-widget-head">
-                    <span className="sim-widget-bar purple" />
-                    <h4>播放器</h4>
-                    <button type="button" className="sim-widget-btn" onClick={() => handleDockClick("music")}>网易云 ↗</button>
-                  </div>
-                  <div className="sim-music-widget-body">
-                    <div className="sim-mini-vinyl" />
-                    <div className="sim-mini-music-meta">
-                      <span className="sim-mini-music-title">Never Gonna Give You Up</span>
-                      <span className="sim-mini-music-artist">Rick Astley · 经典流行</span>
-                      <div className="sim-mini-music-seek">
-                        <div className="sim-mini-music-fill" />
+                {/* 3. 右栏：黑胶播放器卡片 (HomeMusicCard.vue) */}
+                <section className="real-glass-card real-player-card">
+                  <header className="real-card-head">
+                    <span className="real-bar red" />
+                    <h3>播放器</h3>
+                    <span className="real-grow" />
+                    <button
+                      type="button"
+                      className="real-head-pill-btn"
+                      onClick={() => handleDockClick("music")}
+                    >
+                      网易云 ↗
+                    </button>
+                  </header>
+                  <div className="real-player-body">
+                    <div
+                      className={"real-vinyl-disc " + (isVinylPlaying ? "playing" : "")}
+                      onClick={() => setIsVinylPlaying(!isVinylPlaying)}
+                      title="点击播放 / 暂停"
+                    >
+                      <div className="real-vinyl-needle" />
+                      <div className="real-vinyl-core" />
+                    </div>
+                    <div className="real-player-info">
+                      <strong className="real-song-title">塞壬唱片 · 点击播放</strong>
+                      <span className="real-song-sub">明日方舟音乐库</span>
+                      <div className="real-seek-row">
+                        <span>{isVinylPlaying ? "01:18" : "0:00"}</span>
+                        <div className="real-seek-track">
+                          <div className="real-seek-fill" style={{ width: isVinylPlaying ? "45%" : "6%" }} />
+                          <span className="real-seek-Knob" style={{ left: isVinylPlaying ? "45%" : "6%" }} />
+                        </div>
+                        <span>03:24</span>
                       </div>
-                      <div className="sim-mini-music-time">
-                        <span>01:24</span>
-                        <span>03:32</span>
+                      <div className="real-player-btns">
+                        <button type="button" className="real-m-btn">⏮</button>
+                        <button
+                          type="button"
+                          className="real-m-btn play"
+                          onClick={() => setIsVinylPlaying(!isVinylPlaying)}
+                        >
+                          {isVinylPlaying ? "⏸" : "▶"}
+                        </button>
+                        <button type="button" className="real-m-btn">⏭</button>
+                        <button type="button" className="real-m-btn">♡</button>
+                        <button type="button" className="real-m-btn" style={{ color: "#3b82f6" }}>🔁</button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              {/* 第二排：双栏大底座 (左侧常用网站背包网格 + 右侧 AI HOT 资讯) */}
+              <div className="real-launcher-bottom-grid">
+                {/* 左侧：常用网站与 2x2 大文件夹卡片 (FavoriteSites.vue) */}
+                <section className="real-glass-card real-sites-panel">
+                  <header className="real-sites-header">
+                    <div className="real-sites-switch">
+                      <button
+                        type="button"
+                        className={sitesView === "sites" ? "active" : ""}
+                        onClick={() => setSitesView("sites")}
+                      >常用网站</button>
+                      <button
+                        type="button"
+                        className={sitesView === "bookmarks" ? "active" : ""}
+                        onClick={() => setSitesView("bookmarks")}
+                      >书签</button>
+                    </div>
+
+                    <div className="real-page-tabs">
+                      {sitePageTabs.map(tab => (
+                        <button
+                          key={tab}
+                          type="button"
+                          className={"real-page-tab " + (activeSitePage === tab ? "active" : "")}
+                          onClick={() => {
+                            setSitesView("sites");
+                            setActiveSitePage(tab);
+                          }}
+                        >
+                          {tab}
+                        </button>
+                      ))}
+                      <button type="button" className="real-page-add">+</button>
+                    </div>
+                  </header>
+
+                  {sitesView === "sites" ? (
+                    <div className="real-backpack-grid">
+                      {currentTiles.map(tile => {
+                        if (tile.type === "folder-large") {
+                          return (
+                            <div key={tile.id} className="real-tile-folder-large">
+                              <div className="real-folder-large-box">
+                                {tile.subIcons?.map((ic, i) => (
+                                  <span
+                                    key={i}
+                                    className="real-mini-icon"
+                                    style={{ background: ic.bg, color: ic.color || "#0f172a" }}
+                                  >
+                                    {ic.text}
+                                  </span>
+                                ))}
+                              </div>
+                              <span className="real-tile-label">{tile.title}</span>
+                            </div>
+                          );
+                        }
+                        if (tile.type === "folder-small") {
+                          return (
+                            <div key={tile.id} className="real-tile-item">
+                              <div className="real-folder-small-box">
+                                {tile.subIcons?.slice(0, 4).map((ic, i) => (
+                                  <span
+                                    key={i}
+                                    className="real-micro-icon"
+                                    style={{ background: ic.bg, color: ic.color || "#0f172a" }}
+                                  >
+                                    {ic.text}
+                                  </span>
+                                ))}
+                              </div>
+                              <span className="real-tile-label">{tile.title}</span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div key={tile.id} className="real-tile-item">
+                            <div
+                              className="real-link-favicon"
+                              style={{ background: tile.iconBg || "#ffffff", color: tile.iconColor || "#0f172a" }}
+                            >
+                              <span>{tile.iconText}</span>
+                            </div>
+                            <span className="real-tile-label">{tile.title}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="real-bookmarks-placeholder">
+                      <div className="real-bm-grid">
+                        {topBookmarkFolders.map((f, i) => (
+                          <div key={i} className="real-bm-card">
+                            <span className="real-bm-folder-ico">📂</span>
+                            <div>
+                              <strong>{f}</strong>
+                              <small>{12 + i * 5} 个书签项 · Worker 拼音秒搜</small>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </section>
+
+                {/* 右侧：AI HOT 资讯卡片 (LauncherAiHotCard.vue) */}
+                <section className="real-glass-card real-aihot-panel">
+                  <header className="real-card-head">
+                    <span className="real-bar cyan" />
+                    <h3>AI HOT 资讯</h3>
+                    <span className="real-grow" />
+                    <button
+                      type="button"
+                      className="real-head-pill-btn"
+                      onClick={() => setAihotIdx(aihotIdx + 1)}
+                    >
+                      换一批 ↻
+                    </button>
+                    <button
+                      type="button"
+                      className="real-head-pill-btn"
+                      onClick={() => handleDockClick("aihot")}
+                    >
+                      热榜 ↗
+                    </button>
+                  </header>
+
+                  <div className="real-aihot-body">
+                    <div
+                      className="real-aihot-featured-card"
+                      onClick={() => handleDockClick("aihot")}
+                      title="点击打开 AI HOT 沉浸式阅读工作台"
+                    >
+                      <span className="real-aihot-rank">{currentAihot.rank}</span>
+                      <div className="real-aihot-main">
+                        <h4>{currentAihot.title}</h4>
+                        <p>{currentAihot.summary}</p>
+                        <div className="real-aihot-meta">
+                          <span className="real-aihot-tag">{currentAihot.tag}</span>
+                          <span className="real-aihot-source">{currentAihot.source}</span>
+                          <span className="real-aihot-time">{currentAihot.time}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="real-aihot-sublist">
+                      {aihotPool.map((item, idx) => (
+                        <div
+                          key={item.rank}
+                          className={"real-aihot-mini-row " + (idx === aihotIdx % aihotPool.length ? "active" : "")}
+                          onClick={() => setAihotIdx(idx)}
+                        >
+                          <span className="mini-rank">{item.rank}</span>
+                          <span className="mini-title">{item.title}</span>
+                          <span className="mini-src">{item.source}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              {/* ================= 弹出的全屏工作区 / 独立窗口模拟层 ================= */}
+
+              {/* 1. B站插件全屏工作区 (BilibiliWorkspace.vue) */}
+              {activeWindow === "bili" && (
+                <div className="sim-app-window sim-bili-window">
+                  <div className="sim-win-header">
+                    <div className="sim-win-title">
+                      <span className="real-bar" style={{ background: "linear-gradient(180deg,#818cf8,#f472b6)" }} />
+                      <Image src="/assets/bilibili.svg" alt="" width={16} height={16} />
+                      <span>B站收藏夹</span>
+                    </div>
+                    <div className="sim-win-actions">
+                      <span className="sim-win-badge">🔔 消息</span>
+                      <span className="sim-win-badge">⚙ 关注分组管理</span>
+                      <button
+                        type="button"
+                        className="sim-win-close-btn"
+                        title="关闭窗口并熄灭绿点"
+                        onClick={() => setActiveWindow(null)}
+                      >✕</button>
+                    </div>
+                  </div>
+                  <div className="sim-split-layout">
+                    <div className="sim-pane-sidebar">
+                      <div className="sim-sidebar-group">
+                        <span className="sim-sidebar-label">⚡ 快捷频道</span>
+                        <button
+                          type="button"
+                          className={"sim-channel-card " + (biliTab === "sub" ? "active" : "")}
+                          onClick={() => setBiliTab("sub")}
+                        >
+                          <div>
+                            <strong>🎬 订阅视频</strong>
+                            <small>刹那观察室 · AI字幕</small>
+                          </div>
+                          <span className="ch-badge pink">NEW</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={"sim-channel-card " + (biliTab === "cache" ? "active" : "")}
+                          onClick={() => setBiliTab("cache")}
+                        >
+                          <div>
+                            <strong>💾 缓存视频</strong>
+                            <small>本地文件夹 · 离线观看</small>
+                          </div>
+                          <span className="ch-badge blue">LOCAL</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={"sim-channel-card " + (biliTab === "follow" ? "active" : "")}
+                          onClick={() => setBiliTab("follow")}
+                        >
+                          <div>
+                            <strong>📺 正在关注</strong>
+                            <small>UP 主分组 · 最新投稿</small>
+                          </div>
+                          <span className="ch-badge green">FEED</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={"sim-channel-card " + (biliTab === "rec" ? "active" : "")}
+                          onClick={() => setBiliTab("rec")}
+                        >
+                          <div>
+                            <strong>✨ 个性推荐</strong>
+                            <small>猜你喜欢 · 每次刷新</small>
+                          </div>
+                          <span className="ch-badge purple">FOR YOU</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={"sim-channel-card " + (biliTab === "radio" ? "active" : "")}
+                          onClick={() => setBiliTab("radio")}
+                        >
+                          <div>
+                            <strong>📻 B站电台</strong>
+                            <small>连播系列 · 自由编排</small>
+                          </div>
+                          <span className="ch-badge amber">RADIO</span>
+                        </button>
+                      </div>
+
+                      <div className="sim-sidebar-group">
+                        <span className="sim-sidebar-label">📁 我创建的收藏夹</span>
+                        <button type="button" className="sim-sidebar-item">
+                          <span>默认收藏夹</span>
+                          <span className="sim-item-pill">36</span>
+                        </button>
+                        <button type="button" className="sim-sidebar-item">
+                          <span>机器人与ROS2</span>
+                          <span className="sim-item-pill">18</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="sim-pane-content">
+                      <div className="sim-tape-player">
+                        <div className="sim-tape-left">
+                          <span className="sim-tape-tag">CASSETTE TAPE</span>
+                          <span>📼 B站电台 DASH 纯音频流 (~3MB) · 支持拖拽视频化为磁带连播</span>
+                        </div>
+                        <span className="sim-tape-status">● 智能切源就绪</span>
+                      </div>
+
+                      <div className="sim-video-grid">
+                        <div className="sim-video-card">
+                          <div className="sim-video-thumb v1">
+                            <span className="sim-video-duration">18:42</span>
+                          </div>
+                          <h5 className="sim-video-title">【硬件实操】从零搭建具身智能机械臂与视觉抓取控制</h5>
+                          <div className="sim-video-meta">
+                            <span>刹那观察室</span>
+                            <span>24.6万 · AI字幕</span>
+                          </div>
+                        </div>
+
+                        <div className="sim-video-card">
+                          <div className="sim-video-thumb v2">
+                            <span className="sim-video-duration">32:10</span>
+                          </div>
+                          <h5 className="sim-video-title">Chromium 扩展 MV3 纯血架构与高性能虚拟列表演进</h5>
+                          <div className="sim-video-meta">
+                            <span>前端架构师</span>
+                            <span>8.9万 · 收藏夹</span>
+                          </div>
+                        </div>
+
+                        <div className="sim-video-card">
+                          <div className="sim-video-thumb v3">
+                            <span className="sim-video-duration">01:45:00</span>
+                          </div>
+                          <h5 className="sim-video-title">【塞壬唱片】孤星 Lonetrail 太空歌剧纯享工作电台</h5>
+                          <div className="sim-video-meta">
+                            <span>塞壬唱片-MSR</span>
+                            <span>102.4万 · 电台</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* 常用网站网格展示 */}
-              <div className="tab-sites-grid">
-                {workspaceSites[activeWorkspace].map((site, idx) => (
-                  <div key={idx} className={"sim-site-card " + site.tone}>
-                    <div className="sim-site-icon-box">
-                      {site.icon ? (
-                        <Image src={"/" + site.icon} alt={site.name} width={26} height={26} className="sim-site-img" />
-                      ) : (
-                        <span className="sim-site-plus">＋</span>
-                      )}
+              {/* 2. GitHub 插件全屏工作区 + v1.0.5 Topic 看板 (GitHubWorkspaceCard.vue) */}
+              {activeWindow === "github" && (
+                <div className="sim-app-window sim-github-window">
+                  <div className="sim-win-header">
+                    <div className="sim-win-title">
+                      <span className="real-bar" style={{ background: "linear-gradient(180deg,#22c55e,#06b6d4)" }} />
+                      <Image src="/assets/nav-github.svg" alt="" width={16} height={16} />
+                      <span>GitHub 工作区</span>
                     </div>
-                    <span className="sim-site-title">{site.name}</span>
+                    <div className="sim-win-actions">
+                      <span className="sim-win-badge">v1.0.5 Topic 看板 · 点击卡片右侧按钮可测试移动</span>
+                      <button
+                        type="button"
+                        className="sim-win-close-btn"
+                        title="关闭窗口并熄灭绿点"
+                        onClick={() => setActiveWindow(null)}
+                      >✕</button>
+                    </div>
                   </div>
-                ))}
-              </div>
+                  <div className="sim-split-layout">
+                    <div className="sim-pane-sidebar">
+                      <div className="sim-sidebar-group">
+                        <span className="sim-sidebar-label">⚡ 快捷频道</span>
+                        <button
+                          type="button"
+                          className={"sim-channel-card " + (ghTab === "stars" ? "active" : "")}
+                          onClick={() => setGhTab("stars")}
+                        >
+                          <div>
+                            <strong>⭐ Star 收藏</strong>
+                            <small>星标项目 · 文件夹管理</small>
+                          </div>
+                          <span className="ch-badge amber">STAR</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={"sim-channel-card " + (ghTab === "trending" ? "active" : "")}
+                          onClick={() => setGhTab("trending")}
+                        >
+                          <div>
+                            <strong>🔥 趋势榜单</strong>
+                            <small>开源风向标 · 今日热榜</small>
+                          </div>
+                          <span className="ch-badge pink">HOT</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={"sim-channel-card " + (ghTab === "awesome" ? "active" : "")}
+                          onClick={() => setGhTab("awesome")}
+                        >
+                          <div>
+                            <strong>🌟 资源专区</strong>
+                            <small>神级清单 · 全球精选</small>
+                          </div>
+                          <span className="ch-badge purple">AWESOME</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={"sim-channel-card " + (ghTab === "repos" ? "active" : "")}
+                          onClick={() => setGhTab("repos")}
+                        >
+                          <div>
+                            <strong>📦 我的仓库</strong>
+                            <small>个人项目 · Topic 看板</small>
+                          </div>
+                          <span className="ch-badge blue">REPOS</span>
+                        </button>
+                      </div>
+                    </div>
 
-              {/* 浮动应用窗口展示 (Todoist / 音乐 / GitHub) */}
+                    <div className="sim-pane-content">
+                      <div className="sim-gh-kanban-head">
+                        <strong>📦 我的仓库 · Topic 看板（v1.0.5 新增）</strong>
+                        <span>支持卡片拖拽、滚轮横移、右键「📁 移动到分组」并自动 PUT 同步 GitHub 远端 Topics</span>
+                      </div>
+
+                      <div className="sim-gh-kanban-track">
+                        {[
+                          { id: "default", title: "默认板块 (未分类)", dot: "#94a3b8" },
+                          { id: "tools", title: "#tools", dot: "#0284c7" },
+                          { id: "vue3", title: "#vue3", dot: "#0284c7" },
+                        ].map(col => {
+                          const list = kanbanRepos.filter(r => r.topic === col.id);
+                          return (
+                            <div key={col.id} className="sim-gh-kanban-col">
+                              <div className="sim-gh-col-title">
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                                  <i style={{ width: 7, height: 7, borderRadius: "50%", background: col.dot }} />
+                                  {col.title}
+                                </span>
+                                <span className="sim-item-pill">{list.length}</span>
+                              </div>
+
+                              {list.map(repo => (
+                                <div key={repo.id} className="sim-gh-card">
+                                  <div className="sim-gh-card-top">
+                                    <span className="sim-gh-card-name">{repo.name}</span>
+                                    {col.id !== "tools" ? (
+                                      <button
+                                        type="button"
+                                        className="sim-gh-move-btn"
+                                        title="模拟移入 #tools 并同步 GitHub"
+                                        onClick={() => moveRepoTopic(repo.id, "tools")}
+                                      >→ #tools</button>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        className="sim-gh-move-btn"
+                                        title="模拟移入 #vue3 并同步 GitHub"
+                                        onClick={() => moveRepoTopic(repo.id, "vue3")}
+                                      >→ #vue3</button>
+                                    )}
+                                  </div>
+                                  <p className="sim-gh-card-desc">{repo.desc}</p>
+                                  {col.id !== "default" && (
+                                    <div className="sim-gh-card-topics">
+                                      <span className="sim-gh-topic-tag">
+                                        #{col.id}
+                                        <b
+                                          onClick={() => moveRepoTopic(repo.id, "default")}
+                                          title="点击移除 Topic 回到默认板块"
+                                          style={{ cursor: "pointer", marginLeft: 4 }}
+                                        >×</b>
+                                      </span>
+                                    </div>
+                                  )}
+                                  <div className="sim-gh-card-footer">
+                                    <span>● {repo.lang}</span>
+                                    <span>⭐ {repo.stars}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })}
+
+                        <div className="sim-gh-kanban-col sim-gh-col-new">
+                          <span>＋ 新建 Topic 板块</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 3. Todoist 任务工作区 (TodoistWorkspace.vue) */}
               {activeWindow === "todoist" && (
                 <div className="sim-app-window sim-todoist-window">
                   <div className="sim-win-header">
                     <div className="sim-win-title">
                       <Image src="/assets/nav-todoist.svg" alt="" width={16} height={16} />
-                      <span>Todoist 看板 · 工作任务</span>
+                      <span>Todoist 看板 · 离线 0ms 直出与 GitHub 任务分层</span>
                     </div>
                     <div className="sim-win-actions">
-                      <span className="sim-win-badge">SWR 0ms 本地直出</span>
+                      <span className="sim-win-badge">点击圆圈可直接完成任务</span>
                       <button
                         type="button"
                         className="sim-win-close-btn"
@@ -390,14 +1137,12 @@ export default function Home() {
                   </div>
 
                   <div className="sim-win-body">
-                    {/* 分层展示：以关联仓库进行独立分组 */}
                     <div className="sim-todoist-col">
                       <div className="sim-col-header">
                         <strong>github 任务区</strong>
                         <span className="sim-col-tag">按关联仓库分层排版</span>
                       </div>
 
-                      {/* 仓库层 1: OpenShell */}
                       <div className="sim-repo-layer">
                         <div
                           className="sim-repo-header"
@@ -425,7 +1170,6 @@ export default function Home() {
                         )}
                       </div>
 
-                      {/* 仓库层 2: tab-project-next */}
                       <div className="sim-repo-layer">
                         <div
                           className="sim-repo-header"
@@ -457,12 +1201,38 @@ export default function Home() {
                 </div>
               )}
 
+              {/* 4. AI Hot / 模型价格 窗口 */}
+              {activeWindow === "aihot" && (
+                <div className="sim-app-window sim-todoist-window">
+                  <div className="sim-win-header">
+                    <div className="sim-win-title">
+                      <Image src="/assets/nav-aihot.svg" alt="" width={16} height={16} />
+                      <span>AI HOT 每日精选热榜 · 沉浸式正文提取阅读</span>
+                    </div>
+                    <button type="button" className="sim-win-close-btn" onClick={() => setActiveWindow(null)}>✕</button>
+                  </div>
+                  <div className="sim-win-body">
+                    {aihotPool.map(item => (
+                      <div key={item.rank} className="sim-notif-item" style={{ marginBottom: 8 }}>
+                        <div className="sim-notif-meta">
+                          <strong>#{item.rank} · {item.tag}</strong>
+                          <span>{item.source} · {item.time}</span>
+                        </div>
+                        <div className="sim-notif-title">{item.title}</div>
+                        <div className="sim-notif-desc">{item.summary}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 5. 网易云与塞壬唱片音乐窗口 */}
               {activeWindow === "music" && (
                 <div className="sim-app-window sim-music-window">
                   <div className="sim-win-header">
                     <div className="sim-win-title">
                       <Image src="/assets/netease.svg" alt="" width={16} height={16} />
-                      <span>网易云音乐 · 官网会话直连</span>
+                      <span>网易云音乐 · 官网会话直连 & 塞壬唱片库</span>
                     </div>
                     <button
                       type="button"
@@ -476,8 +1246,8 @@ export default function Home() {
                       <div className="vinyl-core">♫</div>
                     </div>
                     <div className="sim-music-info">
-                      <strong>自然回响 · 沉浸白噪音与经典歌单</strong>
-                      <p>官网安全会话连接 · 无需本地中间代理节点</p>
+                      <strong>塞壬唱片 · 孤星 Lonetrail OST</strong>
+                      <p>官网安全会话直连 · 无需本地中间代理节点</p>
                       <div className="sim-music-bar">
                         <span className="bar-fill" />
                       </div>
@@ -486,318 +1256,85 @@ export default function Home() {
                 </div>
               )}
 
-              {/* 哔哩哔哩工作区窗口 */}
-              {activeWindow === "bili" && (
-                <div className="sim-app-window sim-bili-window">
-                  <div className="sim-win-header">
-                    <div className="sim-win-title">
-                      <Image src="/assets/bilibili.svg" alt="" width={16} height={16} />
-                      <span>哔哩哔哩 · 收藏夹与电台</span>
-                    </div>
-                    <div className="sim-win-actions">
-                      <span className="sim-win-badge">SWR 0ms 直出 · 已连接</span>
-                      <button
-                        type="button"
-                        className="sim-win-close-btn"
-                        title="关闭窗口并熄灭绿点"
-                        onClick={() => setActiveWindow(null)}
-                      >✕</button>
-                    </div>
-                  </div>
-                  <div className="sim-split-layout">
-                    {/* 左侧侧栏 */}
-                    <div className="sim-pane-sidebar">
-                      <div className="sim-sidebar-group">
-                        <span className="sim-sidebar-label">⚡ 快捷频道</span>
-                        <button
-                          type="button"
-                          className={"sim-sidebar-item " + (biliTab === "all" ? "active" : "")}
-                          onClick={() => setBiliTab("all")}
-                        >
-                          <span>★ 全部收藏</span>
-                          <span className="sim-item-pill">28</span>
-                        </button>
-                        <button
-                          type="button"
-                          className={"sim-sidebar-item " + (biliTab === "radio" ? "active" : "")}
-                          onClick={() => setBiliTab("radio")}
-                        >
-                          <span>📻 精选电台</span>
-                          <span className="sim-item-pill">12</span>
-                        </button>
-                        <button
-                          type="button"
-                          className={"sim-sidebar-item " + (biliTab === "up" ? "active" : "")}
-                          onClick={() => setBiliTab("up")}
-                        >
-                          <span>⚡ UP主动态</span>
-                        </button>
-                      </div>
-
-                      <div className="sim-sidebar-group">
-                        <span className="sim-sidebar-label">📁 收藏夹分组</span>
-                        <button type="button" className="sim-sidebar-item">
-                          <span>默认收藏夹</span>
-                          <span className="sim-item-pill">16</span>
-                        </button>
-                        <button type="button" className="sim-sidebar-item">
-                          <span>前端实战</span>
-                          <span className="sim-item-pill">8</span>
-                        </button>
-                        <button type="button" className="sim-sidebar-item">
-                          <span>工作白噪音</span>
-                          <span className="sim-item-pill">4</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* 右侧主内容区 */}
-                    <div className="sim-pane-content">
-                      <div className="sim-tape-player">
-                        <div className="sim-tape-left">
-                          <span className="sim-tape-tag">DASH</span>
-                          <span>📼 纯音频流 (~3MB) · 正在播放：塞壬唱片 - 孤星 (HQ)</span>
-                        </div>
-                        <span className="sim-tape-status">● 播放中</span>
-                      </div>
-
-                      <div className="sim-video-grid">
-                        <div className="sim-video-card">
-                          <div className="sim-video-thumb v1">
-                            <span className="sim-video-duration">18:42</span>
-                          </div>
-                          <h5 className="sim-video-title">【Vue 3 + Vite】下一代前端新标签页架构实战演练</h5>
-                          <div className="sim-video-meta">
-                            <span>极客小站</span>
-                            <span>24.6万 · 3天前</span>
-                          </div>
-                        </div>
-
-                        <div className="sim-video-card">
-                          <div className="sim-video-thumb v2">
-                            <span className="sim-video-duration">32:10</span>
-                          </div>
-                          <h5 className="sim-video-title">Chromium 扩展 MV3 权限沙箱与通信最佳实践</h5>
-                          <div className="sim-video-meta">
-                            <span>架构师修炼</span>
-                            <span>8.9万 · 1周前</span>
-                          </div>
-                        </div>
-
-                        <div className="sim-video-card">
-                          <div className="sim-video-thumb v3">
-                            <span className="sim-video-duration">02:00:00</span>
-                          </div>
-                          <h5 className="sim-video-title">赛博自习室 · 深度工作纯音乐背景音 (2小时沉浸)</h5>
-                          <div className="sim-video-meta">
-                            <span>塞壬唱片</span>
-                            <span>52.1万 · 2周前</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* GitHub 工作区与 Topic 看板窗口 */}
-              {activeWindow === "github" && (
-                <div className="sim-app-window sim-github-window">
-                  <div className="sim-win-header">
-                    <div className="sim-win-title">
-                      <Image src="/assets/github-star.svg" alt="" width={16} height={16} />
-                      <span>GitHub · 个人看板与精选仓库</span>
-                    </div>
-                    <div className="sim-win-actions">
-                      <span className="sim-win-badge">v1.0.5 Topic 看板 · 远端双向同步</span>
-                      <button
-                        type="button"
-                        className="sim-win-close-btn"
-                        title="关闭窗口并熄灭绿点"
-                        onClick={() => setActiveWindow(null)}
-                      >✕</button>
-                    </div>
-                  </div>
-                  <div className="sim-split-layout">
-                    {/* 左侧侧栏 */}
-                    <div className="sim-pane-sidebar">
-                      <div className="sim-sidebar-group">
-                        <span className="sim-sidebar-label">⚡ 快捷频道</span>
-                        <button
-                          type="button"
-                          className={"sim-sidebar-item " + (ghTab === "myrepos" ? "active" : "")}
-                          onClick={() => setGhTab("myrepos")}
-                        >
-                          <span>📦 我的仓库</span>
-                          <span className="sim-item-pill">REPOS</span>
-                        </button>
-                        <button
-                          type="button"
-                          className={"sim-sidebar-item " + (ghTab === "stars" ? "active" : "")}
-                          onClick={() => setGhTab("stars")}
-                        >
-                          <span>⭐ Star 仓库</span>
-                          <span className="sim-item-pill">142</span>
-                        </button>
-                        <button
-                          type="button"
-                          className={"sim-sidebar-item " + (ghTab === "trending" ? "active" : "")}
-                          onClick={() => setGhTab("trending")}
-                        >
-                          <span>🔥 Trending 热榜</span>
-                        </button>
-                      </div>
-
-                      <div className="sim-sidebar-group">
-                        <span className="sim-sidebar-label">📁 仓库文件夹</span>
-                        <button type="button" className="sim-sidebar-item">
-                          <span>常用工具</span>
-                          <span className="sim-item-pill">12</span>
-                        </button>
-                        <button type="button" className="sim-sidebar-item">
-                          <span>AI / Agent 探索</span>
-                          <span className="sim-item-pill">9</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* 右侧主看板区 */}
-                    <div className="sim-pane-content">
-                      <div className="sim-gh-kanban-head">
-                        <strong>我的仓库 · Topic 瀑布流看板</strong>
-                        <span>可自由拖拽归类 · 远端 Topics 秒级同步</span>
-                      </div>
-
-                      <div className="sim-gh-kanban-track">
-                        {/* 默认板块列 */}
-                        <div className="sim-gh-kanban-col">
-                          <div className="sim-gh-col-title">
-                            <span>默认板块</span>
-                            <span className="sim-item-pill">2</span>
-                          </div>
-                          <div className="sim-gh-card">
-                            <span className="sim-gh-card-name">OpenShell</span>
-                            <div className="sim-gh-card-footer">
-                              <span>C++</span>
-                              <span>⭐ 320</span>
-                            </div>
-                          </div>
-                          <div className="sim-gh-card">
-                            <span className="sim-gh-card-name">tab-project-website</span>
-                            <div className="sim-gh-card-footer">
-                              <span>TypeScript</span>
-                              <span>⭐ 18</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* #tools 列 */}
-                        <div className="sim-gh-kanban-col">
-                          <div className="sim-gh-col-title">
-                            <span>#tools</span>
-                            <span className="sim-item-pill">2</span>
-                          </div>
-                          <div className="sim-gh-card">
-                            <span className="sim-gh-card-name">tab-project-next</span>
-                            <div className="sim-gh-card-topics">
-                              <span className="sim-gh-topic-tag">#tools</span>
-                              <span className="sim-gh-topic-tag">#vue3</span>
-                            </div>
-                            <div className="sim-gh-card-footer">
-                              <span>Vue</span>
-                              <span>⭐ 482</span>
-                            </div>
-                          </div>
-                          <div className="sim-gh-card">
-                            <span className="sim-gh-card-name">CLI-Manager</span>
-                            <div className="sim-gh-card-footer">
-                              <span>Go</span>
-                              <span>⭐ 86</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* #vue3 列 */}
-                        <div className="sim-gh-kanban-col">
-                          <div className="sim-gh-col-title">
-                            <span>#vue3</span>
-                            <span className="sim-item-pill">2</span>
-                          </div>
-                          <div className="sim-gh-card">
-                            <span className="sim-gh-card-name">tab-project-next</span>
-                            <div className="sim-gh-card-topics">
-                              <span className="sim-gh-topic-tag">#vue3</span>
-                            </div>
-                            <div className="sim-gh-card-footer">
-                              <span>Vue</span>
-                              <span>⭐ 482</span>
-                            </div>
-                          </div>
-                          <div className="sim-gh-card">
-                            <span className="sim-gh-card-name">obsidian-clipper</span>
-                            <div className="sim-gh-card-footer">
-                              <span>TypeScript</span>
-                              <span>⭐ 64</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* 新建列插槽 */}
-                        <div className="sim-gh-kanban-col sim-gh-col-new">
-                          <span>＋ 新建 Topic</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* 底部仿 MacDock 栏 */}
-              <div className="tab-bottom-dock" role="toolbar" aria-label="底栏应用快捷坞">
+              {/* ================= 底部 1:1 复刻 MacDock 快捷栏 (MacDock.vue) ================= */}
+              <div className="real-mac-dock" role="toolbar" aria-label="快捷应用栏">
+                {/* 左侧：全屏插件卡片组 (B站、YouTube、GitHub、AI Hot) */}
                 <button
                   type="button"
-                  className={"dock-btn " + (activeWindow === "home" ? "active" : "")}
-                  title="常用主页"
-                  onClick={() => setActiveWindow(null)}
+                  className={"dock-btn " + (activeWindow === "bili" ? "active" : "")}
+                  title="b站插件 (点击体验)"
+                  onClick={() => handleDockClick("bili")}
                 >
-                  <Image src="/assets/nav-home.svg" alt="Home" width={22} height={22} />
+                  <Image src="/assets/bilibili.svg" alt="B站" width={24} height={24} />
+                  {activeWindow === "bili" && <span className="dock-active-dot" />}
                 </button>
+                <button
+                  type="button"
+                  className="dock-btn"
+                  title="YouTube (封藏中)"
+                  onClick={() => handleDockClick("bili")}
+                >
+                  <Image src="/assets/nav-youtube.svg" alt="YouTube" width={24} height={24} />
+                </button>
+                <button
+                  type="button"
+                  className={"dock-btn " + (activeWindow === "github" ? "active" : "")}
+                  title="github插件 · 我的仓库 Topic 看板 (点击体验)"
+                  onClick={() => handleDockClick("github")}
+                >
+                  <Image src="/assets/nav-github.svg" alt="GitHub" width={24} height={24} />
+                  {activeWindow === "github" && <span className="dock-active-dot" />}
+                </button>
+                <button
+                  type="button"
+                  className={"dock-btn " + (activeWindow === "aihot" ? "active" : "")}
+                  title="ai hot插件 (点击体验)"
+                  onClick={() => handleDockClick("aihot")}
+                >
+                  <Image src="/assets/nav-aihot.svg" alt="AI Hot" width={24} height={24} />
+                  {activeWindow === "aihot" && <span className="dock-active-dot" />}
+                </button>
+
                 <div className="dock-divider" />
+
+                {/* 中间：常用主页 (nav-home.svg) */}
+                <button
+                  type="button"
+                  className={"dock-btn " + (activeWindow === null ? "active" : "")}
+                  title="常用主页"
+                  onClick={() => handleDockClick("home")}
+                >
+                  <Image src="/assets/nav-home.svg" alt="Home" width={24} height={24} />
+                </button>
+
+                <div className="dock-divider" />
+
+                {/* 右侧：工具模块组 (Todoist、网易云、商店 🧩) */}
                 <button
                   type="button"
                   className={"dock-btn " + (activeWindow === "todoist" ? "active" : "")}
-                  title="Todoist 任务看板"
+                  title="todoist (点击体验)"
                   onClick={() => handleDockClick("todoist")}
                 >
-                  <Image src="/assets/nav-todoist.svg" alt="Todoist" width={22} height={22} />
+                  <Image src="/assets/nav-todoist.svg" alt="Todoist" width={24} height={24} />
                   {activeWindow === "todoist" && <span className="dock-active-dot" />}
                 </button>
                 <button
                   type="button"
                   className={"dock-btn " + (activeWindow === "music" ? "active" : "")}
-                  title="网易云与播放器"
+                  title="网易云模块 (点击体验)"
                   onClick={() => handleDockClick("music")}
                 >
-                  <Image src="/assets/netease.svg" alt="Music" width={22} height={22} />
+                  <Image src="/assets/netease.svg" alt="Music" width={24} height={24} />
                   {activeWindow === "music" && <span className="dock-active-dot" />}
                 </button>
                 <button
                   type="button"
-                  className={"dock-btn " + (activeWindow === "bili" ? "active" : "")}
-                  title="B站收藏与视频"
-                  onClick={() => handleDockClick("bili")}
-                >
-                  <Image src="/assets/bilibili.svg" alt="B站" width={22} height={22} />
-                  {activeWindow === "bili" && <span className="dock-active-dot" />}
-                </button>
-                <button
-                  type="button"
-                  className={"dock-btn " + (activeWindow === "github" ? "active" : "")}
-                  title="GitHub 资源专区与 Topic 看板"
+                  className="dock-btn"
+                  title="商店 · 模块与全屏插件管理"
                   onClick={() => handleDockClick("github")}
                 >
-                  <Image src="/assets/github-star.svg" alt="GitHub" width={22} height={22} />
-                  {activeWindow === "github" && <span className="dock-active-dot" />}
+                  <span style={{ fontSize: 19 }}>🧩</span>
                 </button>
               </div>
             </div>
@@ -818,12 +1355,12 @@ export default function Home() {
             {/* 卡片 1: 常用网站 */}
             <article className="bento-card bento-wide">
               <div className="bento-badge">01 · 常用网站与书签</div>
-              <h3>多工作区与深层嵌套文件夹</h3>
-              <p>支持创建多个专属工作区，网站卡片就地右键重命名、换位动画丝滑；文件夹支持多层嵌套，打开时专注内部交互，零误触。</p>
+              <h3>多工作区与 2x2 大文件夹背包网格</h3>
+              <p>支持创建多个专属工作区（默认、游戏区、学校事务、机械臂等），2x2 大文件夹支持 9 宫格直达与深层嵌套，拖拽换位丝滑跟手。</p>
               <div className="bento-visual sites-preview">
-                <span className="chip sage">个人工作区</span>
-                <span className="chip rose">开发常用</span>
-                <span className="chip sand">深度学习</span>
+                <span className="chip sage">常用平台 2x2</span>
+                <span className="chip rose">常用AI 2x2</span>
+                <span className="chip sand">Worker 书签秒搜</span>
               </div>
             </article>
 
@@ -861,8 +1398,8 @@ export default function Home() {
             {/* 卡片 5: 音乐陪伴 */}
             <article className="bento-card">
               <div className="bento-badge">05 · 旋律与白噪</div>
-              <h3>官网会话音乐直连</h3>
-              <p>网易云音乐直接通过同一浏览器的官方会话连接，配合塞壬唱片模块，轻巧纯净，无需配置复杂的外部服务。</p>
+              <h3>顶栏滚动立方体与黑胶唱片</h3>
+              <p>顶栏 3D 滚动立方体实时呈现歌词与状态；网易云通过同一浏览器官网会话直连，配合塞壬唱片与 B站 DASH 纯音频电台，轻巧纯净。</p>
             </article>
 
             {/* 卡片 6: 纯净隐私 */}

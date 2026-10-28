@@ -634,26 +634,233 @@ body {
 .theme-dot.lonetrail { background: #796840; }
 .theme-dot.dark { background: #b4d3a5; }
 
+/* 首屏三栏布局 (对齐插件 AppLauncher.vue 架构) */
+.sim-launcher-overview {
+  display: grid;
+  grid-template-columns: 215px 1fr 215px;
+  gap: 16px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+@media (max-width: 980px) {
+  .sim-launcher-overview {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .sim-widget-card {
+    display: none;
+  }
+}
+
+.sim-widget-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  min-height: 140px;
+}
+
+.sim-widget-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sim-widget-bar {
+  width: 4px;
+  height: 14px;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+
+.sim-widget-bar.cyan {
+  background: linear-gradient(180deg, #38bdf8, #818cf8);
+}
+
+.sim-widget-bar.purple {
+  background: linear-gradient(180deg, #a855f7, #ec4899);
+}
+
+.sim-widget-head h4 {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--heading);
+  margin: 0;
+  flex: 1;
+}
+
+.sim-widget-btn {
+  font-size: 10.5px;
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* 天气小部件内容 */
+.sim-weather-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sim-wx-temp-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sim-wx-emoji {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.sim-wx-temp {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.sim-wx-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.sim-wx-detail {
+  font-size: 10px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.sim-wx-hours {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+
+.sim-wx-hour-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+/* 播放器小部件内容 */
+.sim-music-widget-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.sim-mini-vinyl {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #111;
+  border: 2px solid #333;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+  animation: vinyl-spin 10s linear infinite;
+  position: relative;
+}
+
+.sim-mini-vinyl::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f43f5e;
+  border: 3px solid #fff;
+}
+
+.sim-mini-music-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sim-mini-music-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sim-mini-music-artist {
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sim-mini-music-seek {
+  height: 3px;
+  background: var(--border);
+  border-radius: 99px;
+  margin: 6px 0 3px;
+  overflow: hidden;
+}
+
+.sim-mini-music-fill {
+  width: 42%;
+  height: 100%;
+  background: var(--accent);
+}
+
+.sim-mini-music-time {
+  font-size: 8.5px;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+}
+
 /* 首屏时钟 */
 .tab-hero-center {
   text-align: center;
-  margin-top: 10px;
+  margin-top: 0;
 }
 
 .tab-clock-display {
-  font-size: clamp(52px, 7vw, 78px);
+  font-size: clamp(48px, 6vw, 70px);
   font-weight: 300;
-  letter-spacing: -3px;
+  letter-spacing: -2px;
   color: var(--heading);
-  line-height: 1.1;
+  line-height: 1.05;
+  display: block;
+}
+
+.tab-date-lunar {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
   display: block;
 }
 
 .tab-motto-quote {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--muted);
-  margin-top: 10px;
-  letter-spacing: 0.5px;
+  margin-top: 6px;
+  letter-spacing: 0.3px;
 }
 
 /* 搜索框 */
@@ -915,6 +1122,327 @@ body {
 /* 音乐窗口 */
 .sim-music-window {
   width: 360px;
+}
+
+/* 哔哩哔哩 & GitHub 浮动窗口通用分栏架构 */
+.sim-bili-window {
+  width: min(720px, calc(100% - 24px));
+}
+
+.sim-github-window {
+  width: min(780px, calc(100% - 24px));
+}
+
+.sim-split-layout {
+  display: flex;
+  height: 380px;
+  overflow: hidden;
+}
+
+.sim-pane-sidebar {
+  width: 165px;
+  min-width: 165px;
+  border-right: 1px solid var(--border);
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--surface);
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.sim-sidebar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sim-sidebar-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+  padding-left: 6px;
+}
+
+.sim-sidebar-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  font-size: 11.5px;
+  color: var(--text);
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.12s ease;
+}
+
+.sim-sidebar-item:hover {
+  background: var(--surface-hover, rgba(0, 0, 0, 0.04));
+  color: var(--heading);
+}
+
+.sim-sidebar-item.active {
+  background: var(--panel);
+  color: var(--heading);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+.sim-item-pill {
+  font-size: 9.5px;
+  padding: 1px 5px;
+  border-radius: 99px;
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.sim-sidebar-item.active .sim-item-pill {
+  background: #0284c7;
+  color: #fff;
+}
+
+.sim-pane-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* B站磁带播放器横条 */
+.sim-tape-player {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.sim-tape-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--heading);
+  font-weight: 500;
+}
+
+.sim-tape-tag {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #f43f5e;
+  color: #fff;
+  font-weight: 700;
+}
+
+.sim-tape-status {
+  font-size: 10px;
+  color: #10b981;
+}
+
+/* B站视频卡片网格 */
+.sim-video-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .sim-video-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sim-video-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.sim-video-card:hover {
+  transform: translateY(-2px);
+}
+
+.sim-video-thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 4px 6px;
+  box-shadow: var(--shadow-sm);
+}
+
+.sim-video-thumb.v1 {
+  background: linear-gradient(135deg, #0284c7, #38bdf8);
+}
+.sim-video-thumb.v2 {
+  background: linear-gradient(135deg, #4f46e5, #818cf8);
+}
+.sim-video-thumb.v3 {
+  background: linear-gradient(135deg, #e11d48, #f43f5e);
+}
+
+.sim-video-duration {
+  font-size: 9px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.65);
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.sim-video-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--heading);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+.sim-video-meta {
+  font-size: 9.5px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* GitHub Topic 看板模拟 */
+.sim-gh-kanban-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.sim-gh-kanban-head strong {
+  font-size: 12.5px;
+  color: var(--heading);
+}
+
+.sim-gh-kanban-head span {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.sim-gh-kanban-track {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  flex: 1;
+}
+
+.sim-gh-kanban-col {
+  width: 175px;
+  min-width: 175px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
+.sim-gh-col-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--heading);
+  padding: 2px 4px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sim-gh-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  cursor: grab;
+  transition: transform 0.12s ease;
+}
+
+.sim-gh-card:hover {
+  transform: translateY(-1px);
+  border-color: #0284c7;
+}
+
+.sim-gh-card-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sim-gh-card-topics {
+  display: flex;
+  gap: 4px;
+}
+
+.sim-gh-topic-tag {
+  font-size: 9px;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+.sim-gh-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.sim-gh-col-new {
+  border-style: dashed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 11.5px;
+  cursor: pointer;
+  min-height: 80px;
+}
+
+.sim-gh-col-new:hover {
+  color: #0284c7;
+  border-color: #0284c7;
 }
 
 .sim-music-body {

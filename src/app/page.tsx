@@ -68,7 +68,10 @@ export default function Home() {
     { id: "n2", app: "GitHub", title: "新仓库关联", desc: "已在 tab-project-next 中关联至 GitHub 任务区", time: "10分钟前" },
   ]);
   const [clockTime, setClockTime] = useState("09:41");
+  const [clockDate, setClockDate] = useState("10月28日 星期三 · 农历九月十八");
   const [activeRepoGroup, setActiveRepoGroup] = useState<string | null>(null);
+  const [biliTab, setBiliTab] = useState("all");
+  const [ghTab, setGhTab] = useState("myrepos");
 
   useEffect(() => {
     const updateTime = () => {
@@ -76,6 +79,8 @@ export default function Home() {
       setClockTime(
         String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0")
       );
+      const weekDays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+      setClockDate(`${now.getMonth() + 1}月${now.getDate()}日 ${weekDays[now.getDay()]} · 农历九月十八`);
     };
     updateTime();
     const timer = setInterval(updateTime, 1000);
@@ -287,16 +292,65 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* 首屏时钟与名言 */}
-              <div className="tab-hero-center">
-                <span className="tab-clock-display">{clockTime}</span>
-                <p className="tab-motto-quote">把常去的地方放在手边，给专注留一片净土。</p>
+              {/* 首屏三栏布局 (对齐插件 AppLauncher.vue 真实布局) */}
+              <div className="sim-launcher-overview">
+                {/* 1. 左侧天气卡片 (WeatherWidget) */}
+                <div className="sim-widget-card">
+                  <div className="sim-widget-head">
+                    <span className="sim-widget-bar cyan" />
+                    <h4>天气</h4>
+                    <span className="sim-widget-btn">深圳 ▾</span>
+                  </div>
+                  <div className="sim-weather-body">
+                    <div className="sim-wx-temp-row">
+                      <span className="sim-wx-emoji">🌤️</span>
+                      <span className="sim-wx-temp">24°</span>
+                    </div>
+                    <p className="sim-wx-sub">晴天 · 空气优 26</p>
+                    <p className="sim-wx-detail">今日无雨 · 东北风 2级</p>
+                    <div className="sim-wx-hours">
+                      <div className="sim-wx-hour-item"><span>14:00</span><span>🌤️</span><span>25°</span></div>
+                      <div className="sim-wx-hour-item"><span>16:00</span><span>⛅</span><span>24°</span></div>
+                      <div className="sim-wx-hour-item"><span>18:00</span><span>🌤️</span><span>22°</span></div>
+                      <div className="sim-wx-hour-item"><span>20:00</span><span>🌙</span><span>20°</span></div>
+                    </div>
+                  </div>
+                </div>
 
-                {/* 搜索框 */}
-                <div className="tab-search-box">
-                  <span className="search-icon">🔍</span>
-                  <span className="search-placeholder">在网页、B站、GitHub 搜索，或优先检索本地书签…</span>
-                  <kbd className="search-shortcut">Ctrl+K</kbd>
+                {/* 2. 中间时钟、名言、搜索框 (HeroClock + SearchBox) */}
+                <div className="tab-hero-center">
+                  <span className="tab-clock-display">{clockTime}</span>
+                  <span className="tab-date-lunar">{clockDate}</span>
+                  <p className="tab-motto-quote">把常去的地方放在手边，给专注留一片净土。</p>
+
+                  <div className="tab-search-box">
+                    <span className="search-icon">🔍</span>
+                    <span className="search-placeholder">在网页、B站、GitHub 搜索，或优先检索本地书签…</span>
+                    <kbd className="search-shortcut">Ctrl+K</kbd>
+                  </div>
+                </div>
+
+                {/* 3. 右侧播放器卡片 (HomeMusicCard) */}
+                <div className="sim-widget-card">
+                  <div className="sim-widget-head">
+                    <span className="sim-widget-bar purple" />
+                    <h4>播放器</h4>
+                    <button type="button" className="sim-widget-btn" onClick={() => handleDockClick("music")}>网易云 ↗</button>
+                  </div>
+                  <div className="sim-music-widget-body">
+                    <div className="sim-mini-vinyl" />
+                    <div className="sim-mini-music-meta">
+                      <span className="sim-mini-music-title">Never Gonna Give You Up</span>
+                      <span className="sim-mini-music-artist">Rick Astley · 经典流行</span>
+                      <div className="sim-mini-music-seek">
+                        <div className="sim-mini-music-fill" />
+                      </div>
+                      <div className="sim-mini-music-time">
+                        <span>01:24</span>
+                        <span>03:32</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -432,6 +486,272 @@ export default function Home() {
                 </div>
               )}
 
+              {/* 哔哩哔哩工作区窗口 */}
+              {activeWindow === "bili" && (
+                <div className="sim-app-window sim-bili-window">
+                  <div className="sim-win-header">
+                    <div className="sim-win-title">
+                      <Image src="/assets/bilibili.svg" alt="" width={16} height={16} />
+                      <span>哔哩哔哩 · 收藏夹与电台</span>
+                    </div>
+                    <div className="sim-win-actions">
+                      <span className="sim-win-badge">SWR 0ms 直出 · 已连接</span>
+                      <button
+                        type="button"
+                        className="sim-win-close-btn"
+                        title="关闭窗口并熄灭绿点"
+                        onClick={() => setActiveWindow(null)}
+                      >✕</button>
+                    </div>
+                  </div>
+                  <div className="sim-split-layout">
+                    {/* 左侧侧栏 */}
+                    <div className="sim-pane-sidebar">
+                      <div className="sim-sidebar-group">
+                        <span className="sim-sidebar-label">⚡ 快捷频道</span>
+                        <button
+                          type="button"
+                          className={"sim-sidebar-item " + (biliTab === "all" ? "active" : "")}
+                          onClick={() => setBiliTab("all")}
+                        >
+                          <span>★ 全部收藏</span>
+                          <span className="sim-item-pill">28</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={"sim-sidebar-item " + (biliTab === "radio" ? "active" : "")}
+                          onClick={() => setBiliTab("radio")}
+                        >
+                          <span>📻 精选电台</span>
+                          <span className="sim-item-pill">12</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={"sim-sidebar-item " + (biliTab === "up" ? "active" : "")}
+                          onClick={() => setBiliTab("up")}
+                        >
+                          <span>⚡ UP主动态</span>
+                        </button>
+                      </div>
+
+                      <div className="sim-sidebar-group">
+                        <span className="sim-sidebar-label">📁 收藏夹分组</span>
+                        <button type="button" className="sim-sidebar-item">
+                          <span>默认收藏夹</span>
+                          <span className="sim-item-pill">16</span>
+                        </button>
+                        <button type="button" className="sim-sidebar-item">
+                          <span>前端实战</span>
+                          <span className="sim-item-pill">8</span>
+                        </button>
+                        <button type="button" className="sim-sidebar-item">
+                          <span>工作白噪音</span>
+                          <span className="sim-item-pill">4</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 右侧主内容区 */}
+                    <div className="sim-pane-content">
+                      <div className="sim-tape-player">
+                        <div className="sim-tape-left">
+                          <span className="sim-tape-tag">DASH</span>
+                          <span>📼 纯音频流 (~3MB) · 正在播放：塞壬唱片 - 孤星 (HQ)</span>
+                        </div>
+                        <span className="sim-tape-status">● 播放中</span>
+                      </div>
+
+                      <div className="sim-video-grid">
+                        <div className="sim-video-card">
+                          <div className="sim-video-thumb v1">
+                            <span className="sim-video-duration">18:42</span>
+                          </div>
+                          <h5 className="sim-video-title">【Vue 3 + Vite】下一代前端新标签页架构实战演练</h5>
+                          <div className="sim-video-meta">
+                            <span>极客小站</span>
+                            <span>24.6万 · 3天前</span>
+                          </div>
+                        </div>
+
+                        <div className="sim-video-card">
+                          <div className="sim-video-thumb v2">
+                            <span className="sim-video-duration">32:10</span>
+                          </div>
+                          <h5 className="sim-video-title">Chromium 扩展 MV3 权限沙箱与通信最佳实践</h5>
+                          <div className="sim-video-meta">
+                            <span>架构师修炼</span>
+                            <span>8.9万 · 1周前</span>
+                          </div>
+                        </div>
+
+                        <div className="sim-video-card">
+                          <div className="sim-video-thumb v3">
+                            <span className="sim-video-duration">02:00:00</span>
+                          </div>
+                          <h5 className="sim-video-title">赛博自习室 · 深度工作纯音乐背景音 (2小时沉浸)</h5>
+                          <div className="sim-video-meta">
+                            <span>塞壬唱片</span>
+                            <span>52.1万 · 2周前</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* GitHub 工作区与 Topic 看板窗口 */}
+              {activeWindow === "github" && (
+                <div className="sim-app-window sim-github-window">
+                  <div className="sim-win-header">
+                    <div className="sim-win-title">
+                      <Image src="/assets/github-star.svg" alt="" width={16} height={16} />
+                      <span>GitHub · 个人看板与精选仓库</span>
+                    </div>
+                    <div className="sim-win-actions">
+                      <span className="sim-win-badge">v1.0.5 Topic 看板 · 远端双向同步</span>
+                      <button
+                        type="button"
+                        className="sim-win-close-btn"
+                        title="关闭窗口并熄灭绿点"
+                        onClick={() => setActiveWindow(null)}
+                      >✕</button>
+                    </div>
+                  </div>
+                  <div className="sim-split-layout">
+                    {/* 左侧侧栏 */}
+                    <div className="sim-pane-sidebar">
+                      <div className="sim-sidebar-group">
+                        <span className="sim-sidebar-label">⚡ 快捷频道</span>
+                        <button
+                          type="button"
+                          className={"sim-sidebar-item " + (ghTab === "myrepos" ? "active" : "")}
+                          onClick={() => setGhTab("myrepos")}
+                        >
+                          <span>📦 我的仓库</span>
+                          <span className="sim-item-pill">REPOS</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={"sim-sidebar-item " + (ghTab === "stars" ? "active" : "")}
+                          onClick={() => setGhTab("stars")}
+                        >
+                          <span>⭐ Star 仓库</span>
+                          <span className="sim-item-pill">142</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={"sim-sidebar-item " + (ghTab === "trending" ? "active" : "")}
+                          onClick={() => setGhTab("trending")}
+                        >
+                          <span>🔥 Trending 热榜</span>
+                        </button>
+                      </div>
+
+                      <div className="sim-sidebar-group">
+                        <span className="sim-sidebar-label">📁 仓库文件夹</span>
+                        <button type="button" className="sim-sidebar-item">
+                          <span>常用工具</span>
+                          <span className="sim-item-pill">12</span>
+                        </button>
+                        <button type="button" className="sim-sidebar-item">
+                          <span>AI / Agent 探索</span>
+                          <span className="sim-item-pill">9</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 右侧主看板区 */}
+                    <div className="sim-pane-content">
+                      <div className="sim-gh-kanban-head">
+                        <strong>我的仓库 · Topic 瀑布流看板</strong>
+                        <span>可自由拖拽归类 · 远端 Topics 秒级同步</span>
+                      </div>
+
+                      <div className="sim-gh-kanban-track">
+                        {/* 默认板块列 */}
+                        <div className="sim-gh-kanban-col">
+                          <div className="sim-gh-col-title">
+                            <span>默认板块</span>
+                            <span className="sim-item-pill">2</span>
+                          </div>
+                          <div className="sim-gh-card">
+                            <span className="sim-gh-card-name">OpenShell</span>
+                            <div className="sim-gh-card-footer">
+                              <span>C++</span>
+                              <span>⭐ 320</span>
+                            </div>
+                          </div>
+                          <div className="sim-gh-card">
+                            <span className="sim-gh-card-name">tab-project-website</span>
+                            <div className="sim-gh-card-footer">
+                              <span>TypeScript</span>
+                              <span>⭐ 18</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* #tools 列 */}
+                        <div className="sim-gh-kanban-col">
+                          <div className="sim-gh-col-title">
+                            <span>#tools</span>
+                            <span className="sim-item-pill">2</span>
+                          </div>
+                          <div className="sim-gh-card">
+                            <span className="sim-gh-card-name">tab-project-next</span>
+                            <div className="sim-gh-card-topics">
+                              <span className="sim-gh-topic-tag">#tools</span>
+                              <span className="sim-gh-topic-tag">#vue3</span>
+                            </div>
+                            <div className="sim-gh-card-footer">
+                              <span>Vue</span>
+                              <span>⭐ 482</span>
+                            </div>
+                          </div>
+                          <div className="sim-gh-card">
+                            <span className="sim-gh-card-name">CLI-Manager</span>
+                            <div className="sim-gh-card-footer">
+                              <span>Go</span>
+                              <span>⭐ 86</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* #vue3 列 */}
+                        <div className="sim-gh-kanban-col">
+                          <div className="sim-gh-col-title">
+                            <span>#vue3</span>
+                            <span className="sim-item-pill">2</span>
+                          </div>
+                          <div className="sim-gh-card">
+                            <span className="sim-gh-card-name">tab-project-next</span>
+                            <div className="sim-gh-card-topics">
+                              <span className="sim-gh-topic-tag">#vue3</span>
+                            </div>
+                            <div className="sim-gh-card-footer">
+                              <span>Vue</span>
+                              <span>⭐ 482</span>
+                            </div>
+                          </div>
+                          <div className="sim-gh-card">
+                            <span className="sim-gh-card-name">obsidian-clipper</span>
+                            <div className="sim-gh-card-footer">
+                              <span>TypeScript</span>
+                              <span>⭐ 64</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 新建列插槽 */}
+                        <div className="sim-gh-kanban-col sim-gh-col-new">
+                          <span>＋ 新建 Topic</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 底部仿 MacDock 栏 */}
               <div className="tab-bottom-dock" role="toolbar" aria-label="底栏应用快捷坞">
                 <button
@@ -463,7 +783,7 @@ export default function Home() {
                 </button>
                 <button
                   type="button"
-                  className="dock-btn"
+                  className={"dock-btn " + (activeWindow === "bili" ? "active" : "")}
                   title="B站收藏与视频"
                   onClick={() => handleDockClick("bili")}
                 >
@@ -472,8 +792,8 @@ export default function Home() {
                 </button>
                 <button
                   type="button"
-                  className="dock-btn"
-                  title="GitHub 资源专区"
+                  className={"dock-btn " + (activeWindow === "github" ? "active" : "")}
+                  title="GitHub 资源专区与 Topic 看板"
                   onClick={() => handleDockClick("github")}
                 >
                   <Image src="/assets/github-star.svg" alt="GitHub" width={22} height={22} />
